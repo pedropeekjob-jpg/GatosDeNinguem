@@ -42,6 +42,12 @@ pnpm dev                                         # web :3000, api :4000, back of
 
 Without `DATABASE_URL` the API runs on in-memory demo content; without `API_URL` the site does too.
 
+## Online demo (GitHub Pages)
+
+`.github/workflows/pages.yml` publishes a static demo of the public site on every push to `main`. It uses the example content, and forms check what you type but send nothing. Turn it on once in **Settings → Pages → Source: GitHub Actions**. To build it locally: `BASE_PATH=/GatosDeNinguem pnpm --filter @gn/web export:pages` (output in `apps/web/out`).
+
+GitHub Pages only serves files, so the API, the back office, saved forms, redirects and live SEO edits need a Node host for production (for example Vercel for the site plus Render or Railway for the API and Postgres).
+
 ## Tests (test-first, mobile-first)
 
 ```bash

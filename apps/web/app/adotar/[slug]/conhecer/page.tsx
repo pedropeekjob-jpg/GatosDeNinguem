@@ -2,10 +2,14 @@ import { notFound } from "next/navigation";
 import { Container } from "@gn/ui";
 import { AdoptionInterestForm } from "@/components/forms/AdoptionInterestForm";
 import { PageHero } from "@/components/PageHero";
-import { getCat } from "@/lib/content";
+import { getCat, listCats } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
+
+export async function generateStaticParams() {
+  return (await listCats("para-adocao")).map((c) => ({ slug: c.slug }));
+}
 
 export async function generateMetadata({ params }: Props) {
   const cat = await getCat((await params).slug);
