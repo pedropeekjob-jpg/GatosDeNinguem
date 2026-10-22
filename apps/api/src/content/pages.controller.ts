@@ -5,7 +5,7 @@ import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
 
-const editablePage = pageSchema.pick({ heading: true, intro: true }).partial();
+const editablePage = pageSchema.pick({ heading: true, intro: true, gallery: true, carousel: true }).partial();
 
 @Controller("pages")
 export class PagesController {

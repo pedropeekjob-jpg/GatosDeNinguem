@@ -12,6 +12,7 @@ import { PartnersController } from "./content/partners.controller";
 import { PostsController } from "./content/posts.controller";
 import { EscalasController } from "./escalas/escalas.controller";
 import { SeoController } from "./seo/seo.controller";
+import { MAX_UPLOAD_BYTES, UploadsController } from "./media/uploads.controller";
 
 @Controller("health")
 class HealthController {
@@ -24,14 +25,14 @@ class AppModule {
   static register(options: ApiOptions): DynamicModule {
     return {
       module: AppModule,
-      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController],
+      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController],
       providers: [{ provide: API_OPTIONS, useValue: options }, AdminGuard],
     };
   }
 }
 
 export async function createApp(options: ApiOptions): Promise<NestFastifyApplication> {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule.register(options), new FastifyAdapter(), {
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule.register(options), new FastifyAdapter({ bodyLimit: Math.ceil(MAX_UPLOAD_BYTES * 1.4) }), {
     logger: options.logger ?? ["log", "error", "warn"],
   });
   app.enableCors({ origin: options.corsOrigins ?? true });

@@ -48,6 +48,23 @@ export const catSchema = z.object({
 });
 export type Cat = z.infer<typeof catSchema>;
 
+/** A photo in a page's gallery (the shelter carousel on the home page). */
+export const galleryPhotoSchema = photoSchema.extend({
+  caption: z.string().max(120).optional(),
+  /** Kept in the list but not shown on the site. */
+  hidden: z.boolean().optional(),
+});
+export type GalleryPhoto = z.infer<typeof galleryPhotoSchema>;
+
+/** How the shelter carousel behaves. Autoplay is always off for visitors who ask for reduced motion. */
+export const carouselSettingsSchema = z.object({
+  autoplay: z.boolean(),
+  /** Seconds each photo stays before moving on. */
+  intervalSeconds: z.number().int().min(3).max(20),
+});
+export type CarouselSettings = z.infer<typeof carouselSettingsSchema>;
+export const defaultCarouselSettings: CarouselSettings = { autoplay: true, intervalSeconds: 6 };
+
 /** Editable static pages (Início, Ajudar, SOS Gato, Sobre...). */
 export const pageSchema = z.object({
   id: z.string(),
@@ -55,6 +72,9 @@ export const pageSchema = z.object({
   path: z.string().regex(/^\/[a-z0-9/-]*$/),
   heading: z.string().min(1),
   intro: z.string(),
+  /** Photos shown in a full-width carousel (used on the home page). */
+  gallery: z.array(galleryPhotoSchema).default([]),
+  carousel: carouselSettingsSchema.default(defaultCarouselSettings),
   seo: seoFieldsSchema.default({}),
   updatedAt: z.string().datetime(),
 });

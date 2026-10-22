@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><rect width="1600" height="900" fill="#e9e4de"/><rect y="720" width="1600" height="180" fill="#d9cdbd"/><rect x="406" y="96" width="788" height="498" rx="10" fill="#ffffff"/><rect x="420" y="110" width="760" height="470" fill="#bcdcf0"/><path d="M800 110v470M420 345h760" stroke="#ffffff" stroke-width="12"/><circle cx="980" cy="240" r="70" fill="#f9d66b"/>
+    <rect x="380" y="600" width="840" height="36" rx="10" fill="#ffffff"/>
+    <path d="M420 580l300 140h-300z" fill="#f9d66b" opacity=".18"/>
+    <g transform="translate(800 606) scale(1.05 1.05) translate(-200 -278)">
+    <ellipse cx="200" cy="279" rx="100" ry="8" fill="#1c1a1b" opacity=".08"/>
+    <path d="M238 266C292 270 318 238 302 198C295 180 279 177 272 188" fill="none" stroke="#e6e2df" stroke-width="17" stroke-linecap="round"/>
+    <path d="M120 268C110 222 150 196 200 196C262 196 300 222 290 268C288 276 282 278 272 278H136C126 278 122 276 120 268Z" fill="#ffffff" stroke="#1c1a1b" stroke-width="2.5"/>
+    <g transform="translate(-30 34)"><path d="M138 140C136 112 140 88 146 62C148 54 156 53 162 59L186 84C195 82 205 82 214 84L238 59C244 53 252 54 254 62C260 88 264 112 262 140C262 178 234 197 200 197C166 197 138 178 138 140Z" fill="#ffffff" stroke="#1c1a1b" stroke-width="2.5"/><path d="M166 142q10 8 20 0M214 142q10 8 20 0" fill="none" stroke="#1c1a1b" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M195 160h10l-5 6z" fill="#e79a9a"/></g>
+  </g></svg>

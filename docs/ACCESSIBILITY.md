@@ -3,7 +3,7 @@
 Many supporters are older and not comfortable with technology. These rules are enforced by tests where possible; please keep them when adding pages.
 
 **Reading**
-- Inter (a screen-first, highly legible sans-serif), body text at least 18px. Tested on every page.
+- Inter (a screen-first, highly legible sans-serif), body text at least 16px (the browser default, so zoom and the phone's text size setting work as expected). Tested on every page.
 - No text size widget: comfortable sizes by default, and the page reflows when visitors zoom or use their phone's own text size.
 - High contrast (WCAG AA), links always underlined, plain Portuguese, no jargon.
 

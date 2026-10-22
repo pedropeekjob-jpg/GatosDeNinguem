@@ -11,6 +11,7 @@ import {
   Breadcrumbs,
   Button,
   Card,
+  Carousel,
   ChoiceList,
   Notice,
   ProgressMeter,
@@ -216,5 +217,46 @@ describe("misc", () => {
     render(<SearchPreview title={"T".repeat(80)} url="https://gatosdeninguem.pt/adotar" description={"D".repeat(200)} />);
     expect(screen.getByText(/^T+…$/).textContent!.length).toBeLessThanOrEqual(61);
     expect(screen.getByText(/^D+…$/).textContent!.length).toBeLessThanOrEqual(161);
+  });
+});
+
+describe("Carousel", () => {
+  const slides = [
+    { src: "/a.jpg", alt: "Sala do gatil", caption: "A sala" },
+    { src: "/b.jpg", alt: "Hora da refeição" },
+    { src: "/c.jpg", alt: "Janela ao sol" },
+  ];
+
+  it("moves between photos with the buttons and wraps around", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Carousel slides={slides} label="Fotografias do gatil" />);
+    expect(screen.getByRole("region", { name: "Fotografias do gatil" })).toBeInTheDocument();
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Fotografia anterior" }));
+    expect(screen.getByText("3 / 3")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Fotografia seguinte" }));
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /automátic/ })).not.toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("offers a pause button when it plays by itself", async () => {
+    const user = userEvent.setup();
+    render(<Carousel slides={slides} label="Fotografias do gatil" autoplay intervalSeconds={4} />);
+    await user.click(await screen.findByRole("button", { name: "Parar a passagem automática" }));
+    expect(screen.getByRole("button", { name: "Passar automaticamente" })).toBeInTheDocument();
+  });
+
+  it("never plays by itself when the device asks for reduced motion", () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia;
+    render(<Carousel slides={slides} label="Fotografias do gatil" autoplay />);
+    expect(screen.getByRole("button", { name: "Passar automaticamente" })).toBeInTheDocument();
+    window.matchMedia = original;
+  });
+
+  it("renders nothing without photos", () => {
+    const { container } = render(<Carousel slides={[]} label="Fotografias do gatil" />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

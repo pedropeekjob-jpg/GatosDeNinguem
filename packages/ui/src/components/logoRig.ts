@@ -26,6 +26,9 @@ const EAR_R_CORE = "M428 80H520V150H445Z";
 /** A front paw that reaches out from behind the chest to bat the ball. At rest it is tucked inside the body. */
 const ARM = "M335 468C400 452 470 455 515 468C558 480 568 527 532 540C482 555 405 550 335 542Z";
 const TOES = "M534 482c10 8 12 20 5 32M512 476c10 9 12 24 4 38";
+/** The folded paws split in two: the right one is the paw that reaches out, so its outline goes while it is out. */
+const PAW_L = "M0 340H257V640H0Z";
+const PAW_R = "M257 340H420V640H257Z";
 /** The invisible circle around the words, that the cat hides behind. */
 /** A rounded chin for the head on its own (peeking and leaping). */
 const JAW = "M0 0H520V280C500 340 420 368 300 368C180 368 60 348 0 300Z";
@@ -99,6 +102,7 @@ const STYLE = `
 .gnc--intro .gns-pour{animation:gns-pour 3.74s both}
 .gnc--intro .gns-open{animation:gns-wink 3.74s both}
 .gnc--intro .gnc-arm{animation:gns-arm 3.74s both}
+.gnc--intro .gnc-paw-r{animation:gns-paw-r 3.74s both}
 .gnc--intro .gnc-ball{animation:gns-ball-x 3.74s both}
 .gnc--intro .gnc-ball-y{animation:gns-ball-y 3.74s both}
 .gnc--intro .gnc-ball-sq{animation:gns-ball-sq 3.74s both}
@@ -185,6 +189,9 @@ const STYLE = `
   60.59%{transform:scaleX(1) rotate(3deg);animation-timing-function:ease-in-out}
   64.29%{transform:scaleX(.2);opacity:1}
   64.9%,100%{transform:scaleX(.2);opacity:0}}
+/* The paw that bats is the right folded paw: its outline leaves the chest as the arm reaches out and comes
+   back as the arm folds in, so the cat never shows an extra paw. */
+@keyframes gns-paw-r{0%,56.2%{opacity:1}56.9%,63.9%{opacity:0}64.6%,100%{opacity:1}}
 
 /* The ball: horizontal at a steady speed, vertical like a real bounce, squashing where it lands. */
 @keyframes gns-ball-x{
@@ -234,6 +241,7 @@ const STYLE = `
 .gnc--loader .gnc-eye{animation:gnc-blink-loop 4.8s linear infinite}
 .gnc--loader .gnc-ear-r{animation:gnc-ear-r-loop 2.4s ease-in-out infinite}
 .gnc--loader .gnc-arm{animation:gnc-arm-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-paw-r{animation:gnc-paw-r-loop 2.4s linear infinite}
 .gnc--loader .gnc-paws{animation:gnc-paws-loop 2.4s ease-in-out infinite}
 .gnc--loader .gnc-tail{animation:gnc-tail-loop 2.4s ease-in-out infinite}
 .gnc--loader .gnc-tip{animation:gnc-tip-loop 1.2s ease-in-out infinite}
@@ -248,6 +256,7 @@ const STYLE = `
 @keyframes gnc-blink-loop{0%,60%,64%,100%{transform:none}62%{transform:scale(1,.1)}}
 @keyframes gnc-ear-r-loop{0%,20%,30%,100%{transform:none}24%{transform:rotate(14deg)}}
 @keyframes gnc-arm-loop{0%,30%{transform:scaleX(.2);opacity:0}31%,53%{opacity:1}37%{transform:scaleX(1) rotate(-16deg)}42%{transform:scaleX(1.04) rotate(7deg)}45%{transform:scaleX(1) rotate(4deg)}54%,100%{transform:scaleX(.2);opacity:0}}
+@keyframes gnc-paw-r-loop{0%,30%{opacity:1}32%,52%{opacity:0}54.5%,100%{opacity:1}}
 @keyframes gnc-paws-loop{0%,26%,48%,100%{transform:none}36%{transform:translate(6px,-8px) rotate(-4deg)}}
 @keyframes gnc-tail-loop{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
 @keyframes gnc-tip-loop{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(7deg)}}
@@ -301,6 +310,8 @@ export function animatedLogoSvg({ variant, id = "gnc", label, armed = false, wid
     + clip("head", HEAD + EAR_L_CORE + EAR_R_CORE, true)
     + clip("ear-l", EAR_L)
     + clip("ear-r", EAR_R)
+    + clip("paw-l", PAW_L)
+    + clip("paw-r", PAW_R)
     + (intro ? clip("jaw", JAW) : "")
     + (intro
       // The young cat of the story: the logo's head (both eyes open) on a body drawn for the leap.
@@ -320,7 +331,8 @@ export function animatedLogoSvg({ variant, id = "gnc", label, armed = false, wid
     + `<g class="gnc-cat"><g class="gnc-body">`
     + `<g class="gnc-tail"${intro ? ` mask="url(#${id}-sweep)"` : ""}><g clip-path="url(#${id}-tail)"><use href="#${id}-cat" class="gnc-ink"/></g><g class="gnc-tip">${piece("tip")}</g></g>`
     + (intro ? `<g mask="url(#${id}-pour)">` : "") + piece("trunk") + `<path class="gnc-bg" d="${LOGO_LEG}"/>` + (intro ? "</g>" : "")
-    + `<g class="gnc-paws"><path class="gnc-bg" d="${LOGO_PAWS}"/></g>`
+    + `<g class="gnc-paws"><g clip-path="url(#${id}-paw-l)"><path class="gnc-bg" d="${LOGO_PAWS}"/></g>`
+    + `<g class="gnc-paw-r" clip-path="url(#${id}-paw-r)"><path class="gnc-bg" d="${LOGO_PAWS}"/></g></g>`
     + `<g class="gnc-arm"><path class="gnc-ink" d="${ARM}"/><path class="gnc-cut" d="${TOES}"/></g>`
     + `<g class="gnc-head">${piece("head")}<g class="gnc-ear-l">${piece("ear-l")}</g><g class="gnc-ear-r">${piece("ear-r")}</g>`
     + `<g class="gnc-face">${leftEye}<path class="gnc-bg" d="${LOGO_WINK}"/>${intro ? `<g class="gns-open">${OPEN_EYE}</g>` : ""}${mouth}</g></g>`

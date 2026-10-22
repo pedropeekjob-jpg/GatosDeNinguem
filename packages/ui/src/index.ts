@@ -7,6 +7,7 @@ export { Checkbox, ChoiceList, TextArea, TextField, type Choice } from "./compon
 export { Breadcrumbs, SiteHeader, type NavItem } from "./components/Navigation";
 export { IconHand, IconHeart, IconHome, IconNews, IconPaw } from "./components/icons";
 export { AnimatedLogo } from "./components/AnimatedLogo";
+export { Carousel, type CarouselSlide } from "./components/Carousel";
 export { StepWizard } from "./components/StepWizard";
 export { SearchPreview } from "./components/SearchPreview";
 export { NextStep, ShareBar, ToggleButton } from "./components/Engagement";

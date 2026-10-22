@@ -1,4 +1,4 @@
-import { AnimatedLogo, Button, Container } from "@gn/ui";
+import { AnimatedLogo, Button, Carousel, Container } from "@gn/ui";
 import { FeaturedCat } from "@/components/FeaturedCat";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { getPage, listCats } from "@/lib/content";
@@ -16,6 +16,8 @@ export default async function HomePage() {
   const week = Math.floor(Date.now() / (7 * 24 * 3600 * 1000));
   const ordered = [...cats].sort((a, b) => b.ageYears - a.ageYears);
   const featured = ordered.length ? ordered[week % ordered.length] : undefined;
+  // Shelter photos, managed in the back office (Fotos do gatil).
+  const slides = (page.gallery ?? []).filter((p) => !p.hidden).map((p) => ({ src: p.url, alt: p.alt, caption: p.caption }));
 
   return (
     <>
@@ -39,8 +41,9 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {featured ? <FeaturedCat cat={featured} /> : null}
+      <Carousel slides={slides} label="Fotografias do gatil" autoplay={page.carousel?.autoplay} intervalSeconds={page.carousel?.intervalSeconds} />
 
+      {featured ? <FeaturedCat cat={featured} /> : null}
     </>
   );
 }
