@@ -5,6 +5,9 @@
  *
  * Minimal and light, like the logo: black ink on white, warm greys, lots of space.
  * Colour is kept for meaning only (red for emergencies, green/blue/amber in badges).
+ * The logo's hand: big headings use its hand-drawn lettering, with brush strokes and slightly
+ * uneven corners. Everything people read or press (text, buttons, menu, forms) stays in the
+ * highly legible body font.
  */
 :root {
   --gn-ink: #1c1a1b;            /* the logo's ink, 17:1 on white */
@@ -29,12 +32,17 @@
 
   --gn-font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
   --gn-font-display: var(--gn-font-body);
+  --gn-font-hand: "Amatic SC", var(--gn-font-body);   /* like the logo's lettering; headings only */
+  /* A brush stroke, used as a mask so it takes the text colour. */
+  --gn-brush: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14'%3E%3Cpath d='M3 9.5C18 5 40 3.2 62 3.6C82 4 100 5.4 117 7.2C118.6 7.4 118.4 9.2 116.8 9.2C98 8.6 80 8.4 62 8.9C42 9.4 22 10.6 5 12.4C2 12.7 1 10.2 3 9.5Z'/%3E%3C/svg%3E");
+  --gn-radius-hand: 18px 11px 20px 10px / 11px 20px 10px 18px;   /* a touch uneven, as if drawn */
+  --gn-radius-hand-s: 12px 8px 13px 7px / 8px 13px 7px 12px;
 
   --gn-text: 1.1875rem;         /* 19px body */
   --gn-text-s: 1.0625rem;       /* 17px minimum for any text */
   --gn-text-l: 1.3125rem;
-  --gn-h1: clamp(2.25rem, 6.5vw, 3.75rem);
-  --gn-h2: clamp(1.65rem, 4.2vw, 2.25rem);
+  --gn-h1: clamp(3rem, 10.5vw, 5.25rem);
+  --gn-h2: clamp(2.4rem, 7vw, 3.4rem);
   --gn-h3: 1.375rem;
 
   --gn-space-s: 0.75rem;
@@ -61,8 +69,16 @@ body {
 *, *::before, *::after { box-sizing: border-box; }
 img { max-width: 100%; height: auto; }
 h1, h2, h3, h4 { font-family: var(--gn-font-display); font-weight: 650; line-height: 1.12; letter-spacing: -0.025em; margin: 0; text-wrap: balance; color: var(--gn-ink); }
+h1, h2 { font-family: var(--gn-font-hand); font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
 h1 { font-size: var(--gn-h1); }
 h2 { font-size: var(--gn-h2); }
+/* A brush stroke under page and section titles. */
+/* Headings inside forms, steps and cards are read while doing something: keep them in the plain font. */
+.gn-plain-heading, .gn-wizard__title, .gn-card__title { font-family: var(--gn-font-display); font-weight: 650; font-size: var(--gn-h3); letter-spacing: -0.015em; line-height: 1.2; }
+.gn-brush::after, .gn-section__heading::after {
+  content: ""; display: block; width: 5.5rem; height: 0.7rem; margin-top: 0.45rem; background: currentColor;
+  -webkit-mask: var(--gn-brush) no-repeat center / 100% 100%; mask: var(--gn-brush) no-repeat center / 100% 100%;
+}
 h3 { font-size: var(--gn-h3); letter-spacing: -0.015em; }
 p { margin: 0; max-width: var(--gn-measure); }
 a { color: var(--gn-ink); text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1.5px; }
@@ -84,6 +100,17 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-grid { display: grid; gap: var(--gn-space-m); grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--gn-grid-min, 18rem)), 1fr)); }
 .gn-section { padding-block: var(--gn-space-xl); }
 .gn-section--soft { background: var(--gn-sand); }
+/* Ink: a block of the logo's black with light writing, for a few strong moments. */
+.gn-section--ink { background: var(--gn-ink); color: #fff; --gn-alogo-bg: var(--gn-ink); }
+.gn-section--ink h2, .gn-section--ink .gn-stat__value { color: #fff; }
+.gn-section--ink .gn-lead, .gn-section--ink .gn-stat__label, .gn-section--ink .gn-progress__label { color: #dcd7d3; }
+.gn-section--ink .gn-stat { border-left-color: rgb(255 255 255 / 0.3); }
+.gn-section--ink .gn-progress__track { background: rgb(255 255 255 / 0.22); }
+.gn-section--ink .gn-progress__fill { background: #fff; }
+.gn-section--ink .gn-btn--primary { background: #fff; color: var(--gn-ink); }
+.gn-section--ink .gn-btn--primary:hover { background: var(--gn-sand); }
+.gn-section--ink a:not(.gn-btn) { color: #fff; }
+.gn-section--ink :focus-visible { outline-color: #fff; }
 .gn-lead { font-size: var(--gn-text-l); color: var(--gn-ink-soft); }
 .gn-eyebrow { font-size: var(--gn-text-s); font-weight: 600; color: var(--gn-ink-soft); }
 
@@ -92,7 +119,7 @@ a:hover { text-decoration-thickness: 2.5px; }
   display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
   min-height: var(--gn-target); padding: 0.7rem 1.35rem;
   font: inherit; font-weight: 600; font-size: var(--gn-text); line-height: 1.25; text-align: center;
-  border: 1.5px solid transparent; border-radius: var(--gn-radius-s); cursor: pointer; text-decoration: none;
+  border: 1.5px solid transparent; border-radius: var(--gn-radius-hand-s); cursor: pointer; text-decoration: none;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 .gn-btn__icon { display: inline-flex; width: 1.4em; height: 1.4em; }
@@ -122,7 +149,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-notice--error { border-color: var(--gn-error); background: #fbeceb; }
 
 /* Card */
-.gn-card { position: relative; background: var(--gn-surface); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s; }
+.gn-card { position: relative; background: var(--gn-surface); border: 1px solid var(--gn-line); border-radius: var(--gn-radius-hand); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s; }
 .gn-card:has(.gn-card__title a):hover { border-color: var(--gn-line-strong); }
 .gn-card__media { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--gn-sand); }
 .gn-card__body { padding: var(--gn-space-m); display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
@@ -139,7 +166,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 
 /* Stats and progress */
 .gn-stat { display: grid; gap: 0.25rem; padding-left: var(--gn-space-m); border-left: 1px solid var(--gn-line); }
-.gn-stat__value { font-family: var(--gn-font-display); font-size: clamp(2.25rem, 5vw, 3rem); font-weight: 650; letter-spacing: -0.03em; color: var(--gn-ink); font-variant-numeric: tabular-nums; line-height: 1.05; }
+.gn-stat__value { font-family: var(--gn-font-hand); font-size: clamp(3.25rem, 8vw, 4.25rem); font-weight: 700; letter-spacing: 0.01em; color: var(--gn-ink); font-variant-numeric: tabular-nums; line-height: 1.05; }
 .gn-stat__label { color: var(--gn-ink-soft); }
 .gn-progress { display: grid; gap: 0.5rem; }
 .gn-progress__label { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-weight: 600; }
@@ -193,7 +220,12 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-nav__list { list-style: none; margin: 0; padding: 0; display: flex; gap: 0.25rem; }
 .gn-nav__link { display: flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: var(--gn-target); padding: 0.6rem 0.9rem; color: var(--gn-ink-soft); font-weight: 600; text-decoration: none; text-align: center; white-space: nowrap; }
 .gn-nav__link:hover { color: var(--gn-ink); text-decoration: underline; }
-.gn-nav__link[aria-current="page"] { color: var(--gn-ink); text-decoration: underline; text-decoration-thickness: 2.5px; text-underline-offset: 0.45em; }
+.gn-nav__link { position: relative; }
+.gn-nav__link[aria-current="page"] { color: var(--gn-ink); }
+.gn-nav__link[aria-current="page"]::after {
+  content: ""; position: absolute; left: 0.7rem; right: 0.7rem; bottom: 0.15rem; height: 0.55rem; background: currentColor;
+  -webkit-mask: var(--gn-brush) no-repeat center / 100% 100%; mask: var(--gn-brush) no-repeat center / 100% 100%;
+}
 .gn-nav__icon { display: inline-flex; }
 .gn-icon { display: block; width: 1.5rem; height: 1.5rem; }
 /* Icons are for the phone tab bar; wide screens keep plain words. */
@@ -220,7 +252,7 @@ a:hover { text-decoration-thickness: 2.5px; }
   }
   .gn-header--tabbar .gn-nav__link:hover { text-decoration: none; }
   .gn-header--tabbar .gn-nav__link[aria-current="page"] { text-decoration: none; font-weight: 700; }
-  .gn-header--tabbar .gn-nav__link[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 50%; width: 2rem; height: 3px; margin-left: -1rem; border-radius: 0 0 3px 3px; background: var(--gn-ink); }
+  .gn-header--tabbar .gn-nav__link[aria-current="page"]::after { left: 50%; right: auto; top: 0.1rem; bottom: auto; width: 2.6rem; height: 0.45rem; margin-left: -1.3rem; }
   .gn-header--tabbar .gn-nav__link[aria-current="page"] .gn-icon { stroke-width: 2.3; }
   .gn-header--tabbar .gn-btn--urgent { white-space: normal; line-height: 1.15; text-align: center; min-width: 0; }
   body:has(.gn-header--tabbar) { padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px)); }

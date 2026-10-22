@@ -20,7 +20,7 @@ export function SosGuide() {
     return (
       <div className="gn-stack gn-stack--m">
         <Notice tone={node.urgent ? "error" : "info"} title={node.urgent ? "Urgente" : "O que fazer"}>
-          <h2 ref={headingRef} tabIndex={-1}>{node.title}</h2>
+          <h2 ref={headingRef} tabIndex={-1} className="gn-plain-heading">{node.title}</h2>
         </Notice>
         <ol className="gn-stack gn-stack--s">{node.steps.map((s) => <li key={s}>{s}</li>)}</ol>
         <p><strong>Contactar a associação:</strong> mensagem no <a href="https://www.facebook.com/GatosdeNinguemViana/">Facebook</a> ou no <a href="https://www.instagram.com/gatosdeninguem/">Instagram</a>.</p>
@@ -42,7 +42,7 @@ export function SosGuide() {
         if (option) go([...path, option.next]);
       }}
     >
-      <h2 ref={headingRef} tabIndex={-1}>{node.question}</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="gn-plain-heading">{node.question}</h2>
       <ChoiceList name={`sos-${node.id}`} legend={<span className="gn-sr-only">{node.question}</span>} options={node.options.map((o) => ({ value: o.next, label: o.label }))} value={choice} onChange={setChoice} />
       <div className="action-row">
         {path.length > 1 ? <Button variant="secondary" onClick={() => go(path.slice(0, -1))}>Voltar</Button> : null}

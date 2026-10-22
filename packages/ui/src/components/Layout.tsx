@@ -14,9 +14,9 @@ export function Grid({ children, min = "18rem" }: { children: ReactNode; min?: s
   return <div className="gn-grid" style={{ ["--gn-grid-min" as string]: min }}>{children}</div>;
 }
 
-export function Section({ id, heading, intro, children, tone }: { id?: string; heading?: ReactNode; intro?: ReactNode; children?: ReactNode; tone?: "plain" | "soft" }) {
+export function Section({ id, heading, intro, children, tone }: { id?: string; heading?: ReactNode; intro?: ReactNode; children?: ReactNode; tone?: "plain" | "soft" | "ink" }) {
   return (
-    <section id={id} className={cx("gn-section", tone === "soft" && "gn-section--soft")}>
+    <section id={id} className={cx("gn-section", tone === "soft" && "gn-section--soft", tone === "ink" && "gn-section--ink")}>
       <Container>
         <div className="gn-stack gn-stack--m">
           {heading ? <h2 className="gn-section__heading">{heading}</h2> : null}

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible_Next } from "next/font/google";
+import { Amatic_SC, Atkinson_Hyperlegible_Next } from "next/font/google";
 import { organizationJsonLd } from "@gn/seo";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -9,6 +9,8 @@ import "./globals.css";
 
 // Atkinson Hyperlegible Next: designed by the Braille Institute for readers with low vision, in a clean modern cut.
 const atkinson = Atkinson_Hyperlegible_Next({ subsets: ["latin", "latin-ext"], variable: "--font-atkinson", display: "swap" });
+// Amatic SC: close to the hand lettering of the logo. Only for big headings and numbers.
+const amatic = Amatic_SC({ weight: "700", subsets: ["latin", "latin-ext"], variable: "--font-amatic", display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSeoSettings();
@@ -25,7 +27,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSeoSettings();
   return (
-    <html lang="pt-PT" className={atkinson.variable}>
+    <html lang="pt-PT" className={`${atkinson.variable} ${amatic.variable}`}>
       <body>
         <Header />
         {process.env.NEXT_PUBLIC_STATIC_DEMO === "1" ? (

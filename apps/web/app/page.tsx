@@ -1,5 +1,5 @@
 import { postCategoryLabel } from "@gn/domain";
-import { Badge, Button, Card, Container, Grid, ProgressMeter, Section, StatTile } from "@gn/ui";
+import { AnimatedLogo, Badge, Button, Card, Container, Grid, ProgressMeter, Section, StatTile } from "@gn/ui";
 import { FeaturedCat } from "@/components/FeaturedCat";
 import { CatCard } from "@/components/CatCard";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
@@ -38,14 +38,14 @@ export default async function HomePage() {
               </div>
               <FavoritesStrip cats={cats} />
             </div>
-            <div className="home-hero__art" aria-hidden="true">
-              {cats.slice(0, 3).map((c) => <img key={c.slug} src={c.photos[0]!.url} alt="" width={400} height={300} />)}
+            <div className="home-hero__art">
+              <AnimatedLogo size={460} />
             </div>
           </div>
         </Container>
       </section>
 
-      <Section heading="O nosso trabalho em números" intro={`Atualizado em ${formatDate(impact.updatedAt)}.`}>
+      <Section tone="ink" heading="O nosso trabalho em números" intro={`Atualizado em ${formatDate(impact.updatedAt)}.`}>
         <div className="stats">
           <StatTile value={impact.catsInShelter} label="gatos no gatil hoje" />
           <StatTile value={impact.adoptionsThisYear} label="adoções este ano" />

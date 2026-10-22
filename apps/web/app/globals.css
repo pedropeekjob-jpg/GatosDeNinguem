@@ -1,6 +1,6 @@
 @import "@gn/ui/styles.css";
 
-:root { --gn-font-body: var(--font-atkinson), system-ui, sans-serif; --gn-font-display: var(--font-atkinson), system-ui, sans-serif; }
+:root { --gn-font-body: var(--font-atkinson), system-ui, sans-serif; --gn-font-display: var(--font-atkinson), system-ui, sans-serif; --gn-font-hand: var(--font-amatic), "Amatic SC", var(--font-atkinson), sans-serif; }
 main { display: block; }
 .page-hero { padding-block: var(--gn-space-l) var(--gn-space-s); }
 .page-hero .gn-container { display: grid; gap: var(--gn-space-m); }
@@ -11,10 +11,8 @@ main { display: block; }
 .home-actions { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); padding-top: 0.75rem; }
 @media (min-width: 60rem) {
   .home-hero__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 4.5rem; }
-  /* Three cats waiting for a home, as a quiet collage. */
-  .home-hero__art { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 0.75rem; aspect-ratio: 1; }
-  .home-hero__art img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--gn-radius); background: var(--gn-sand); }
-  .home-hero__art img:first-child { grid-row: span 2; }
+  /* The logo's cat comes to life beside the welcome. */
+  .home-hero__art { display: grid; place-items: center; }
   .home-actions { grid-template-columns: repeat(3, auto); justify-content: start; }
   .home-actions .gn-btn { white-space: nowrap; }
 }
@@ -23,7 +21,7 @@ main { display: block; }
 .small { font-size: var(--gn-text-s); }
 .cat-profile { display: grid; gap: var(--gn-space-l); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 52rem) { .cat-profile { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; } }
-.cat-profile__photo { width: 100%; border-radius: var(--gn-radius); background: var(--gn-sand); }
+.cat-profile__photo { width: 100%; border-radius: var(--gn-radius-hand); background: var(--gn-sand); }
 .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: 0.6rem 1rem; margin: 0; }
 .facts div { border-top: 1px solid var(--gn-line); padding: 0.7rem 0; }
 .facts dt { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
@@ -37,7 +35,7 @@ main { display: block; }
 .site-footer__logo { width: 7rem; --gn-alogo-bg: var(--gn-sand); }
 .site-footer__brand p { font-size: var(--gn-text-l); color: var(--gn-ink-soft); max-width: 30rem; }
 .site-footer__grid { display: grid; gap: var(--gn-space-l); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
-.site-footer__title { font-size: var(--gn-h3); }
+.site-footer__title { font-size: 2.4rem; }
 .site-footer__links { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
 .site-footer__small { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
 .discover-card { display: grid; gap: var(--gn-space-m); }
@@ -58,10 +56,10 @@ main { display: block; }
 
 /* Gato da semana: big picture beside the story on wide screens, stacked on phones. */
 .featured__grid { display: grid; gap: var(--gn-space-l); align-items: center; }
-.featured__photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius); }
+.featured__photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius-hand); }
 .featured__body { display: grid; gap: var(--gn-space-m); justify-items: start; }
 .featured__eyebrow { margin: 0; font-size: var(--gn-text-s); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gn-ink-soft); }
-.featured__name { margin: -0.5rem 0 0; font-size: clamp(2.25rem, 6vw, 3.25rem); line-height: 1.05; }
+.featured__name { margin: -0.5rem 0 0; font-size: clamp(3.5rem, 9vw, 5rem); line-height: 1; }
 .featured__facts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; margin: 0; padding-block: 0.9rem; border-block: 1px solid var(--gn-line); width: 100%; }
 .featured__facts dl { display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; margin: 0; }
 .featured__facts dt { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
