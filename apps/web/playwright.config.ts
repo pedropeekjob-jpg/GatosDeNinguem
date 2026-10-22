@@ -6,7 +6,8 @@ export default defineConfig({
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
-  use: { baseURL: "http://localhost:3000", trace: "retain-on-failure", locale: "pt-PT" },
+  // Reduced motion: checks run on the final state of the page, not mid-animation.
+  use: { baseURL: "http://localhost:3000", trace: "retain-on-failure", locale: "pt-PT", contextOptions: { reducedMotion: "reduce" } },
   projects: [
     { name: "telemovel-android", use: { ...devices["Pixel 7"] } },
     { name: "telemovel-iphone", use: { ...devices["iPhone 14"], browserName: "chromium" } },

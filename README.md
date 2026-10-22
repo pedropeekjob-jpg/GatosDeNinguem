@@ -56,7 +56,7 @@ pnpm test                 # unit + component tests (axe accessibility checks inc
 pnpm --filter @gn/web build && pnpm e2e   # Playwright: Android phone, iPhone, desktop
 ```
 
-API tests against Postgres run when `DATABASE_URL` is set. Every public page is checked on phones for: one `h1`, title, canonical, description, no horizontal scroll, body text ≥ 18px and zero WCAG 2.1 AA violations.
+API tests against Postgres run when `DATABASE_URL` is set. Every public page is checked on phones for: one `h1`, title, canonical, description, no horizontal scroll, body text ≥ 16px and zero WCAG 2.1 AA violations.
 
 ## Environment variables
 

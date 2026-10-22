@@ -18,6 +18,10 @@ export type ApiOptions = {
   now?: () => Date;
   logger?: false | ("log" | "error" | "warn")[];
   corsOrigins?: string[];
+  /** Folder for uploaded photos (default: ./uploads). */
+  uploadDir?: string;
+  /** Public address of this API, used in uploaded photo URLs (default: from the request). */
+  publicUrl?: string;
 };
 
 export const API_OPTIONS = Symbol("ApiOptions");

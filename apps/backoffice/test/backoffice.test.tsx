@@ -119,4 +119,56 @@ describe("Gatos", () => {
     await user.type(screen.getByLabelText("Nome"), "Estrela da Meadela");
     expect(screen.getByText("Endereço: /adotar/estrela-da-meadela")).toBeInTheDocument();
   });
+
+  it("uploads a new photo, makes it the main one and removes the old one", async () => {
+    const user = userEvent.setup();
+    const { api, container } = renderAt("/gatos");
+    await user.click(await screen.findByRole("button", { name: "Editar Mia" }));
+    const photo = new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0])], "mia.jpg", { type: "image/jpeg" });
+    await user.upload(screen.getByLabelText("Escolher fotografias para adicionar"), photo);
+
+    const second = await screen.findByRole("listitem", { name: "Fotografia 2" });
+    expect(within(second).getByLabelText("Descrição da fotografia 2")).toHaveValue("Mia, foto 2");
+    expect(api.uploadPhoto).toHaveBeenCalledWith({ type: "image/jpeg", data: "/9j/4A==" });
+
+    await user.click(within(second).getByRole("button", { name: /Tornar principal/ }));
+    const first = screen.getByRole("listitem", { name: "Fotografia 1" });
+    expect(within(first).getByText("Foto principal")).toBeInTheDocument();
+    await user.click(within(screen.getByRole("listitem", { name: "Fotografia 2" })).getByRole("button", { name: /Apagar/ }));
+    expect(screen.queryByRole("listitem", { name: "Fotografia 2" })).not.toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+
+    await user.click(screen.getByRole("button", { name: "Guardar gato" }));
+    await screen.findByRole("button", { name: "Adicionar gato" });
+    const mia = (await api.cats()).find((c) => c.name === "Mia")!;
+    expect(mia.photos).toEqual([{ url: "/demo/novo-1.jpg", alt: "Mia, foto 2" }]);
+  });
+
+  it("does not save a cat without photos", async () => {
+    const user = userEvent.setup();
+    renderAt("/gatos");
+    await user.click(await screen.findByRole("button", { name: "Editar Mia" }));
+    for (const b of screen.getAllByRole("button", { name: /Apagar/ })) await user.click(b);
+    await user.click(screen.getByRole("button", { name: "Guardar gato" }));
+    expect(await screen.findByText("Adicione pelo menos uma fotografia.")).toBeInTheDocument();
+  });
+});
+
+describe("Fotos do gatil", () => {
+  it("hides a photo, changes the speed and saves the carousel", async () => {
+    const user = userEvent.setup();
+    const { api, container } = renderAt("/fotos");
+    expect(await screen.findByText(/4 de 4 visíveis/)).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Mostrar no site (fotografia 3)"));
+    expect(screen.getByText(/3 de 4 visíveis/)).toBeInTheDocument();
+    const seconds = screen.getByLabelText("Segundos em cada fotografia");
+    await user.clear(seconds);
+    await user.type(seconds, "8");
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Guardar fotos" }));
+    expect(await screen.findByText("Guardado")).toBeInTheDocument();
+    const home = (await api.pages()).find((p) => p.path === "/")!;
+    expect(home.carousel).toEqual({ autoplay: true, intervalSeconds: 8 });
+    expect(home.gallery.map((p) => !!p.hidden)).toEqual([false, false, true, false]);
+  });
 });

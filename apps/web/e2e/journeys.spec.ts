@@ -14,9 +14,9 @@ test.describe("every page", () => {
       // No horizontal scrolling on any screen size.
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow).toBeLessThanOrEqual(1);
-      // Body text is at least 18px for older readers.
+      // Body text is at least 16px (the browser default).
       const size = await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize));
-      expect(size).toBeGreaterThanOrEqual(18);
+      expect(size).toBeGreaterThanOrEqual(16);
       const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
       expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
     });
@@ -140,6 +140,19 @@ test("volunteer finds a free shift from Ajudar and signs up", async ({ page }) =
   await shift.getByRole("button", { name: "Confirmar inscrição" }).click();
   await expect(shift.getByText("Está inscrito. Obrigado!")).toBeVisible();
   await expect(shift.getByRole("link", { name: "Pôr no meu calendário" })).toHaveAttribute("href", /^data:text\/calendar/);
+});
+
+test("home: shelter photos in a full-width carousel, moved with the buttons", async ({ page }) => {
+  await page.goto("/");
+  const carousel = page.getByRole("region", { name: "Fotografias do gatil" });
+  await expect(carousel).toBeVisible();
+  const box = await carousel.boundingBox();
+  expect(box!.width).toBeGreaterThanOrEqual((page.viewportSize()!.width) - 1);
+  await expect(carousel.getByText("1 / 4")).toBeVisible();
+  await carousel.getByRole("button", { name: "Fotografia seguinte" }).click();
+  await expect(carousel.getByText("2 / 4")).toBeVisible();
+  // People who ask for reduced motion never get autoplay, but can still start it.
+  await expect(carousel.getByRole("button", { name: "Passar automaticamente" })).toBeVisible();
 });
 
 test.describe("contas e Patinhas", () => {

@@ -16,6 +16,7 @@ import { PatinhasController } from "./patinhas/patinhas.controller";
 import { InMemoryPatinhasRepository } from "./patinhas/repository";
 import { PatinhasService } from "./patinhas/service";
 import { SeoController } from "./seo/seo.controller";
+import { MAX_UPLOAD_BYTES, UploadsController } from "./media/uploads.controller";
 
 @Controller("health")
 class HealthController {
@@ -28,7 +29,7 @@ class AppModule {
   static register(options: ApiOptions): DynamicModule {
     return {
       module: AppModule,
-      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, ContaController, PatinhasController],
+      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, options.patinhas ?? new InMemoryPatinhasRepository()) },
@@ -39,7 +40,7 @@ class AppModule {
 }
 
 export async function createApp(options: ApiOptions): Promise<NestFastifyApplication> {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule.register(options), new FastifyAdapter(), {
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule.register(options), new FastifyAdapter({ bodyLimit: Math.ceil(MAX_UPLOAD_BYTES * 1.4) }), {
     logger: options.logger ?? ["log", "error", "warn"],
   });
   app.enableCors({ origin: options.corsOrigins ?? true });

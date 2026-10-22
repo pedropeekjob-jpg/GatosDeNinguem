@@ -1,4 +1,6 @@
 import type { FosterPlacement, Shift, Sponsorship } from "./escalas";
+import type { z } from "zod";
+import { pageSchema } from "./content";
 import type { Cat, Impact, Page, Partner, Post, Redirect, SeoSettings } from "./index";
 
 /**
@@ -269,12 +271,20 @@ export const seedPartners: Partner[] = [
   },
 ];
 
-export const seedPages: Page[] = [
+/** Written without the defaulted fields (gallery, carousel); filled in by the schema below. */
+const seedPageInputs: z.input<typeof pageSchema>[] = [
   {
     id: "page-home",
     path: "/",
     heading: "Ajude um gato de ninguém a ser de alguém",
     intro: "Resgatamos, tratamos e encontramos famílias para gatos de rua em Viana do Castelo. Há muitas formas de ajudar, mesmo sem tempo ou dinheiro.",
+    // Placeholder pictures until the shelter's own photos are added in the back office (Fotos do gatil).
+    gallery: [
+      { url: "/demo/gatil-sala.svg", alt: "Imagem provisória: gatos a descansar na sala do gatil", caption: "A sala dos gatos, onde esperam por uma família" },
+      { url: "/demo/gatil-refeicao.svg", alt: "Imagem provisória: dois gatos a comer das suas taças", caption: "Hora da refeição, duas vezes por dia" },
+      { url: "/demo/gatil-janela.svg", alt: "Imagem provisória: gato ao sol junto a uma janela", caption: "O cantinho do sol, o lugar mais disputado" },
+      { url: "/demo/gatil-brincar.svg", alt: "Imagem provisória: gato a brincar com um novelo", caption: "Brincar também faz parte da recuperação" },
+    ],
     seo: { title: "Gatos de Ninguém, adoção e resgate de gatos em Viana do Castelo" },
     updatedAt: now,
   },
@@ -367,6 +377,8 @@ export const seedPages: Page[] = [
     updatedAt: now,
   },
 ];
+
+export const seedPages: Page[] = seedPageInputs.map((p) => pageSchema.parse(p));
 
 export const seedRedirects: Redirect[] = [
   { id: "r1", from: "/gatos", to: "/", permanent: true },

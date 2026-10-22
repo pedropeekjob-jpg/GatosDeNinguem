@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from
 import { AnimatedLogo, Button, Container, Notice, SiteHeader, TextField } from "@gn/ui";
 import { ApiContext, httpApi, type Api } from "./lib/api";
 import { EscalasPage } from "./pages/EscalasPage";
+import { FotosPage } from "./pages/FotosPage";
 import { GatosPage } from "./pages/GatosPage";
 import { HojePage } from "./pages/HojePage";
 import { NoticiasPage } from "./pages/NoticiasPage";
@@ -16,6 +17,7 @@ const nav = [
   { href: "/", label: "Hoje" },
   { href: "/escalas", label: "Escalas" },
   { href: "/gatos", label: "Gatos" },
+  { href: "/fotos", label: "Fotos do gatil" },
   { href: "/noticias", label: "Notícias" },
   { href: "/pedidos", label: "Pedidos" },
   { href: "/patinhas", label: "Patinhas" },
@@ -73,6 +75,7 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
                 <Route path="/" element={<HojePage today={today} />} />
                 <Route path="/escalas" element={<EscalasPage today={today} />} />
                 <Route path="/gatos" element={<GatosPage />} />
+                <Route path="/fotos" element={<FotosPage />} />
                 <Route path="/noticias" element={<NoticiasPage />} />
                 <Route path="/pedidos" element={<PedidosPage />} />
                 <Route path="/patinhas" element={<PatinhasPage />} />

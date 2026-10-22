@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ageLabel, statusLabel, type CatStatus } from "@gn/domain";
 import { Badge, Button, Checkbox, ChoiceList, Notice, TextArea, TextField } from "@gn/ui";
+import { PhotoManager } from "../components/PhotoManager";
 import { errorMessage, useApi } from "../lib/api";
+import { photoSrc } from "../lib/photos";
 import { slugify } from "../lib/slug";
 import type { Cat, CatInput } from "../lib/types";
 
@@ -26,7 +28,7 @@ export function GatosPage() {
       <ul className="cat-list">
         {cats.data?.map((c) => (
           <li key={c.id} className="shift">
-            <img src={c.photos[0]?.url} alt="" width={96} height={72} />
+            <img src={c.photos[0] ? photoSrc(c.photos[0].url) : undefined} alt="" width={96} height={72} />
             <div className="gn-stack gn-stack--s">
               <p className="shift__title">{c.name}</p>
               <p className="small muted">{ageLabel(c.ageYears)} · {c.sex === "femea" ? "Fêmea" : "Macho"}</p>
@@ -59,13 +61,14 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
     sterilized: cat?.sterilized ?? false,
     vaccinated: cat?.vaccinated ?? false,
     microchipped: cat?.microchipped ?? false,
-    photoUrl: cat?.photos[0]?.url ?? "",
-    photoAlt: cat?.photos[0]?.alt ?? "",
+    photos: cat?.photos ?? [],
   });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
   const save = useMutation({
     mutationFn: () => {
+      if (f.photos.length === 0) throw new Error("Adicione pelo menos uma fotografia.");
+      if (f.photos.some((p) => p.alt.trim().length < 3)) throw new Error("Escreva uma descrição curta em cada fotografia.");
       const input: CatInput = {
         slug: cat?.slug ?? slugify(f.name),
         name: f.name,
@@ -83,7 +86,7 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
         sterilized: f.sterilized,
         vaccinated: f.vaccinated,
         microchipped: f.microchipped,
-        photos: [{ url: f.photoUrl, alt: f.photoAlt }],
+        photos: f.photos.map((p) => ({ url: p.url, alt: p.alt.trim() })),
         seo: cat?.seo ?? {},
         adoptedAt: cat?.adoptedAt,
         happyEnding: cat?.happyEnding,
@@ -98,6 +101,10 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
       <div><Button variant="quiet" onClick={onClose}>← Voltar</Button></div>
       <h1>{cat ? `Editar ${cat.name}` : "Novo gato"}</h1>
       <TextField id="c-name" label="Nome" value={f.name} onChange={(e) => set("name", e.target.value)} hint={!cat && f.name ? `Endereço: /adotar/${slugify(f.name)}` : undefined} />
+      <section className="gn-stack gn-stack--s" aria-labelledby="c-photos">
+        <h2 id="c-photos">Fotografias</h2>
+        <PhotoManager photos={f.photos} onChange={(photos) => set("photos", photos)} altFor={(n) => `${f.name || "Gato"}, foto ${n}`} />
+      </section>
       <ChoiceList name="c-status" legend="Situação" value={f.status} onChange={(v) => set("status", v)} options={statusOptions} />
       <ChoiceList name="c-sex" legend="Sexo" value={f.sex} onChange={(v) => set("sex", v)} options={[{ value: "femea", label: "Fêmea" }, { value: "macho", label: "Macho" }]} />
       <TextField id="c-age" label="Idade (anos)" hint="Use 0 para bebés com menos de 1 ano." type="number" inputMode="numeric" value={f.ageYears} onChange={(e) => set("ageYears", e.target.value)} />
@@ -112,8 +119,6 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
       <Checkbox id="c-ster" label="Esterilizado" checked={f.sterilized} onChange={(v) => set("sterilized", v)} />
       <Checkbox id="c-vac" label="Vacinado" checked={f.vaccinated} onChange={(v) => set("vaccinated", v)} />
       <Checkbox id="c-chip" label="Com chip" checked={f.microchipped} onChange={(v) => set("microchipped", v)} />
-      <TextField id="c-photo" label="Endereço da fotografia" value={f.photoUrl} onChange={(e) => set("photoUrl", e.target.value)} />
-      <TextField id="c-alt" label="Descrição da fotografia" hint="Para quem não vê a imagem e para o Google. Ex.: Mia, gata tigrada a dormir." value={f.photoAlt} onChange={(e) => set("photoAlt", e.target.value)} />
       {save.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(save.error)}</Notice> : null}
       <div><Button type="submit" disabled={save.isPending}>{save.isPending ? "A guardar…" : "Guardar gato"}</Button></div>
     </form>
