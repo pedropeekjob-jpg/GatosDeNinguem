@@ -190,3 +190,12 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .gatil__agora .loc, .gatil__gato-cartao .loc { background: var(--gn-surface); }
 .account-link__count { display: inline-grid; place-items: center; min-width: 1.35rem; height: 1.35rem; padding-inline: 0.3rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-size: 0.75rem; font-weight: 700; line-height: 1; }
 .gatil__turno h2 { color: #fff; }
+
+/* Page changes: a short cross-fade (View Transitions). The header stays still; reduced motion skips it in JS. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.18s; animation-timing-function: ease-out; }
+/* view-transition-name makes the header its own layer; keep it (and the phone tab bar inside it) above the page. */
+.gn-header { view-transition-name: site-header; position: relative; z-index: 40; }
+/* The page loader waits a moment before showing, so fast page changes never flash it. */
+.route-loading { min-height: 50vh; display: grid; place-items: center; animation: route-loading-in 0.2s 0.3s both; }
+@keyframes route-loading-in { from { opacity: 0; } }
+.splash[hidden] { display: none; }

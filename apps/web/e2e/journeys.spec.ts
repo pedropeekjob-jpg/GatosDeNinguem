@@ -289,3 +289,18 @@ test("home: Patinhas are explained above the fold, with a link to how they work"
   await teaser.getByRole("link", { name: "Como funcionam as Patinhas" }).click();
   await expect(page).toHaveURL(/\/patinhas\/?$/);
 });
+
+test("menu links change page inside the app, without a reload or a loader flash", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await page.evaluate(() => { (window as unknown as { __same: boolean }).__same = true; });
+  for (const name of ["Adotar", "Sobre nós", "Início"]) {
+    await page.locator("header nav").getByRole("link", { name, exact: true }).click();
+    await expect(page.locator("header nav").getByRole("link", { name, exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(page.locator("main h1")).toBeVisible();
+    await expect(page.locator(".route-loading")).toHaveCount(0);
+  }
+  expect(await page.evaluate(() => (window as unknown as { __same?: boolean }).__same)).toBe(true);
+  expect(errors).toEqual([]);
+});
