@@ -8,7 +8,8 @@ import { buildMetadata } from "@/lib/seo";
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return (await listCats("para-adocao")).map((c) => ({ slug: c.slug }));
+  // Pre-rendering is only a speed-up: if the API is down, the pages are built on request instead.
+  return (await listCats("para-adocao").catch(() => [])).map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

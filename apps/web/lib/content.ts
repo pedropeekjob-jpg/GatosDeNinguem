@@ -49,8 +49,21 @@ export const CONTENT_TAG = "content";
 export type PublicCat = Omit<Cat, "happyEnding"> & { happyEnding?: ReturnType<typeof publicHappyEnding> };
 export type HappyEndingItem = { cat: PublicCat; happyEnding: NonNullable<ReturnType<typeof publicHappyEnding>> | null };
 
+/** The API could not be reached (stopped, restarting or too slow). Pages show app/error.tsx instead of crashing. */
+export class ContentUnavailableError extends Error {
+  constructor(path: string, cause?: unknown) {
+    super(`Não foi possível ler ${path} da API`, { cause });
+    this.name = "ContentUnavailableError";
+  }
+}
+
 async function api<T>(path: string): Promise<T | undefined> {
-  const res = await fetch(`${API_URL}${path}`, { next: { revalidate: 300, tags: [CONTENT_TAG] } });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, { next: { revalidate: 300, tags: [CONTENT_TAG] }, signal: AbortSignal.timeout(8000) });
+  } catch (err) {
+    throw new ContentUnavailableError(path, err);
+  }
   if (res.status === 404) return undefined;
   if (!res.ok) throw new Error(`API ${path} respondeu ${res.status}`);
   return (await res.json()) as T;
@@ -62,12 +75,15 @@ const toPublic = (cat: Cat): PublicCat => {
 };
 
 export async function getSeoSettings(): Promise<SeoSettings> {
-  return API_URL ? (await api<SeoSettings>("/seo/settings"))! : seedSeoSettings;
+  if (!API_URL) return seedSeoSettings;
+  // Every page's layout needs these; if the API is down, the defaults keep the header and footer standing.
+  return (await api<SeoSettings>("/seo/settings").catch(() => undefined)) ?? seedSeoSettings;
 }
 
 export async function getPage(path: string): Promise<Page> {
   // Pages added in a new release show their default text until the team edits them.
-  const page = (API_URL ? await api<Page>(`/pages?path=${encodeURIComponent(path)}`) : undefined) ?? seedPages.find((p) => p.path === path);
+  // If the API is down, the default text keeps pages like SOS readable.
+  const page = (API_URL ? await api<Page>(`/pages?path=${encodeURIComponent(path)}`).catch(() => undefined) : undefined) ?? seedPages.find((p) => p.path === path);
   if (!page) throw new Error(`Página ${path} não existe no conteúdo`);
   return page;
 }
