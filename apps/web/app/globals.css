@@ -255,3 +255,17 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .patinhas-teaser__short { display: none; }
   .patinhas-teaser__long { display: inline; }
 }
+
+/* Phones, modern finish: tighter, bolder headline; the Patinhas as a black "member card" with the yellow paw,
+   the one dark block on the page, so it reads as something special rather than another notice. */
+@media (max-width: 59.99rem) {
+  .home-hero__text h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.08; }
+  .home-actions .gn-btn { min-height: 3rem; }
+  .patinhas-teaser { background: var(--gn-ink); border-color: var(--gn-ink); color: #fff; box-shadow: 0 10px 28px rgb(28 26 27 / .18); }
+  .patinhas-teaser__title { color: #fff; }
+  .patinhas-teaser__body { color: rgb(255 255 255 / .78); }
+  .patinhas-teaser__link::after { border-color: var(--gn-accent); }
+  .patinhas-teaser__link:focus-visible { outline-color: var(--gn-accent); }
+  .featured__photo { border-radius: var(--gn-radius); }
+  .featured__name { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; }
+}
