@@ -77,4 +77,4 @@ API tests against Postgres run when `DATABASE_URL` is set. Every public page is 
 
 ## Brand
 
-The logo and name are kept. `apps/*/public/logo.svg` is a placeholder until the official files arrive; brand colour is `--gn-brand` in `packages/ui/src/styles.css`.
+The official logo is in `apps/*/public/logo.svg` (ink) and `logo-branco.svg` (white, for dark backgrounds), traced from the association's artwork. Colours and fonts live as tokens at the top of `packages/ui/src/styles.css`: ink `#221e20` from the logo, warm paper `#faf6f0`, and ginger `#b13c0c` for main actions. Every text colour passes WCAG AA, checked by axe in the tests.

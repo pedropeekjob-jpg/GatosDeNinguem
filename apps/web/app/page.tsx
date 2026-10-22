@@ -27,14 +27,19 @@ export default async function HomePage() {
       <section className="home-hero">
         <Container>
           <div className="home-hero__grid">
-            <h1>{page.heading}</h1>
-            <p className="gn-lead">{page.intro}</p>
-            <div className="home-actions">
-              <Button href="/adotar">Quero adotar</Button>
-              <Button href="/ajudar" variant="secondary">Quero ajudar</Button>
-              <Button href="/sos" variant="urgent">Encontrei um gato</Button>
+            <div className="home-hero__text">
+              <h1>{page.heading}</h1>
+              <p className="gn-lead">{page.intro}</p>
+              <div className="home-actions">
+                <Button href="/adotar">Quero adotar</Button>
+                <Button href="/ajudar" variant="secondary">Quero ajudar</Button>
+                <Button href="/sos" variant="urgent">Encontrei um gato</Button>
+              </div>
+              <FavoritesStrip cats={cats} />
             </div>
-            <FavoritesStrip cats={cats} />
+            <div className="home-hero__art" aria-hidden="true">
+              <img src="/logo.svg" alt="" width={400} height={416} />
+            </div>
           </div>
         </Container>
       </section>

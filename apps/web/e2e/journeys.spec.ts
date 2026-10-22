@@ -29,6 +29,8 @@ test("main navigation is always visible (no hidden menu)", async ({ page }) => {
     await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name })).toBeVisible();
   }
   await expect(page.getByRole("link", { name: "Encontrei um gato" }).first()).toBeVisible();
+  // The association's own logo leads home.
+  await expect(page.getByRole("link", { name: "Gatos de Ninguém, página inicial" })).toBeVisible();
 });
 
 test("touch targets are at least 44px tall", async ({ page }) => {
