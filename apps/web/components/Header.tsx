@@ -1,5 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
+import { AccountLink } from "./client/AccountLink";
 import { IconHand, IconHeart, IconHome, IconNews, IconPaw, SiteHeader } from "@gn/ui";
 
 const items = [
@@ -18,6 +19,7 @@ export function Header() {
       currentPath={pathname}
       items={items}
       tabBar
+      tools={<AccountLink />}
       urgent={{ href: "/sos", label: "Encontrei um gato" }}
       brand={
 <img className="gn-header__logo" src="/logo.svg" alt="Gatos de Ninguém, página inicial" width={81} height={84} />

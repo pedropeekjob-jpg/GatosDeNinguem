@@ -74,3 +74,45 @@ main { display: block; }
 .splash.is-done { opacity: 0; pointer-events: none; transition: opacity 0.35s; }
 @keyframes splash-out { to { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .splash { display: none; } }
+
+/* Contas e Patinhas */
+.account-link { font-size: var(--gn-text-s); text-decoration: none; padding-inline: 0.6rem; gap: 0.35rem; white-space: nowrap; }
+.account-link:hover { text-decoration: underline; }
+.account-link__icon { display: inline-flex; }
+.account-link__icon .gn-icon { width: 1.25em; height: 1.25em; }
+.conta-form { max-width: 30rem; }
+.conta-form h2:focus { outline: none; }
+.conta-saber-mais { margin-top: var(--gn-space-l); }
+.painel { padding-bottom: var(--gn-space-l); }
+.painel__resumo { display: grid; gap: var(--gn-space-m); padding: var(--gn-space-m); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); background: var(--gn-surface); }
+.painel__numeros { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--gn-space-s) var(--gn-space-l); }
+.painel__saldo { display: grid; margin: 0; }
+.painel__saldo-valor { font-family: var(--gn-font-display); font-size: clamp(2.5rem, 9vw, 3.5rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+.painel__nivel { display: grid; margin: 0; }
+.painel__nivel-num { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.painel__factos { display: grid; gap: 0.2rem; margin: 0; padding: 0; list-style: none; color: var(--gn-ink-soft); }
+.painel__lista { list-style: none; margin: 0; padding: 0; display: grid; max-width: 46rem; }
+.painel__linha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding-block: 0.85rem; border-bottom: 1px solid var(--gn-line); }
+.painel__linha:first-child { border-top: 1px solid var(--gn-line); }
+.painel__linha > div:first-child { flex: 1 1 16rem; display: grid; gap: 0.15rem; }
+.painel__linha-fim { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.painel__pontos { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.painel__pontos--menos { color: var(--gn-ink-soft); }
+.painel__desafio { padding: var(--gn-space-m); border-radius: var(--gn-radius); background: var(--gn-sand); }
+.painel__demo { padding: var(--gn-space-m); border: 1px dashed var(--gn-line-strong); border-radius: var(--gn-radius); }
+.codigo { font-family: ui-monospace, Menlo, monospace; font-weight: 700; letter-spacing: 0.08em; padding: 0.2rem 0.6rem; border-radius: var(--gn-radius-s); background: var(--gn-sand); }
+.codigo--grande { display: inline-block; font-size: 1.75rem; padding: 0.4rem 0.9rem; border: 2px solid var(--gn-ink); background: var(--gn-surface); }
+.medalhas { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); }
+.medalha { display: grid; gap: 0.2rem; padding: 0.9rem; border: 1px solid var(--gn-line); border-radius: var(--gn-radius); background: var(--gn-surface); color: var(--gn-ink-soft); }
+.medalha__icone { font-size: 1.75rem; line-height: 1; filter: grayscale(1); opacity: 0.45; }
+.medalha__nome { font-weight: 650; color: var(--gn-ink); }
+.medalha__texto { font-size: var(--gn-text-s); }
+.medalha__estado { font-size: var(--gn-text-s); font-weight: 600; }
+.medalha--ganha { border-color: var(--gn-ink); }
+.medalha--ganha .medalha__icone { filter: none; opacity: 1; }
+.medalha--ganha .medalha__estado { color: var(--gn-success); }
+.niveis { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); }
+.nivel { display: grid; gap: 0.2rem; align-content: start; padding: 1rem; border: 1px solid var(--gn-line); border-radius: var(--gn-radius); }
+.nivel__num, .nivel__pontos { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.nivel__nome { font-size: var(--gn-text-l); }
+.mural { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }

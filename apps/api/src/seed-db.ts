@@ -1,7 +1,9 @@
 /** Loads the demo content into an empty database: pnpm --filter @gn/api db:seed */
 import { PrismaClient } from "@prisma/client";
 import { seedCats, seedFosterPlacements, seedImpact, seedShifts, seedSponsorships, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings } from "@gn/domain";
+import { seedBadges, seedChallenges } from "@gn/domain";
 import { PrismaContentRepository } from "./content/prisma.repository";
+import { PrismaPatinhasRepository } from "./patinhas/prisma.repository";
 
 export async function seedDatabase(db: PrismaClient) {
   const repo = new PrismaContentRepository(db);
@@ -15,6 +17,10 @@ export async function seedDatabase(db: PrismaClient) {
   await repo.saveShifts(seedShifts);
   for (const p of seedFosterPlacements) await repo.saveFosterPlacement(p);
   for (const sp of seedSponsorships) await repo.saveSponsorship(sp);
+  // Patinhas: example badges and monthly challenges. Points rules use the defaults until edited.
+  const patinhas = new PrismaPatinhasRepository(db);
+  for (const b of seedBadges) await patinhas.saveBadge(b);
+  for (const c of seedChallenges) await patinhas.saveChallenge(c);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

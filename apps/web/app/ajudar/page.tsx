@@ -26,6 +26,7 @@ export default async function HelpPage() {
           <Card title="Ser voluntário" href="#voluntariado"><p>Limpeza, transporte ao veterinário e eventos.</p></Card>
           <Card title="Família temporária" href="#familia-temporaria"><p>Acolha um gato por umas semanas.</p></Card>
           <Card title="Ser Amigo" href="#amigo"><p>24 euros por ano, com descontos nos parceiros.</p></Card>
+          <Card title="Ganhar Patinhas" href="/patinhas"><p>Cada ajuda dá Patinhas, que pode trocar por vantagens nos parceiros.</p></Card>
         </Grid>
       </Section>
 

@@ -4,3 +4,6 @@ export * from "./seed";
 export * from "./matching";
 export * from "./help";
 export * from "./escalas";
+export * from "./contas";
+export * from "./patinhas";
+export * from "./seed-patinhas";

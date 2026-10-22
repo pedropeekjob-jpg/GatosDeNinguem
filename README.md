@@ -69,6 +69,15 @@ API tests against Postgres run when `DATABASE_URL` is set. Every public page is 
 | `API_URL` | web | API base URL. Empty → demo content |
 | `ALLOW_INDEXING` | web | `true` only on the production domain |
 | `VITE_API_URL` | backoffice | API base URL |
+| `RESEND_API_KEY`, `LOGIN_EMAIL_FROM` | api | Sends sign-in codes by email (Resend). Without it codes only go to the log |
+
+## Accounts and Patinhas
+
+Helpers sign in with their email or mobile and a 6-digit code (no passwords). The account page (`/conta`) shows their Patinhas, level, badges, the month's community challenge, and lets them swap points for partner perks, getting a code to show at the counter. `/patinhas` explains the rules publicly. In the back office, **Patinhas** confirms actions done off the site, marks perk codes as used (or cancels and refunds them), and edits points per action, badges, monthly challenges and each partner perk's price, minimum level and monthly limit.
+
+Shift points are automatic: marking a volunteer present in Escalas pays the account with the same mobile number, including shifts done before the account existed. Adopting never earns points, levels count everything earned (spending never lowers a level), streaks are counted in months, and the thanks wall only shows people who opted in, by nickname or first name.
+
+Without an API (the GitHub Pages demo and `next start` without `API_URL`) all of this runs in the browser on example data; sign in with `912 000 001` to see an account with history. In `pnpm demo` the code is shown on screen. In production, email codes need `RESEND_API_KEY`; codes for mobile numbers need an SMS or WhatsApp provider, still to be chosen, and until then are only written to the API log.
 
 ## Docs
 

@@ -1,7 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { recommendHelp, type HelpAnswers } from "@gn/domain";
 import { Button, Card, ChoiceList, Grid, NextStep, StepWizard } from "@gn/ui";
+import { contaClient, readSignedIn } from "@/lib/conta";
+
+/** Finishing the quiz counts once for Patinhas when signed in; otherwise a gentle invitation. */
+function QuizPatinhas() {
+  const [result, setResult] = useState<"convite" | "ganhou" | null>(null);
+  useEffect(() => {
+    if (!readSignedIn()) return setResult("convite");
+    void contaClient().finishQuiz().then((r) => setResult(r.counted ? "ganhou" : null));
+  }, []);
+  if (result === "ganhou") return <p className="small" role="status">Ganhou 10 Patinhas por fazer o questionário.</p>;
+  if (result === "convite") return <p className="small muted">Sabia que cada ajuda dá Patinhas, que pode trocar nos parceiros? <a href="/patinhas">Saiba como</a>.</p>;
+  return null;
+}
 
 const questions = [
   {
@@ -50,6 +63,7 @@ export function HelpQuiz() {
           }
         >
           <p>{main.description}</p>
+          <QuizPatinhas />
         </NextStep>
         {alternatives.length > 0 ? (
           <>

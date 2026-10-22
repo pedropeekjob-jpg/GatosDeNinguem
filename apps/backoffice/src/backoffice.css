@@ -29,3 +29,8 @@
 .cat-list li { grid-template-columns: auto 1fr auto; align-items: center; }
 .cat-list img { border-radius: 8px; object-fit: cover; }
 @media (max-width: 30rem) { .cat-list li { grid-template-columns: 1fr; } }
+/* Patinhas */
+.bo-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+.bo-code { font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.06em; white-space: nowrap; }
+.bo-fieldset { border: 0; margin: 0; padding: 0.5rem 0 0; display: grid; gap: 0.5rem; }
+.bo-fieldset legend { font-weight: 650; padding: 0; }
