@@ -12,7 +12,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "logo:svg": "tsx scripts/write-animated-logo.ts"
   },
   "peerDependencies": {
     "react": "^19.1.0",

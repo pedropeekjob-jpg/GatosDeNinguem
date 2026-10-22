@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { animatedLogoSvg } from "./components/logoRig";
 import { axeViolations } from "../test/axe";
 import {
   AnimatedLogo,
@@ -167,12 +170,20 @@ describe("AnimatedLogo", () => {
     expect(screen.getByRole("status")).toHaveTextContent("A carregar…");
   });
 
-  it("stays still for people who ask for less motion", () => {
-    const original = window.matchMedia;
-    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
-    render(<AnimatedLogo />);
-    expect(screen.getByRole("img", { name: "Gatos de Ninguém" })).not.toHaveAttribute("data-armed");
-    window.matchMedia = original;
+  it("keeps clip-path ids unique when the logo appears twice", () => {
+    const { container } = render(<><AnimatedLogo /><AnimatedLogo variant="loader" /></>);
+    const ids = [...container.querySelectorAll("clipPath")].map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("stands still for people who ask for less motion", () => {
+    expect(animatedLogoSvg({ variant: "intro" })).toContain("@media (prefers-reduced-motion:reduce)");
+  });
+
+  it("matches the published standalone files (run pnpm --filter @gn/ui logo:svg after changing it)", () => {
+    const file = (name: string) => readFileSync(resolve(process.cwd(), "../../apps/web/public", name), "utf8");
+    expect(file("logo-animado.svg")).toBe(animatedLogoSvg({ variant: "intro", label: "Gatos de Ninguém" }) + "\n");
+    expect(file("logo-a-carregar.svg")).toBe(animatedLogoSvg({ variant: "loader", label: "A carregar…" }) + "\n");
   });
 });
 
