@@ -15,20 +15,20 @@ import {
   weeklyRuleSchema,
   type Shift,
 } from "@gn/domain";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
+import { volunteerIdFromPhone } from "../common/volunteer";
+import { PatinhasService } from "../patinhas/service";
 
 /** Public view of a shift: volunteers see how many places are left, never other people's details. */
 const toPublic = ({ signups, ...shift }: Shift) => ({ ...shift, taken: signups.length, free: freeSpots({ capacity: shift.capacity, signups }) });
 
-/** Until volunteer accounts exist, the phone number identifies a volunteer. */
-const volunteerIdFromPhone = (phone: string) => "tel-" + createHash("sha256").update(phone.replace(/\D/g, "")).digest("hex").slice(0, 16);
 
 @Controller("escalas")
 export class EscalasController {
-  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {}
+  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions, @Inject(PatinhasService) private readonly patinhas: PatinhasService) {}
   private get repo() { return this.options.repository; }
   private now() { return this.options.now?.() ?? new Date(); }
 
@@ -142,6 +142,8 @@ export class EscalasController {
     if (!shift) throw new NotFoundException("Turno não encontrado.");
     const next = checkIn(shift, volunteerId, this.now());
     await this.repo.saveShifts([next]);
+    // Being there is the verification: the volunteer's account gets the shift's Patinhas.
+    await this.patinhas.awardShift(next, volunteerId);
     return next;
   }
 

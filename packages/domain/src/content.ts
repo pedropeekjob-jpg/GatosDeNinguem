@@ -137,8 +137,10 @@ export const partnerCategoryLabel: Record<PartnerCategory, string> = {
   outro: "Outro",
 };
 
-/** A benefit a partner offers. Patinhas fields are ready for the rewards phase. */
+/** A benefit a partner offers. With an id and a Patinhas cost it can be taken in exchange for Patinhas. */
 export const perkSchema = z.object({
+  /** Stable id so a perk can be taken with Patinhas. */
+  id: z.string().regex(/^[a-z0-9-]+$/).optional(),
   description: z.string().min(3),
   /** Who can use it today, before the rewards system exists. */
   audience: z.enum(["amigos", "voluntarios", "todos"]).default("amigos"),
