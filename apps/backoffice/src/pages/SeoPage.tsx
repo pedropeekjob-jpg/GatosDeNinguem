@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LIMITS } from "@gn/seo";
-import { Badge, Button, Checkbox, Notice, SearchPreview, TextArea, TextField } from "@gn/ui";
+import { AnimatedLogo, Badge, Button, Checkbox, Notice, SearchPreview, TextArea, TextField } from "@gn/ui";
 import { errorMessage, useApi, type AuditItem } from "../lib/api";
 import type { Redirect, SeoFields, SeoSettings } from "../lib/types";
 
@@ -38,7 +38,7 @@ function SeoPages() {
   const settings = useQuery({ queryKey: ["seo-settings"], queryFn: () => api.seoSettings() });
   const [selected, setSelected] = useState<AuditItem>();
 
-  if (audit.isPending || settings.isPending) return <p>A carregar…</p>;
+  if (audit.isPending || settings.isPending) return <AnimatedLogo variant="loader" size={110} />;
   if (audit.isError || settings.isError) return <Notice tone="error" title="Não foi possível carregar">{errorMessage(audit.error ?? settings.error)}</Notice>;
 
   const issuesFor = (id: string) => audit.data.issues.filter((i) => i.id === id);
@@ -207,7 +207,7 @@ function GeneralSettings() {
   const save = useMutation({ mutationFn: (s: SeoSettings) => api.saveSeoSettings(s) });
   const templateOk = useMemo(() => draft?.titleTemplate.includes("%s") ?? true, [draft]);
 
-  if (!draft) return <p>A carregar…</p>;
+  if (!draft) return <AnimatedLogo variant="loader" size={110} />;
   const set = <K extends keyof SeoSettings>(key: K, value: SeoSettings[K]) => setDraft({ ...draft, [key]: value });
 
   return (

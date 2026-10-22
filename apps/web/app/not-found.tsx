@@ -1,9 +1,10 @@
-import { Button, Container } from "@gn/ui";
+import { AnimatedLogo, Button, Container } from "@gn/ui";
 
 export default function NotFound() {
   return (
     <Container narrow>
       <div className="gn-stack gn-stack--m page-hero">
+        <AnimatedLogo size={180} />
         <h1>Não encontrámos esta página</h1>
         <p className="gn-lead">Pode ter mudado de endereço. Experimente uma destas:</p>
         <div className="action-row">

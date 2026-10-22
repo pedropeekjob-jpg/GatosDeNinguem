@@ -1,0 +1,330 @@
+import { LOGO_EYE, LOGO_EYE_LID, LOGO_LEG, LOGO_LETTERS, LOGO_MOUTH, LOGO_O, LOGO_PAWS, LOGO_SILHOUETTE, LOGO_VIEWBOX, LOGO_WINK } from "./logoPaths";
+
+/*
+ * The logo as a puppet. The solid silhouette is cut (with clip paths) into trunk, head, ears, tail and tail tip,
+ * each turning on its own joint; neighbouring pieces overlap a little so no seam opens when they move.
+ * The light details (eyes, mouth, paws, leg) are drawn on top in the background colour, so they can move too.
+ * Depth comes from parallax: when the cat turns, the face slides more than the head and the tail slides the
+ * other way. The ball of yarn ends up as the "O" of "Gatos".
+ *
+ * Everything is plain SVG + CSS, so the same markup works inline (AnimatedLogo) and as a standalone .svg file.
+ * Coordinates are in the logo's own units (viewBox 0 0 1185 1234).
+ */
+
+const FULL = "M0 0H1185V1234H0Z";
+const TAIL = "M470 270H1185V1140H600V1050L790 1035L800 960L700 490H470Z";
+/** What the trunk leaves out: the tail minus a strip at its base, so the two overlap and no hairline shows. */
+const TAIL_GAP = "M480 270H1185V1140H625V1060L790 1045L800 960L700 490H480Z";
+const TAIL_TIP = "M470 270H800V490H470Z";
+const TAIL_TIP_CORE = "M470 270H770V490H470Z";
+const HEAD = "M0 0H520V350H0Z";
+const HEAD_TOP = "M0 0H520V315H0Z";
+const EAR_L = "M150 0H256V100H150Z";
+const EAR_L_CORE = "M150 0H256V70H150Z";
+const EAR_R = "M415 80H520V185H430Z";
+const EAR_R_CORE = "M428 80H520V150H445Z";
+/** A front paw that reaches out from behind the chest to bat the ball. At rest it is tucked inside the body. */
+const ARM = "M335 468C400 452 470 455 515 468C558 480 568 527 532 540C482 555 405 550 335 542Z";
+const TOES = "M534 482c10 8 12 20 5 32M512 476c10 9 12 24 4 38";
+/** The invisible circle around the words, that the cat hides behind. */
+/** A rounded chin for the head on its own (peeking and leaping). */
+const JAW = "M0 0H520V280C500 340 420 368 300 368C180 368 60 348 0 300Z";
+const CIRCLE = { x: 752, y: 597, r: 268 };
+/** Two front paws holding on to the edge of that circle while the cat peeks. */
+const GRIP = `<g class="gnc-ink"><ellipse cx="1020" cy="530" rx="26" ry="40"/><ellipse cx="1020" cy="662" rx="26" ry="40"/></g>`
+  + `<path class="gnc-cut" style="stroke-width:5" d="M1030 518h14M1030 540h14M1030 650h14M1030 672h14"/>`;
+/** The right eye wide open, before the wink. */
+const OPEN_EYE = `<ellipse class="gnc-bg" cx="396" cy="236" rx="25" ry="21"/><circle class="gnc-ink" cx="400" cy="238" r="11"/>`;
+/** The body in mid-leap (logo coordinates, so it lands where the logo's body is): legs stretched, tail up. */
+const LEAP_BODY = `<g class="gnc-ink"><ellipse cx="480" cy="300" rx="270" ry="125" transform="rotate(-16 480 300)"/>`
+  + `<ellipse cx="300" cy="300" rx="125" ry="112"/></g>`
+  + `<g fill="none" stroke="var(--gn-alogo-ink,#221e20)" stroke-linecap="round">`
+  + `<path stroke-width="64" d="M250 360L110 470M330 385L205 505"/>`
+  + `<path stroke-width="72" d="M650 320L840 395M670 260L880 285"/>`
+  + `<path stroke-width="50" d="M720 175C800 110 860 40 965 30"/></g>`;
+/** The middle of the tail ring, from its root round to its tip: drawing it in reveals the tail. */
+// The body pours down from the head into the curl, then the tail sweeps on round the words: one stroke.
+const POUR = "M300 160C210 400 180 700 260 930C330 1090 460 1160 600 1110";
+const SWEEP = "M600 1090C780 1110 1000 1070 1105 880C1185 720 1160 480 1010 365C880 270 690 285 600 370C565 405 548 440 560 470";
+const YARN = "M-41-32Q0-62 41-37M-54 3Q0-32 54-3M-41 39Q0 8 41 31";
+
+const STYLE = `
+.gnc{overflow:visible}
+.gnc g{transform-box:view-box;transform-origin:0 0}
+.gnc-ink{fill:var(--gn-alogo-ink,#221e20)}
+.gnc-bg{fill:var(--gn-alogo-bg,#fff)}
+.gnc-cut{fill:none;stroke:var(--gn-alogo-bg,#fff);stroke-width:7;stroke-linecap:round}
+.gnc .gnc-cat{transform-origin:300px 1150px}
+.gnc .gnc-body{transform-origin:250px 1180px}
+.gnc .gnc-head{transform-origin:230px 332px}
+.gnc .gnc-face{transform-origin:300px 240px}
+.gnc .gnc-eye{transform-origin:246px 194px}
+.gnc .gnc-ear-l{transform-origin:220px 85px}
+.gnc .gnc-ear-r{transform-origin:450px 150px}
+.gnc .gnc-paws{transform-origin:230px 480px}
+.gnc .gnc-arm{transform-origin:340px 505px;transform:scaleX(.2);opacity:0}
+.gnc .gnc-tail{transform-origin:610px 1095px}
+.gnc .gnc-tip{transform-origin:785px 312px}
+.gnc .gnc-ball{transform:translate(739px,586px);opacity:0}
+
+/* Intro, 3.74s: only "Gat s de Ninguém" at first; a cat peeks out from behind the (invisible) circle around
+   the words; a ball comes bouncing in; the cat leaps forward after it, lands in the logo's pose and bats the
+   ball, which drops into place as the "O" while the tail sweeps round the words; then the cat winks.
+   It is told as one continuous gesture: the ball arrives while the cat is still peeking, the crouch flows into
+   the leap, the ball reaches the paw exactly as it strikes, and on landing the body pours down from the head
+   into the curl and on round the words as the tail. Movements are split into horizontal and vertical parts
+   (real arcs for the ball and the leap), so nothing moves in straight jerks. */
+.gnc .gns-peek,.gnc .gns-grip,.gnc .gns-leap,.gnc .gns-open{opacity:0}
+.gnc .gns-look{transform-origin:250px 330px}
+.gnc .gns-open{transform-origin:396px 236px}
+.gnc .gns-sweep,.gnc .gns-pour{stroke-dasharray:1;stroke-dashoffset:0}
+.gnc--intro .gnc-ball{transform:translate(739px,0)}
+.gnc--intro .gnc-ball-y{transform:translate(0,586px)}
+.gnc--intro .gnc-letters{animation:gns-letters 3.74s ease-out both}
+.gnc--intro .gnc-o{animation:gns-o 3.74s linear both}
+.gnc--intro .gns-peek{animation:gns-peek 3.74s both}
+.gnc--intro .gns-look{animation:gns-look 3.74s both}
+.gnc--intro .gns-grip{animation:gns-grip 3.74s both}
+.gnc--intro .gns-leap{animation:gns-leap-x 3.74s both}
+.gnc--intro .gns-leap-y{animation:gns-leap-y 3.74s both}
+.gnc--intro .gns-leap-s{animation:gns-leap-s 3.74s both}
+.gnc--intro .gns-tuck{animation:gns-tuck 3.74s both}
+.gnc .gns-tuck{transform-origin:300px 300px}
+.gnc--intro .gnc-cat{animation:gns-land 3.74s both}
+.gnc--intro .gnc-head{animation:gns-head 3.74s both}
+.gnc--intro .gnc-face{animation:gns-face 3.74s both}
+.gnc--intro .gnc-ear-r{animation:gns-ear 3.74s both}
+.gnc--intro .gnc-tip{animation:gns-tip 3.74s both}
+.gnc--intro .gns-sweep{animation:gns-sweep 3.74s both}
+.gnc--intro .gns-pour{animation:gns-pour 3.74s both}
+.gnc--intro .gns-open{animation:gns-wink 3.74s both}
+.gnc--intro .gnc-arm{animation:gns-arm 3.74s both}
+.gnc--intro .gnc-ball{animation:gns-ball-x 3.74s both}
+.gnc--intro .gnc-ball-y{animation:gns-ball-y 3.74s both}
+.gnc--intro .gnc-ball-sq{animation:gns-ball-sq 3.74s both}
+.gnc--intro .gnc-yarn{animation:gns-spin 3.74s both}
+.gnc--intro .gnc-yarn .gnc-cut{animation:gns-yarn 3.74s both}
+/* Inline, the intro waits until the logo is on screen. */
+.gnc[data-armed]:not([data-play]) *{animation-play-state:paused!important}
+
+@keyframes gns-letters{from{opacity:0}8.06%{opacity:1}}
+@keyframes gns-o{0%,70%{opacity:0}73.5%,100%{opacity:1}}
+/* The ball loses its stripes as it squeezes into the shape of the "O", and the "O" is fully drawn underneath
+   before the ball fades, so the two never show as a grey double image. */
+@keyframes gns-yarn{0%,69.5%{opacity:1}72%,100%{opacity:0}}
+
+/* 2. Peek: slide out from behind the circle and follow the ball with the eyes, leaning back and sinking slowly
+   into the crouch for the jump (clear of the circle, so nothing pops into view when it leaps); the body never
+   stops, so the peek flows straight into the leap. */
+@keyframes gns-peek{
+  0%,5%{transform:translate(690px,415px) scale(.55);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1.15)}
+  20.94%{transform:translate(912px,415px) scale(.55);animation-timing-function:cubic-bezier(.45,0,.85,.6)}
+  38.18%{transform:translate(960px,432px) scale(.55,.53);animation-timing-function:linear}
+  38.6%{opacity:1}
+  39%,100%{transform:translate(960px,428px) scale(.55);opacity:0}}
+@keyframes gns-look{
+  0%,16.01%{transform:rotate(-8deg);animation-timing-function:ease-in-out}
+  20.32%{transform:rotate(9deg) translate(0,10px);animation-timing-function:ease-in-out}
+  30.79%{transform:rotate(-22deg);animation-timing-function:ease-in-out}
+  37.56%,100%{transform:none}}
+@keyframes gns-grip{
+  0%,8%{transform:translate(-70px,0);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1.1)}
+  19.7%,35.71%{transform:none;opacity:1;animation-timing-function:ease-in}
+  38.6%{opacity:1}
+  39%,100%{transform:translate(-40px,0);opacity:0}}
+
+/* 3. Leap: across in a straight line, up and down in an arc, growing as it comes towards us. */
+@keyframes gns-leap-x{
+  0%,38.18%{transform:translate(960px,0);opacity:0;animation-timing-function:cubic-bezier(.4,.15,.6,1)}
+  38.35%{opacity:1;animation-timing-function:cubic-bezier(.4,.15,.6,1)}
+  55.67%{transform:translate(-30px,0);opacity:1}
+  56.8%,100%{transform:translate(-30px,0);opacity:0}}
+@keyframes gns-leap-y{
+  0%,38.18%{transform:translate(0,428px);animation-timing-function:cubic-bezier(.35,.35,.45,1)}
+  46.8%{transform:translate(0,-20px);animation-timing-function:cubic-bezier(.55,0,.75,.4)}
+  55.67%,100%{transform:translate(0,92px)}}
+@keyframes gns-leap-s{
+  0%,38.18%{transform:scale(.55);animation-timing-function:cubic-bezier(.45,.05,.55,.95)}
+  55.67%,100%{transform:scale(1.02,.97) rotate(-1deg)}}
+/* The body unfolds from behind the head as the cat springs out, and just before landing swings down under
+   the head, into the logo's curled shape. */
+@keyframes gns-tuck{0%,38.18%{transform:scale(.3,.4);animation-timing-function:cubic-bezier(.2,.6,.4,1)}44%{transform:none;animation-timing-function:ease-in}55.67%,100%{transform:rotate(80deg) scale(1.05,1.2)}}
+@keyframes gns-land{
+  0%,54.4%{opacity:0;transform:scale(1.06,.92)}
+  56.2%{opacity:1;transform:scale(1.06,.92);animation-timing-function:cubic-bezier(.3,1.4,.5,1)}
+  61.82%,100%{opacity:1;transform:none}}
+@keyframes gns-head{
+  0%,56.65%{transform:rotate(-4deg);animation-timing-function:ease-in-out}
+  60.59%{transform:rotate(3deg);animation-timing-function:ease-in-out}
+  65.52%{transform:rotate(-4deg);animation-timing-function:ease-in-out}
+  71.67%{transform:rotate(3deg);animation-timing-function:ease-in-out}
+  79.06%{transform:rotate(-1.5deg);animation-timing-function:ease-in-out}
+  86.5%{transform:rotate(2deg);animation-timing-function:ease-in-out}
+  92%,100%{transform:none}}
+@keyframes gns-face{
+  0%,56.65%{transform:translate(-20px,6px) scale(.9,1);animation-timing-function:ease-in-out}
+  60.59%{transform:translate(40px,10px) scale(.84,1);animation-timing-function:ease-in-out}
+  65.52%{transform:translate(30px,-16px) scale(.86,1);animation-timing-function:ease-in-out}
+  71.67%{transform:translate(44px,8px) scale(.84,1);animation-timing-function:ease-in-out}
+  81.53%,100%{transform:none}}
+@keyframes gns-ear{0%,74.14%{transform:none;animation-timing-function:ease-out}77.22%{transform:rotate(14deg);animation-timing-function:ease-in-out}80.3%{transform:rotate(4deg);animation-timing-function:ease-in-out}82.76%,100%{transform:none}}
+@keyframes gns-tip{0%,69.5%{transform:rotate(-30deg);animation-timing-function:ease-out}76%{transform:rotate(9deg);animation-timing-function:ease-in-out}80%{transform:rotate(-4deg);animation-timing-function:ease-in-out}83.5%,100%{transform:none}}
+@keyframes gns-pour{0%,54.9%{stroke-dashoffset:1;animation-timing-function:cubic-bezier(.25,.6,.5,1)}63%,100%{stroke-dashoffset:0}}
+@keyframes gns-sweep{0%,60.5%{stroke-dashoffset:1;animation-timing-function:cubic-bezier(.3,.45,.55,1)}76%,100%{stroke-dashoffset:0}}
+/* 4. Wink: the open right eye closes into the logo's wink. */
+@keyframes gns-wink{
+  0%,54.3%{opacity:0}
+  54.4%,82.76%{opacity:1;transform:none;animation-timing-function:ease-in}
+  86.45%{opacity:1;transform:scale(1,.08)}
+  87.07%,100%{opacity:0;transform:scale(1,.08)}}
+@keyframes gns-arm{
+  0%,55.91%{transform:scaleX(.2);opacity:0}
+  56.4%{transform:scaleX(.2);opacity:1;animation-timing-function:ease-out}
+  57.49%{transform:scaleX(1) rotate(-16deg);animation-timing-function:ease-in}
+  58.5%{transform:scaleX(1.04) rotate(7deg);animation-timing-function:ease-out}
+  60.59%{transform:scaleX(1) rotate(3deg);animation-timing-function:ease-in-out}
+  64.29%{transform:scaleX(.2);opacity:1}
+  64.9%,100%{transform:scaleX(.2);opacity:0}}
+
+/* The ball: horizontal at a steady speed, vertical like a real bounce, squashing where it lands. */
+@keyframes gns-ball-x{
+  0%,12.32%{transform:translate(1250px,0);opacity:0;animation-timing-function:linear}
+  13.05%{opacity:1;animation-timing-function:linear}
+  19.33%{transform:translate(1085px,0);animation-timing-function:linear}
+  39.41%{transform:translate(470px,0);animation-timing-function:linear}
+  51.72%{transform:translate(540px,0);animation-timing-function:linear}
+  58.5%{transform:translate(566px,0);animation-timing-function:linear}
+  69.21%{transform:translate(739px,0);opacity:1}
+  74%{opacity:1}
+  75.5%,100%{transform:translate(739px,0);opacity:0}}
+@keyframes gns-ball-y{
+  0%,12.32%{transform:translate(0,880px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
+  19.33%{transform:translate(0,1060px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
+  30.05%{transform:translate(0,170px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
+  39.41%{transform:translate(0,600px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
+  45.57%{transform:translate(0,430px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
+  51.72%{transform:translate(0,560px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
+  55.67%{transform:translate(0,500px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
+  58.5%{transform:translate(0,515px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
+  63.67%{transform:translate(0,300px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
+  69.21%,100%{transform:translate(0,586px)}}
+@keyframes gns-ball-sq{
+  0%,18.47%{transform:none}
+  19.33%{transform:translate(0,14px) scale(1.25,.75)}
+  20.94%,38.55%{transform:none}
+  39.41%{transform:translate(0,12px) scale(1.2,.8)}
+  41.01%,50.99%{transform:none}
+  51.72%{transform:translate(0,8px) scale(1.12,.88)}
+  52.96%,68.47%{transform:none;animation-timing-function:ease-out}
+  70.44%{transform:scale(1.3,.7);animation-timing-function:ease-in-out}
+  74.14%,100%{transform:scale(.4,1)}}
+@keyframes gns-spin{
+  0%,12.32%{transform:none;animation-timing-function:linear}
+  39.41%{transform:rotate(-560deg);animation-timing-function:linear}
+  58.5%{transform:rotate(-700deg);animation-timing-function:ease-out}
+  69.21%,100%{transform:rotate(-360deg)}}
+@keyframes gnc-breathe{0%,100%{transform:none}50%{transform:scale(1.012,1.018)}}
+
+/* Loader: the ball bounces between the "O" and the cat's paw, and the cat follows it with its head. */
+.gnc--loader .gnc-o{animation:gnc-o-loop 2.4s linear infinite}
+.gnc--loader .gnc-body{animation:gnc-breathe 2.4s ease-in-out infinite}
+.gnc--loader .gnc-cat{animation:gnc-cat-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-head{animation:gnc-head-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-face{animation:gnc-face-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-eye{animation:gnc-blink-loop 4.8s linear infinite}
+.gnc--loader .gnc-ear-r{animation:gnc-ear-r-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-arm{animation:gnc-arm-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-paws{animation:gnc-paws-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-tail{animation:gnc-tail-loop 2.4s ease-in-out infinite}
+.gnc--loader .gnc-tip{animation:gnc-tip-loop 1.2s ease-in-out infinite}
+.gnc--loader .gnc-ball{animation:gnc-ball-loop 2.4s linear infinite}
+.gnc--loader .gnc-ball-y{animation:gnc-ball-y-loop 2.4s linear infinite}
+.gnc--loader .gnc-yarn{animation:gnc-yarn-loop 2.4s ease-in-out infinite}
+
+@keyframes gnc-o-loop{0%,5%{opacity:1}9%,86%{opacity:0}92%,100%{opacity:1}}
+@keyframes gnc-cat-loop{0%,100%{transform:scale(.98,1)}40%{transform:scale(.95,1)}60%{transform:none}}
+@keyframes gnc-head-loop{0%,100%{transform:rotate(3deg)}22%{transform:rotate(-4deg)}40%{transform:rotate(5deg)}62%{transform:rotate(-3deg)}82%{transform:rotate(3deg)}}
+@keyframes gnc-face-loop{0%,100%{transform:translate(46px,6px) scale(.82,1)}22%{transform:translate(30px,-18px) scale(.86,1)}40%{transform:translate(40px,14px) scale(.82,1)}62%{transform:translate(30px,-18px) scale(.86,1)}82%{transform:translate(48px,4px) scale(.82,1)}}
+@keyframes gnc-blink-loop{0%,60%,64%,100%{transform:none}62%{transform:scale(1,.1)}}
+@keyframes gnc-ear-r-loop{0%,20%,30%,100%{transform:none}24%{transform:rotate(14deg)}}
+@keyframes gnc-arm-loop{0%,30%{transform:scaleX(.2);opacity:0}31%,53%{opacity:1}37%{transform:scaleX(1) rotate(-16deg)}42%{transform:scaleX(1.04) rotate(7deg)}45%{transform:scaleX(1) rotate(4deg)}54%,100%{transform:scaleX(.2);opacity:0}}
+@keyframes gnc-paws-loop{0%,26%,48%,100%{transform:none}36%{transform:translate(6px,-8px) rotate(-4deg)}}
+@keyframes gnc-tail-loop{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+@keyframes gnc-tip-loop{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(7deg)}}
+@keyframes gnc-ball-loop{
+  0%,5%{transform:translate(739px,0);opacity:0;animation-timing-function:linear}
+  9%{opacity:1;animation-timing-function:linear}
+  42%{transform:translate(566px,0);animation-timing-function:linear}
+  82%{transform:translate(739px,0);opacity:1}
+  92%,100%{transform:translate(739px,0);opacity:0}}
+@keyframes gnc-ball-y-loop{
+  0%,5%{transform:translate(0,586px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
+  22%{transform:translate(0,320px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
+  42%{transform:translate(0,505px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
+  62%{transform:translate(0,320px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
+  82%,100%{transform:translate(0,586px)}}
+@keyframes gnc-yarn-loop{
+  0%,5%{transform:scale(.4,1)}
+  10%{transform:scale(1)}
+  42%{transform:rotate(-300deg)}
+  81%{transform:rotate(0) scale(1)}
+  85%{transform:scale(1.3,.7)}
+  90%,100%{transform:scale(.4,1)}}
+
+@media (prefers-reduced-motion:reduce){
+  .gnc g{animation:none!important}
+  .gnc--loader .gnc-o{animation:gnc-pulse 1.6s ease-in-out infinite!important}
+}
+@keyframes gnc-pulse{50%{opacity:.35}}
+`;
+
+export type LogoVariant = "intro" | "loader";
+
+/** The animated logo as a complete <svg> string. `id` keeps clip-path ids unique when several logos share a page. */
+export function animatedLogoSvg({ variant, id = "gnc", label, armed = false, width, height }: {
+  variant: LogoVariant; id?: string; label?: string; armed?: boolean; width?: number; height?: number;
+}): string {
+  const intro = variant === "intro";
+  const clip = (name: string, d: string, evenodd = false) =>
+    `<clipPath id="${id}-${name}"><path d="${d}"${evenodd ? ' clip-rule="evenodd"' : ""}/></clipPath>`;
+  const piece = (name: string) => `<g clip-path="url(#${id}-${name})"><use href="#${id}-cat" class="gnc-ink"/></g>`;
+  const a11y = label ? `role="img" aria-label="${label.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")}"` : 'aria-hidden="true"';
+  const size = `${width ? ` width="${width}"` : ""}${height ? ` height="${height}"` : ""}`;
+  const leftEye = `<g class="gnc-eye"><path class="gnc-bg" d="${LOGO_EYE}"/><path class="gnc-ink" d="${LOGO_EYE_LID}"/></g>`;
+  const mouth = `<path class="gnc-bg" d="${LOGO_MOUTH}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${LOGO_VIEWBOX}"${size} class="gnc gnc--${variant}" ${a11y}${armed ? " data-armed" : ""} focusable="false">`
+    + `<style>${STYLE}</style>`
+    + `<defs><path id="${id}-cat" d="${LOGO_SILHOUETTE}"/>`
+    + clip("trunk", FULL + TAIL_GAP + HEAD_TOP, true)
+    + clip("tail", TAIL + TAIL_TIP_CORE, true)
+    + clip("tip", TAIL_TIP)
+    + clip("head", HEAD + EAR_L_CORE + EAR_R_CORE, true)
+    + clip("ear-l", EAR_L)
+    + clip("ear-r", EAR_R)
+    + (intro ? clip("jaw", JAW) : "")
+    + (intro
+      // The young cat of the story: the logo's head (both eyes open) on a body drawn for the leap.
+      ? `<g id="${id}-head-open"><g clip-path="url(#${id}-jaw)">${piece("head")}</g>${piece("ear-l")}${piece("ear-r")}${leftEye}${OPEN_EYE}${mouth}</g>`
+        + `<mask id="${id}-behind" maskUnits="userSpaceOnUse" x="600" y="250" width="640" height="560"><rect x="600" y="250" width="640" height="560" fill="#fff"/><circle cx="${CIRCLE.x}" cy="${CIRCLE.y}" r="${CIRCLE.r}"/></mask>`
+        + `<mask id="${id}-pour" maskUnits="userSpaceOnUse" x="0" y="150" width="820" height="1100"><path class="gns-pour" d="${POUR}" pathLength="1" fill="none" stroke="#fff" stroke-width="440" stroke-linecap="round"/></mask>`
+        + `<mask id="${id}-sweep" maskUnits="userSpaceOnUse" x="470" y="260" width="715" height="890"><path class="gns-sweep" d="${SWEEP}" pathLength="1" fill="none" stroke="#fff" stroke-width="170" stroke-linecap="round"/></mask>`
+      : "")
+    + `</defs>`
+    + `<g class="gnc-letters"><path class="gnc-ink" d="${LOGO_LETTERS}"/></g>`
+    + `<g class="gnc-o"><path class="gnc-ink" d="${LOGO_O}"/></g>`
+    + (intro
+      ? `<g mask="url(#${id}-behind)"><g class="gns-peek"><g class="gns-look"><use href="#${id}-head-open"/></g></g>`
+        + `<g class="gns-grip">${GRIP}</g></g>`
+        + `<g class="gns-leap"><g class="gns-leap-y"><g class="gns-leap-s"><g class="gns-tuck">${LEAP_BODY}</g><use href="#${id}-head-open"/></g></g></g>`
+      : "")
+    + `<g class="gnc-cat"><g class="gnc-body">`
+    + `<g class="gnc-tail"${intro ? ` mask="url(#${id}-sweep)"` : ""}><g clip-path="url(#${id}-tail)"><use href="#${id}-cat" class="gnc-ink"/></g><g class="gnc-tip">${piece("tip")}</g></g>`
+    + (intro ? `<g mask="url(#${id}-pour)">` : "") + piece("trunk") + `<path class="gnc-bg" d="${LOGO_LEG}"/>` + (intro ? "</g>" : "")
+    + `<g class="gnc-paws"><path class="gnc-bg" d="${LOGO_PAWS}"/></g>`
+    + `<g class="gnc-arm"><path class="gnc-ink" d="${ARM}"/><path class="gnc-cut" d="${TOES}"/></g>`
+    + `<g class="gnc-head">${piece("head")}<g class="gnc-ear-l">${piece("ear-l")}</g><g class="gnc-ear-r">${piece("ear-r")}</g>`
+    + `<g class="gnc-face">${leftEye}<path class="gnc-bg" d="${LOGO_WINK}"/>${intro ? `<g class="gns-open">${OPEN_EYE}</g>` : ""}${mouth}</g></g>`
+    + `</g></g>`
+    + `<g class="gnc-ball"><g class="gnc-ball-y"><g class="gnc-ball-sq"><g class="gnc-yarn"><circle class="gnc-ink" r="58"/><path class="gnc-cut" d="${YARN}"/></g></g></g></g>`
+    + `</svg>`;
+}

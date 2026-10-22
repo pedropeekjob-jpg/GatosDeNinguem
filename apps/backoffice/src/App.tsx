@@ -1,7 +1,7 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Button, Container, Notice, SiteHeader, TextField, TextSizeControl } from "@gn/ui";
+import { AnimatedLogo, Button, Container, Notice, SiteHeader, TextField } from "@gn/ui";
 import { ApiContext, httpApi, type Api } from "./lib/api";
 import { EscalasPage } from "./pages/EscalasPage";
 import { GatosPage } from "./pages/GatosPage";
@@ -63,7 +63,7 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
             homeHref="/"
             items={nav}
             currentPath={location.pathname}
-            tools={<><TextSizeControl />{onLogout ? <Button variant="quiet" onClick={onLogout}>Sair</Button> : null}</>}
+            tools={onLogout ? <Button variant="quiet" onClick={onLogout}>Sair</Button> : undefined}
           />
           <main id="conteudo" className="bo-main">
             <Container>
@@ -105,7 +105,7 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
     <main className="bo-login">
       <Container narrow>
         <form className="gn-stack gn-stack--m" onSubmit={submit}>
-          <img src="/logo.svg" alt="" width={116} height={120} />
+          <AnimatedLogo size={140} />
           <h1>Gestão Gatos de Ninguém</h1>
           <p className="gn-lead">Escreva o código de acesso da equipa.</p>
           <TextField id="token" label="Código de acesso" type="password" autoComplete="current-password" value={token} onChange={(e) => setToken(e.target.value)} />

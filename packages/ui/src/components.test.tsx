@@ -1,8 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { animatedLogoSvg } from "./components/logoRig";
 import { axeViolations } from "../test/axe";
 import {
+  AnimatedLogo,
   Badge,
   Breadcrumbs,
   Button,
@@ -14,7 +18,6 @@ import {
   SiteHeader,
   StepWizard,
   TextField,
-  TextSizeControl,
 } from "./index";
 
 describe("Button", () => {
@@ -115,15 +118,6 @@ describe("TextField", () => {
   });
 });
 
-describe("TextSizeControl", () => {
-  it("changes the text size on the page root and marks the active option", async () => {
-    render(<TextSizeControl />);
-    await userEvent.click(screen.getByRole("button", { name: /Letra muito grande/ }));
-    expect(document.documentElement.dataset.textSize).toBe("muito-grande");
-    expect(screen.getByRole("button", { name: /Letra muito grande/ })).toHaveAttribute("aria-pressed", "true");
-  });
-});
-
 describe("SiteHeader", () => {
   it("marks the current page and always shows the urgent action", () => {
     render(
@@ -141,6 +135,55 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "Adotar" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Ajudar" })).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("link", { name: "Encontrei um gato" })).toBeInTheDocument();
+  });
+
+  it("can show the menu as a phone tab bar with icons, keeping the words as link names", () => {
+    const { container } = render(
+      <SiteHeader brand={<span>Marca</span>} homeHref="/" currentPath="/" tabBar
+        items={[{ href: "/", label: "Início", icon: <svg /> }, { href: "/sobre", label: "Sobre nós", icon: <svg /> }]} />,
+    );
+    expect(container.querySelector("header")).toHaveClass("gn-header--tabbar");
+    expect(screen.getByRole("navigation", { name: "Menu principal" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sobre nós" })).toBeInTheDocument();
+  });
+});
+
+describe("AnimatedLogo", () => {
+  it("is announced as the logo and waits on its first frame until it is on screen", () => {
+    let onSeen: (entries: { isIntersecting: boolean }[]) => void = () => {};
+    vi.stubGlobal("IntersectionObserver", class {
+      constructor(cb: typeof onSeen) { onSeen = cb; }
+      observe() {}
+      disconnect() {}
+    });
+    render(<AnimatedLogo />);
+    const logo = screen.getByRole("img", { name: "Gatos de Ninguém" });
+    expect(logo).toHaveAttribute("data-armed");
+    expect(logo).not.toHaveAttribute("data-play");
+    onSeen([{ isIntersecting: true }]);
+    expect(logo).toHaveAttribute("data-play");
+    vi.unstubAllGlobals();
+  });
+
+  it("as a loader, tells screen readers that something is loading", () => {
+    render(<AnimatedLogo variant="loader" />);
+    expect(screen.getByRole("status")).toHaveTextContent("A carregar…");
+  });
+
+  it("keeps clip-path ids unique when the logo appears twice", () => {
+    const { container } = render(<><AnimatedLogo /><AnimatedLogo variant="loader" /></>);
+    const ids = [...container.querySelectorAll("clipPath")].map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("stands still for people who ask for less motion", () => {
+    expect(animatedLogoSvg({ variant: "intro" })).toContain("@media (prefers-reduced-motion:reduce)");
+  });
+
+  it("matches the published standalone files (run pnpm --filter @gn/ui logo:svg after changing it)", () => {
+    const file = (name: string) => readFileSync(resolve(process.cwd(), "../../apps/web/public", name), "utf8");
+    expect(file("logo-animado.svg")).toBe(animatedLogoSvg({ variant: "intro", label: "Gatos de Ninguém" }) + "\n");
+    expect(file("logo-a-carregar.svg")).toBe(animatedLogoSvg({ variant: "loader", label: "A carregar…" }) + "\n");
   });
 });
 

@@ -6,7 +6,7 @@ export function PageHero({ heading, intro, crumbs, children }: { heading: string
     <div className="page-hero">
       <Container>
         {crumbs ? <Breadcrumbs items={crumbs} /> : null}
-        <h1>{heading}</h1>
+        <h1 className="gn-brush">{heading}</h1>
         {intro ? <p className="gn-lead">{intro}</p> : null}
         {children}
       </Container>

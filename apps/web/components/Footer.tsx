@@ -1,4 +1,4 @@
-import { Container } from "@gn/ui";
+import { AnimatedLogo, Container } from "@gn/ui";
 import { NewsletterForm } from "./forms/NewsletterForm";
 
 export function Footer() {
@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="site-footer">
       <Container>
         <div className="site-footer__brand">
-          <img src="/logo.svg" alt="Gatos de Ninguém" width={77} height={80} />
+          <AnimatedLogo size={112} className="site-footer__logo" />
           <p>Resgatamos, tratamos e encontramos famílias para os gatos de rua de Viana do Castelo.</p>
         </div>
         <div className="site-footer__grid">
