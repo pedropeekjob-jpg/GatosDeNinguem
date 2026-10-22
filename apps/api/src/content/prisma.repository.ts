@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { appointmentSchema, careAlertSchema, catCareSchema, doseSchema, medicationSchema, visitNoteSchema, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { fosterPlacementSchema, shiftSchema, sponsorshipSchema, type FosterPlacement, type Shift, type Sponsorship } from "@gn/domain";
 import { adoptionInterestSchema, catSchema, impactSchema, pageSchema, partnerApplicationSchema, partnerSchema, postSchema, seoSettingsSchema, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
@@ -121,4 +122,57 @@ export class PrismaContentRepository implements ContentRepository {
     return r;
   }
   async deleteRedirect(id: string) { await this.db.redirect.deleteMany({ where: { id } }); }
+
+  async listCatCare() { return (await this.db.catCare.findMany()).map((r) => catCareSchema.parse(r.data)); }
+  async getCatCare(catId: string) { const r = await this.db.catCare.findUnique({ where: { catId } }); return r ? catCareSchema.parse(r.data) : undefined; }
+  async saveCatCare(c: CatCare) {
+    const data = { area: c.location.area, data: c as object };
+    await this.db.catCare.upsert({ where: { catId: c.catId }, create: { catId: c.catId, ...data }, update: data });
+    return c;
+  }
+  async listMedications(catId?: string) {
+    return (await this.db.medication.findMany({ where: catId ? { catId } : {} })).map((r) => medicationSchema.parse(r.data));
+  }
+  async getMedication(id: string) { const r = await this.db.medication.findUnique({ where: { id } }); return r ? medicationSchema.parse(r.data) : undefined; }
+  async saveMedication(m: Medication) {
+    const data = { catId: m.catId, data: m as object };
+    await this.db.medication.upsert({ where: { id: m.id }, create: { id: m.id, ...data }, update: data });
+    return m;
+  }
+  async listDoses(range: { from: string; to: string }) {
+    return (await this.db.medicationDose.findMany({ where: { date: { gte: range.from, lte: range.to } } })).map((r) => doseSchema.parse(r.data));
+  }
+  async saveDose(d: Dose) {
+    await this.db.medicationDose.create({ data: { id: d.id, medicationId: d.medicationId, date: d.date, time: d.time, data: d as object } });
+    return d;
+  }
+  async deleteDose(id: string) { await this.db.medicationDose.deleteMany({ where: { id } }); }
+  async listAppointments(catId?: string) {
+    return (await this.db.vetAppointment.findMany({ where: catId ? { catId } : {}, orderBy: { startsAt: "asc" } })).map((r) => appointmentSchema.parse(r.data));
+  }
+  async getAppointment(id: string) { const r = await this.db.vetAppointment.findUnique({ where: { id } }); return r ? appointmentSchema.parse(r.data) : undefined; }
+  async saveAppointment(a: Appointment) {
+    const data = { catId: a.catId, startsAt: new Date(a.startsAt), status: a.status, data: a as object };
+    await this.db.vetAppointment.upsert({ where: { id: a.id }, create: { id: a.id, ...data }, update: data });
+    return a;
+  }
+  async listVisitNotes(catId?: string) {
+    return (await this.db.visitNote.findMany({ where: catId ? { catId } : {}, orderBy: { createdAt: "desc" } })).map((r) => visitNoteSchema.parse(r.data));
+  }
+  async saveVisitNote(n: VisitNote) {
+    await this.db.visitNote.create({ data: { id: n.id, catId: n.catId, createdAt: new Date(n.createdAt), data: n as object } });
+    return n;
+  }
+  async listCareAlerts(opts: { since?: string; catId?: string; limit?: number } = {}) {
+    const rows = await this.db.careAlert.findMany({
+      where: { ...(opts.since ? { createdAt: { gt: new Date(opts.since) } } : {}), ...(opts.catId ? { catId: opts.catId } : {}) },
+      orderBy: { createdAt: "desc" },
+      take: opts.limit ?? 100,
+    });
+    return rows.map((r) => careAlertSchema.parse(r.data));
+  }
+  async saveCareAlert(a: CareAlert) {
+    await this.db.careAlert.create({ data: { id: a.id, catId: a.catId, createdAt: new Date(a.createdAt), data: a as object } });
+    return a;
+  }
 }

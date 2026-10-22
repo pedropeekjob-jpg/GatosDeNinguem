@@ -10,6 +10,7 @@ import { EngagementController } from "./content/engagement.controller";
 import { PagesController } from "./content/pages.controller";
 import { PartnersController } from "./content/partners.controller";
 import { PostsController } from "./content/posts.controller";
+import { CuidadosController } from "./cuidados/cuidados.controller";
 import { EscalasController } from "./escalas/escalas.controller";
 import { ContaController } from "./patinhas/conta.controller";
 import { PatinhasController } from "./patinhas/patinhas.controller";
@@ -29,7 +30,7 @@ class AppModule {
   static register(options: ApiOptions): DynamicModule {
     return {
       module: AppModule,
-      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController],
+      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, options.patinhas ?? new InMemoryPatinhasRepository()) },

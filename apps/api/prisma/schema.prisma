@@ -157,3 +157,62 @@ model Redemption {
 
   @@index([accountId])
 }
+
+// Cuidados: team-only care data per cat.
+
+model CatCare {
+  catId     String   @id
+  area      String
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
+model Medication {
+  id     String @id
+  catId  String
+  data   Json
+
+  @@index([catId])
+}
+
+model MedicationDose {
+  id           String @id
+  medicationId String
+  /// Lisbon date "YYYY-MM-DD" and time "HH:MM" the dose was due.
+  date         String
+  time         String
+  data         Json
+
+  @@unique([medicationId, date, time])
+  @@index([date])
+}
+
+model VetAppointment {
+  id       String   @id
+  catId    String
+  startsAt DateTime
+  status   String
+  data     Json
+
+  @@index([catId])
+  @@index([startsAt])
+}
+
+model VisitNote {
+  id        String   @id
+  catId     String
+  createdAt DateTime
+  data      Json
+
+  @@index([catId])
+}
+
+model CareAlert {
+  id        String   @id
+  catId     String
+  createdAt DateTime
+  data      Json
+
+  @@index([createdAt])
+  @@index([catId])
+}

@@ -1,3 +1,4 @@
+import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship } from "@gn/domain";
 import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
@@ -19,6 +20,12 @@ export class InMemoryContentRepository implements ContentRepository {
   private sponsorships = new Map<string, Sponsorship>(seedSponsorships.map((x) => [x.id, structuredClone(x)]));
   private impact: Impact = clone(seedImpact);
   private newsletter = new Map<string, NewsletterSignup & { subscribedAt: string }>();
+  private care = new Map<string, CatCare>(seedCatCare.map((x) => [x.catId, structuredClone(x)]));
+  private medications = new Map<string, Medication>(seedMedications.map((x) => [x.id, structuredClone(x)]));
+  private doses = new Map<string, Dose>(seedDoses.map((x) => [x.id, structuredClone(x)]));
+  private appointments = new Map<string, Appointment>(seedAppointments.map((x) => [x.id, structuredClone(x)]));
+  private notes = new Map<string, VisitNote>(seedVisitNotes.map((x) => [x.id, structuredClone(x)]));
+  private alerts = new Map<string, CareAlert>(seedCareAlerts.map((x) => [x.id, structuredClone(x)]));
 
   constructor(seed = { cats: seedCats, pages: seedPages, posts: seedPosts, redirects: seedRedirects, settings: seedSeoSettings, partners: seedPartners }) {
     seed.partners.forEach((p) => this.partners.set(p.id, clone(p)));
@@ -77,4 +84,31 @@ export class InMemoryContentRepository implements ContentRepository {
   async listRedirects() { return [...this.redirects.values()].map(clone); }
   async saveRedirect(r: Redirect) { this.redirects.set(r.id, clone(r)); return clone(r); }
   async deleteRedirect(id: string) { this.redirects.delete(id); }
+
+  async listCatCare() { return [...this.care.values()].map(clone); }
+  async getCatCare(catId: string) { const x = this.care.get(catId); return x && clone(x); }
+  async saveCatCare(c: CatCare) { this.care.set(c.catId, clone(c)); return clone(c); }
+  async listMedications(catId?: string) { return [...this.medications.values()].filter((m) => !catId || m.catId === catId).map(clone); }
+  async getMedication(id: string) { const x = this.medications.get(id); return x && clone(x); }
+  async saveMedication(m: Medication) { this.medications.set(m.id, clone(m)); return clone(m); }
+  async listDoses(range: { from: string; to: string }) { return [...this.doses.values()].filter((d) => d.date >= range.from && d.date <= range.to).map(clone); }
+  async saveDose(d: Dose) { this.doses.set(d.id, clone(d)); return clone(d); }
+  async deleteDose(id: string) { this.doses.delete(id); }
+  async listAppointments(catId?: string) {
+    return [...this.appointments.values()].filter((a) => !catId || a.catId === catId).sort((a, b) => a.startsAt.localeCompare(b.startsAt)).map(clone);
+  }
+  async getAppointment(id: string) { const x = this.appointments.get(id); return x && clone(x); }
+  async saveAppointment(a: Appointment) { this.appointments.set(a.id, clone(a)); return clone(a); }
+  async listVisitNotes(catId?: string) {
+    return [...this.notes.values()].filter((n) => !catId || n.catId === catId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(clone);
+  }
+  async saveVisitNote(n: VisitNote) { this.notes.set(n.id, clone(n)); return clone(n); }
+  async listCareAlerts(opts: { since?: string; catId?: string; limit?: number } = {}) {
+    return [...this.alerts.values()]
+      .filter((a) => (!opts.since || a.createdAt > opts.since) && (!opts.catId || a.catId === opts.catId))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, opts.limit ?? 100)
+      .map(clone);
+  }
+  async saveCareAlert(a: CareAlert) { this.alerts.set(a.id, clone(a)); return clone(a); }
 }
