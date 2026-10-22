@@ -351,5 +351,7 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-card { border-color: transparent; box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 8px 24px rgb(28 26 27 / .06); }
   /* Opening photos: a rounded picture inset from the edges, like a card, rather than a full-bleed strip. */
   .gn-carousel--hero { margin: 0.75rem 0.75rem 0; border-radius: var(--gn-radius); overflow: hidden; background: var(--gn-sand); }
+  /* The inset costs a little height: take it back from the photo so the Patinhas card still fits the first screen. */
+  .gn-carousel--hero .gn-carousel__slide { max-height: 25vh; }
   .gn-carousel--hero .gn-carousel__btn { width: 2.75rem; height: 2.75rem; background: rgb(255 255 255 / .9); }
 }
