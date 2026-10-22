@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Shift } from "./escalas";
 
 /**
  * Care inside the shelter ("Cuidados"): where each cat lives, its medication,
@@ -201,9 +202,9 @@ export type VisitNote = z.infer<typeof visitNoteSchema>;
 
 // ---------- alerts ("Novidades") ----------
 
-export const careAlertKindSchema = z.enum(["localizacao", "medicacao", "consulta", "nota"]);
+export const careAlertKindSchema = z.enum(["localizacao", "medicacao", "consulta", "nota", "tarefa"]);
 export type CareAlertKind = z.infer<typeof careAlertKindSchema>;
-export const careAlertKindLabel: Record<CareAlertKind, string> = { localizacao: "Mudou de sítio", medicacao: "Medicação", consulta: "Consulta", nota: "Comentário" };
+export const careAlertKindLabel: Record<CareAlertKind, string> = { localizacao: "Mudou de sítio", medicacao: "Medicação", consulta: "Consulta", nota: "Comentário", tarefa: "Pedido de ajuda" };
 
 /** Raised on every change so the whole team sees what is new. */
 export const careAlertSchema = z.object({
@@ -215,6 +216,8 @@ export const careAlertSchema = z.object({
   important: z.boolean().default(false),
   by: authorSchema,
   createdAt: z.string().datetime(),
+  /** Help requests: the alert closes for everyone once someone takes the task. */
+  taskId: z.string().optional(),
 });
 export type CareAlert = z.infer<typeof careAlertSchema>;
 export type CareAlertDraft = Pick<CareAlert, "kind" | "message" | "important">;
@@ -265,4 +268,157 @@ export function lisbonNow(at: Date): { date: string; time: string } {
       .map((p) => [p.type, p.value]),
   );
   return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
+}
+
+// ---------- volunteers on shift ----------
+
+/**
+ * Volunteers who go to the shelter do not use the back office: they see care for their
+ * own shift in their account on the site. A shift links to an account by mobile number.
+ */
+export const GATIL_SHIFT_TYPES = ["limpeza"] as const;
+const isGatilShift = (s: Pick<Shift, "type">) => (GATIL_SHIFT_TYPES as readonly string[]).includes(s.type);
+const digits = (phone: string) => {
+  const d = phone.replace(/\D/g, "");
+  return d.length === 12 && d.startsWith("351") ? d.slice(3) : d;
+};
+const signedUp = (s: Pick<Shift, "signups">, phone: string) => s.signups.some((x) => digits(x.phone) === digits(phone));
+
+export type VolunteerDuty = {
+  /** Has signed up for any shift in the last six months or ahead: counts as a volunteer. */
+  isVolunteer: boolean;
+  /** The gatil shift whose care to show: today's, or the next one within two weeks. */
+  shift?: Shift;
+  /** True when that shift is today, so doses can be marked as given. */
+  isToday: boolean;
+  /** Vet transport slots this person is taking. */
+  transports: Shift[];
+};
+
+export function volunteerDuty(shifts: Shift[], phone: string | undefined, now: Date): VolunteerDuty {
+  if (!phone) return { isVolunteer: false, isToday: false, transports: [] };
+  const today = lisbonNow(now).date;
+  const nowIso = now.toISOString();
+  const since = new Date(now.getTime() - 180 * 86_400_000).toISOString();
+  const horizon = new Date(now.getTime() + 14 * 86_400_000).toISOString();
+  const mine = shifts.filter((s) => signedUp(s, phone)).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const gatil = mine.filter(isGatilShift);
+  const todays = gatil.find((s) => lisbonNow(new Date(s.startsAt)).date === today);
+  const next = gatil.find((s) => s.startsAt > nowIso && s.startsAt <= horizon);
+  const shift = todays ?? next;
+  return {
+    isVolunteer: mine.some((s) => s.endsAt >= since),
+    shift,
+    isToday: !!shift && lisbonNow(new Date(shift.startsAt)).date === today,
+    transports: mine.filter((s) => s.type === "transporte-vet" && s.endsAt >= nowIso),
+  };
+}
+
+/** Doses due during a shift (an hour either side), and the rest of that day. */
+export function splitRoundForShift<T extends { time: string }>(round: T[], shift: Pick<Shift, "startsAt" | "endsAt">): { during: T[]; rest: T[] } {
+  const from = lisbonNow(new Date(new Date(shift.startsAt).getTime() - 60 * 60_000)).time;
+  const to = lisbonNow(new Date(new Date(shift.endsAt).getTime() + 60 * 60_000)).time;
+  const inside = (t: string) => (from <= to ? t >= from && t <= to : t >= from || t <= to);
+  return { during: round.filter((r) => inside(r.time)), rest: round.filter((r) => !inside(r.time)) };
+}
+
+/** Everyone to tell about a help request: anyone signed up for a shift recently or ahead. */
+export function volunteerPhones(shifts: Shift[], now: Date): string[] {
+  const since = new Date(now.getTime() - 180 * 86_400_000).toISOString();
+  return [...new Set(shifts.filter((s) => s.endsAt >= since).flatMap((s) => s.signups.map((x) => digits(x.phone))))];
+}
+
+// ---------- help requests ("Não consigo dar") ----------
+
+export const careTaskStatusSchema = z.enum(["aberta", "aceite", "feita", "cancelada"]);
+export type CareTaskStatus = z.infer<typeof careTaskStatusSchema>;
+
+/** A volunteer could not give a dose: the task goes to everyone until someone takes it. */
+export const careTaskSchema = z.object({
+  id: z.string(),
+  catId: z.string(),
+  catName: z.string(),
+  medicationId: z.string().optional(),
+  /** "Dar Insulina (1 unidade)" */
+  what: z.string(),
+  date: dateSchema,
+  time: timeSchema.optional(),
+  /** Why the first person could not do it. */
+  comment: z.string(),
+  status: careTaskStatusSchema,
+  createdBy: authorSchema,
+  createdAt: z.string().datetime(),
+  acceptedBy: authorSchema.optional(),
+  acceptedAt: z.string().datetime().optional(),
+  closedBy: authorSchema.optional(),
+  closedAt: z.string().datetime().optional(),
+});
+export type CareTask = z.infer<typeof careTaskSchema>;
+
+export const cantGiveInputSchema = z.object({
+  medicationId: z.string(),
+  date: dateSchema,
+  time: timeSchema,
+  comment: z.string({ required_error: "Diga porque não conseguiu" }).trim().min(3, "Diga porque não conseguiu").max(500),
+});
+export type CantGiveInput = z.infer<typeof cantGiveInputSchema>;
+
+const whenLabel = (t: Pick<CareTask, "date" | "time">, today?: string) => `${t.date === today ? "hoje" : `dia ${dayMonth(t.date)}`}${t.time ? ` às ${t.time}` : ""}`;
+
+export function taskAlert(task: CareTask, change: "pedida" | "aceite" | "devolvida" | "feita" | "cancelada", today?: string): CareAlertDraft {
+  const what = task.what.charAt(0).toLowerCase() + task.what.slice(1);
+  const when = whenLabel(task, today);
+  switch (change) {
+    case "pedida": return { kind: "tarefa", message: `Precisa-se de quem possa ${what} a ${task.catName} ${when}. ${task.createdBy.name} não conseguiu: “${task.comment}”`, important: true };
+    case "aceite": return { kind: "tarefa", message: `Resolvido: ${task.acceptedBy!.name} vai ${what} a ${task.catName} ${when}. Obrigado!`, important: false };
+    case "devolvida": return { kind: "tarefa", message: `${task.catName} volta a precisar de quem possa ${what} ${when}.`, important: true };
+    case "feita": return { kind: "tarefa", message: `Feito: ${task.closedBy!.name} conseguiu ${what} a ${task.catName}.`, important: false };
+    case "cancelada": return { kind: "tarefa", message: `Já não é preciso ${what} a ${task.catName} ${when}.`, important: false };
+  }
+}
+
+/** Each volunteer's notification settings: what they have seen, and what they chose to silence. */
+export const careNotificationPrefsSchema = z.object({
+  lastSeenAt: z.string().datetime().optional(),
+  muteAll: z.boolean().default(false),
+  mutedKinds: z.array(careAlertKindSchema).default([]),
+  mutedCats: z.array(z.string()).default([]),
+});
+export type CareNotificationPrefs = z.infer<typeof careNotificationPrefsSchema>;
+export const defaultCarePrefs: CareNotificationPrefs = { muteAll: false, mutedKinds: [], mutedCats: [] };
+
+/**
+ * What a volunteer is told about: help requests (each one as a single line with its latest news,
+ * so "resolvido por Rui" replaces "precisa-se"), and changes to the cats they look after or take to the vet.
+ */
+export function relevantAlerts(alerts: CareAlert[], ctx: { catIds: Set<string>; tasks: CareTask[]; since: string }): CareAlert[] {
+  const known = new Set(ctx.tasks.map((t) => t.id));
+  const latestForTask = new Map<string, string>();
+  for (const a of alerts) if (a.taskId && (latestForTask.get(a.taskId) ?? "") < a.createdAt) latestForTask.set(a.taskId, a.createdAt);
+  return alerts.filter((a) => {
+    if (a.createdAt < ctx.since) return false;
+    if (a.taskId) return known.has(a.taskId) && latestForTask.get(a.taskId) === a.createdAt;
+    return ctx.catIds.has(a.catId);
+  });
+}
+
+export function isMuted(a: Pick<CareAlert, "kind" | "catId">, prefs: CareNotificationPrefs): boolean {
+  return prefs.muteAll || prefs.mutedKinds.includes(a.kind) || prefs.mutedCats.includes(a.catId);
+}
+
+/** The count on the bell: relevant, not silenced, and newer than the last look. */
+export function unreadForVolunteer(alerts: CareAlert[], prefs: CareNotificationPrefs): CareAlert[] {
+  return alerts.filter((a) => !isMuted(a, prefs) && (!prefs.lastSeenAt || a.createdAt > prefs.lastSeenAt));
+}
+
+/** Several changes about the same cat read as one line: "Estrela: 3 novidades". */
+export function groupAlertsByCat(alerts: CareAlert[]): { catId: string; catName: string; alerts: CareAlert[]; important: boolean; latestAt: string }[] {
+  const groups = new Map<string, CareAlert[]>();
+  for (const a of alerts) groups.set(a.catId, [...(groups.get(a.catId) ?? []), a]);
+  return [...groups.entries()]
+    .map(([catId, list]) => {
+      const sorted = [...list].sort((x, y) => y.createdAt.localeCompare(x.createdAt));
+      return { catId, catName: sorted[0]!.catName, alerts: sorted, important: sorted.some((x) => x.important), latestAt: sorted[0]!.createdAt };
+    })
+    .sort((a, b) => b.latestAt.localeCompare(a.latestAt));
 }

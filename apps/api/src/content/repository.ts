@@ -1,4 +1,4 @@
-import type { Appointment, CareAlert, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
+import type { Appointment, CareAlert, CareNotificationPrefs, CareTask, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
 import type { FosterPlacement, Shift, Sponsorship } from "@gn/domain";
 import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Redirect, SeoSettings } from "@gn/domain";
 
@@ -69,6 +69,13 @@ export interface ContentRepository {
   /** Newest first. */
   listCareAlerts(opts?: { since?: string; catId?: string; limit?: number }): Promise<CareAlert[]>;
   saveCareAlert(a: CareAlert): Promise<CareAlert>;
+  /** Help requests ("Não consigo dar"). Newest first. */
+  listCareTasks(filter?: { status?: CareTask["status"][] }): Promise<CareTask[]>;
+  getCareTask(id: string): Promise<CareTask | undefined>;
+  saveCareTask(t: CareTask): Promise<CareTask>;
+  /** Each volunteer's notification settings, by account id. */
+  getCarePrefs(accountId: string): Promise<CareNotificationPrefs | undefined>;
+  saveCarePrefs(accountId: string, prefs: CareNotificationPrefs): Promise<CareNotificationPrefs>;
 }
 
 export const CONTENT_REPOSITORY = Symbol("ContentRepository");

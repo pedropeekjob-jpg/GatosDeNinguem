@@ -25,6 +25,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { AdminGuard } from "../common/admin.guard";
+import { CareService, catSummary } from "./care.service";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
 
@@ -32,8 +33,6 @@ const withAuthor = z.object({ by: authorSchema.optional().refine((x): x is Autho
 const dateParam = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const timeParam = z.string().regex(/^\d{2}:\d{2}$/);
 
-/** The little the care screens need to know about a cat. */
-const catSummary = (c: Cat) => ({ id: c.id, name: c.name, slug: c.slug, status: c.status, photo: c.photos[0] });
 
 /**
  * Team-only care: where each cat lives, medication, vet appointments and notes.
@@ -42,19 +41,12 @@ const catSummary = (c: Cat) => ({ id: c.id, name: c.name, slug: c.slug, status: 
 @Controller("cuidados")
 @UseGuards(AdminGuard)
 export class CuidadosController {
-  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {}
+  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions, @Inject(CareService) private readonly care: CareService) {}
   private get repo() { return this.options.repository; }
   private now() { return this.options.now?.() ?? new Date(); }
 
-  private async cat(catId: string) {
-    const cat = await this.repo.getCat(catId);
-    if (!cat) throw new NotFoundException("Gato não encontrado.");
-    return cat;
-  }
-
-  private async raise(cat: Cat, draft: CareAlertDraft, by: Author) {
-    return this.repo.saveCareAlert({ ...draft, id: randomUUID(), catId: cat.id, catName: cat.name, by, createdAt: this.now().toISOString() });
-  }
+  private cat(catId: string) { return this.care.cat(catId); }
+  private raise(cat: Cat, draft: CareAlertDraft, by: Author) { return this.care.raise(cat, draft, by); }
 
   // ----- overview -----
 
@@ -151,34 +143,43 @@ export class CuidadosController {
   @Get("ronda")
   async round(@Query("dia") day?: string) {
     const date = day ? parseBody(dateParam, day) : lisbonNow(this.now()).date;
-    const [meds, doses, cats, care] = await Promise.all([this.repo.listMedications(), this.repo.listDoses({ from: date, to: date }), this.repo.listCats(), this.repo.listCatCare()]);
-    const catById = new Map(cats.map((c) => [c.id, c]));
-    const careById = new Map(care.map((c) => [c.catId, c]));
-    const items = medicationRound(meds.filter((m) => catById.has(m.catId)), doses, date).map((r) => ({
-      ...r,
-      cat: catSummary(catById.get(r.medication.catId)!),
-      location: careById.get(r.medication.catId)?.location ?? null,
-    }));
-    return { date, items };
+    return { date, items: await this.care.round(date) };
   }
 
   @Post("medicacao/:id/tomas")
   @HttpCode(201)
   async giveDose(@Param("id") id: string, @Body() body: unknown) {
-    const med = await this.repo.getMedication(id);
-    if (!med) throw new NotFoundException("Medicação não encontrada.");
+    const med = await this.care.medication(id);
     const { by, date, time } = parseBody(withAuthor.extend({ date: dateParam, time: timeParam }), body);
-    const already = (await this.repo.listDoses({ from: date, to: date })).find((d) => d.medicationId === id && d.time === time);
-    if (already) {
-      const at = lisbonNow(new Date(already.givenAt)).time;
-      throw new ConflictException(`Esta dose já foi dada por ${already.by.name} às ${at}. Não dê outra vez.`);
-    }
-    try {
-      return await this.repo.saveDose({ id: randomUUID(), medicationId: id, catId: med.catId, date, time, givenAt: this.now().toISOString(), by });
-    } catch {
-      // Two people pressed at the same moment: the database keeps only one.
-      throw new ConflictException("Esta dose acabou de ser dada por outra pessoa. Não dê outra vez.");
-    }
+    return this.care.giveDose(med, date, time, by);
+  }
+
+  // ----- help requests -----
+
+  /** Open and recently closed help requests, for the managers to follow. */
+  @Get("tarefas")
+  async tasks() {
+    const since = new Date(this.now().getTime() - 7 * 86_400_000).toISOString();
+    return (await this.repo.listCareTasks()).filter((t) => t.status === "aberta" || t.status === "aceite" || (t.closedAt ?? "") >= since);
+  }
+
+  @Post("medicacao/:id/nao-consigo")
+  @HttpCode(201)
+  async cantGive(@Param("id") id: string, @Body() body: unknown) {
+    const { by, ...input } = parseBody(withAuthor.extend({ date: dateParam, time: timeParam, comment: z.string().trim().min(3, "Diga porque não conseguiu") }), body);
+    return this.care.requestHelp(await this.care.medication(id), input, by);
+  }
+
+  @Post("tarefas/:id/aceitar")
+  async acceptTask(@Param("id") id: string, @Body() body: unknown) {
+    return this.care.acceptTask(id, parseBody(withAuthor, body).by);
+  }
+
+  @Post("tarefas/:id/cancelar")
+  async cancelTask(@Param("id") id: string, @Body() body: unknown) {
+    const t = await this.care.task(id);
+    if (t.status === "feita" || t.status === "cancelada") throw new ConflictException("Este pedido já está resolvido.");
+    return this.care.closeTask(t, "cancelada", parseBody(withAuthor, body).by);
   }
 
   /** Undo a dose marked by mistake. */

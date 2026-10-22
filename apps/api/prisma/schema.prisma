@@ -217,6 +217,16 @@ model CareAlert {
   @@index([catId])
 }
 
+/// Help requests from volunteers who could not give a dose.
+model CareTask {
+  id        String   @id
+  status    String
+  createdAt DateTime
+  data      Json
+
+  @@index([status])
+}
+
 /** Uploaded photos, when UPLOAD_STORAGE=database (hosts without a persistent disk). */
 model Upload {
   name        String   @id

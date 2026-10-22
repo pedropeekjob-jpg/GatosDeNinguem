@@ -73,3 +73,9 @@
 .alert__new { padding: 0.1rem 0.55rem; border-radius: 999px; background: var(--gn-accent); font-weight: 700; font-size: var(--gn-text-s); }
 .note--important { border-left: 4px solid var(--gn-warning); }
 details summary { cursor: pointer; font-weight: 650; min-height: var(--gn-target); display: flex; align-items: center; }
+.care-card__task { padding: 0.4rem 0.6rem; border-left: 4px solid var(--gn-accent); background: var(--gn-accent-soft); border-radius: 6px; }
+.help-requests { padding: var(--gn-space-m); border: 2px solid var(--gn-ink); border-radius: var(--gn-radius); }
+.help-requests h2 { margin: 0; font-size: var(--gn-text-l); }
+.help-requests__list { list-style: none; margin: 0; padding: 0; display: grid; }
+.help-requests__list > li { display: grid; gap: 0.25rem; justify-items: start; padding-block: 0.7rem; border-top: 1px solid var(--gn-line); }
+.help-requests__list .care-card__head { width: 100%; }

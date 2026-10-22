@@ -2,7 +2,7 @@ import { vi } from "vitest";
 import {
   appointmentAlert, isMedicationActive, lisbonNow, locationChangeAlert, medicationAlert, medicationRound, noteAlert,
   seedAppointments, seedCareAlerts, seedCatCare, seedCats, seedDoses, seedMedications, seedVisitNotes,
-  type Author, type CareAlert, type CareAlertDraft, type Cat,
+  taskAlert, type Author, type CareAlert, type CareAlertDraft, type CareTask, type Cat,
 } from "@gn/domain";
 import type { CuidadosApi } from "../src/lib/cuidadosApi";
 
@@ -14,6 +14,10 @@ export function fakeCuidados(now: Date, cats: () => Cat[]): CuidadosApi {
   let appointments = structuredClone(seedAppointments);
   let notes = structuredClone(seedVisitNotes);
   let alerts: CareAlert[] = structuredClone(seedCareAlerts);
+  let tasks: CareTask[] = [{
+    id: "pedido-1", catId: "cat-4", catName: "Estrela", medicationId: "med-1", what: "Dar Insulina (1 unidade)", date: lisbonNow(now).date, time: "20:00",
+    comment: "Saio tarde do trabalho.", status: "aberta", createdBy: { name: "Rui Sousa" }, createdAt: now.toISOString(),
+  }];
   let n = 0;
   const id = () => `c-${++n}`;
   const summary = (c: Cat) => ({ id: c.id, name: c.name, slug: c.slug, status: c.status, photo: c.photos[0] });
@@ -66,7 +70,8 @@ export function fakeCuidados(now: Date, cats: () => Cat[]): CuidadosApi {
     },
     round: async (date) => ({
       date,
-      items: medicationRound(meds, doses, date).map((r) => ({ ...r, cat: summary(cat(r.medication.catId)), location: care.find((x) => x.catId === r.medication.catId)?.location ?? null })),
+      items: medicationRound(meds, doses, date).map((r) => ({ ...r, cat: summary(cat(r.medication.catId)), location: care.find((x) => x.catId === r.medication.catId)?.location ?? null,
+        task: tasks.find((t) => (t.status === "aberta" || t.status === "aceite") && t.medicationId === r.medication.id && t.date === date && t.time === r.time) ?? null })),
     }),
     giveDose: vi.fn(async (medicationId, slot, by) => {
       const d = { id: id(), medicationId, catId: meds.find((m) => m.id === medicationId)!.catId, ...slot, givenAt: now.toISOString(), by };
@@ -96,5 +101,12 @@ export function fakeCuidados(now: Date, cats: () => Cat[]): CuidadosApi {
       return note;
     }),
     careAlerts: async () => sorted(),
+    careTasks: async () => tasks,
+    cancelTask: vi.fn(async (taskId, by) => {
+      const t = { ...tasks.find((x) => x.id === taskId)!, status: "cancelada" as const, closedBy: by, closedAt: now.toISOString() };
+      tasks = tasks.map((x) => (x.id === taskId ? t : x));
+      raise(t.catId, taskAlert(t, "cancelada"), by);
+      return t;
+    }),
   };
 }

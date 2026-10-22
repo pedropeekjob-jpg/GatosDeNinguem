@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos"];
 
@@ -220,6 +220,65 @@ test.describe("contas e Patinhas", () => {
     await quiz.getByText("Não", { exact: true }).click();
     await quiz.getByRole("button", { name: "Ver sugestão" }).click();
     await expect(page.getByText("Ganhou 10 Patinhas por fazer o questionário.")).toBeVisible();
+  });
+});
+
+test.describe("no gatil: the volunteer's shift", () => {
+  async function signIn(page: Page, phone: string) {
+    await page.goto("/conta");
+    await page.getByLabel("Email ou telemóvel").fill(phone);
+    await page.getByRole("button", { name: "Continuar" }).click();
+    const code = (await page.getByText(/Demonstração: o código é/).textContent())!.match(/\d{6}/)![0];
+    await page.getByLabel("Código").fill(code);
+    await page.getByRole("button", { name: "Entrar" }).click();
+    await expect(page.getByRole("button", { name: "Sair" })).toBeVisible();
+  }
+
+  test("a volunteer on today's shift sees what to give, asks for help, and another volunteer takes it", async ({ page }) => {
+    await signIn(page, "912 000 001");
+    await page.getByRole("link", { name: "Ver o meu turno e os gatos" }).click();
+    await expect(page.getByRole("heading", { name: "Medicação durante o seu turno" })).toBeVisible();
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+
+    // Tobias's 09:00 dose cannot be given: a reason is required, then everyone is asked.
+    const tobias = page.locator(".gatil__dose", { hasText: "Tobias" }).first();
+    await tobias.getByRole("button", { name: "Não consigo dar" }).click();
+    await tobias.getByRole("button", { name: "Pedir ajuda a todos" }).click();
+    await expect(tobias.getByText("Diga porque não conseguiu")).toBeVisible();
+    await tobias.getByLabel("Porque não consegue dar?").fill("Não se deixou pegar");
+    await tobias.getByRole("button", { name: "Pedir ajuda a todos" }).click();
+    await expect(page.getByText(/Pedimos ajuda a todos para Tobias/)).toBeVisible();
+    await expect(tobias.getByText(/À espera de quem possa dar/)).toBeVisible();
+
+    // Estrela's 08:00 insulin: given once, then it cannot be given again.
+    const estrela = page.locator(".gatil__dose", { hasText: "08:00" });
+    await estrela.getByRole("button", { name: "Já dei" }).click();
+    await expect(estrela.getByText(/Dada por Ana Ribeiro/)).toBeVisible();
+    await expect(estrela.getByRole("button", { name: "Já dei" })).toHaveCount(0);
+
+    // João takes the request; the line about it now says it is solved.
+    await page.goto("/conta");
+    await page.getByRole("button", { name: "Sair" }).click();
+    await signIn(page, "913000002");
+    await page.goto("/conta/gatil");
+    const request = page.locator(".gatil__pedido", { hasText: "Tobias" });
+    await request.getByRole("button", { name: "Fico eu com isto" }).click();
+    await expect(page.getByText(/Ficou consigo: Dar Semintra/)).toBeVisible();
+    await expect(page.locator(".gatil__grupo", { hasText: "Tobias" }).getByText(/Resolvido: João Costa vai dar Semintra/)).toBeVisible();
+  });
+
+  test("notifications can be silenced, for oneself only", async ({ page }) => {
+    await signIn(page, "912 000 001");
+    await page.goto("/conta/gatil");
+    await page.getByRole("button", { name: "Silenciar Tobias" }).click();
+    await expect(page.getByText("Deixa de receber notificações sobre Tobias.")).toBeVisible();
+    await expect(page.locator(".gatil__grupo", { hasText: "Tobias" })).toHaveCount(0);
+    await page.getByText("Silenciar notificações").click();
+    await page.getByText("Silenciar tudo").click();
+    await page.getByRole("button", { name: "Guardar", exact: true }).click();
+    await expect(page.getByText("Preferências guardadas. Só mudam para si.")).toBeVisible();
+    await expect(page.getByRole("link", { name: /notificaç/ })).toHaveCount(0);
   });
 });
 
