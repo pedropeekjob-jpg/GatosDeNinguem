@@ -47,9 +47,9 @@ export default async function CatPage({ params }: Props) {
           <div className="gn-stack gn-stack--m">
             <p className="gn-lead">{cat.summary}</p>
             {cat.status === "para-adocao" ? (
-              <div className="action-row">
+              <div className="action-row cat-profile__cta">
                 <Button href={`/adotar/${cat.slug}/conhecer`}>Quero conhecer {pronoun} {cat.name}</Button>
-                <FavoriteButton slug={cat.slug} name={cat.name} />
+                <FavoriteButton slug={cat.slug} name={cat.name} compact />
               </div>
             ) : null}
             {cat.status === "adotado" && cat.happyEnding ? (

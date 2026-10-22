@@ -155,13 +155,15 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .mural { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
 
 /* Patinhas, on the home page above the fold: a yellow paw, one line and a link. */
-.patinhas-teaser { display: flex; gap: 0.9rem; align-items: flex-start; padding: 0.9rem 1rem; border-radius: var(--gn-radius); background: var(--gn-accent-soft); border: 1px solid #f3dd9c; max-width: 36rem; }
+.patinhas-teaser { display: flex; gap: 0.9rem; align-items: flex-start; padding: 0.9rem 1rem; border-radius: var(--gn-radius); background: var(--gn-ink); border: 1px solid var(--gn-ink); color: #fff; max-width: 36rem; }
 .patinhas-teaser__icon { flex: none; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--gn-accent); color: var(--gn-ink); }
 .patinhas-teaser__icon .gn-icon { width: 1.4rem; height: 1.4rem; }
 .patinhas-teaser__text { display: grid; gap: 0.2rem; }
 .patinhas-teaser__title { font-family: var(--gn-font-display); font-weight: 650; font-size: var(--gn-text-l); letter-spacing: -0.01em; }
-.patinhas-teaser__body { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
-.patinhas-teaser__body a { color: var(--gn-ink); font-weight: 600; white-space: nowrap; }
+.patinhas-teaser__title { color: #fff; }
+.patinhas-teaser__body { font-size: var(--gn-text-s); color: rgb(255 255 255 / .78); }
+.patinhas-teaser__body a { color: var(--gn-accent); font-weight: 600; white-space: nowrap; }
+.patinhas-teaser a:focus-visible { outline-color: var(--gn-accent); }
 
 /* No gatil: the volunteer's shift page */
 .gatil { padding-bottom: var(--gn-space-l); }
@@ -268,4 +270,79 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .patinhas-teaser__link:focus-visible { outline-color: var(--gn-accent); }
   .featured__photo { border-radius: var(--gn-radius); }
   .featured__name { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; }
+}
+
+/* ---------- Patterns from high-engagement mobile sites (photo-first cards, a swipe row, filter chips, a sticky action) ---------- */
+
+/* Save heart on a cat's photo: white disc so it reads on any picture; filled black when saved. */
+.gn-fav { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: rgb(255 255 255 / .92); color: var(--gn-ink); box-shadow: 0 2px 8px rgb(0 0 0 / .18); transition: transform 0.12s; }
+.gn-fav svg { fill: none; stroke: currentColor; stroke-width: 2; }
+.gn-fav[aria-pressed="true"] svg { fill: var(--gn-ink); }
+.gn-fav:active { transform: scale(0.92); }
+.gn-fav:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 2px; }
+
+/* Photo-first cat cards: a taller photo, two lines of story at most. */
+.cat-card .gn-card__media { aspect-ratio: 5 / 4; }
+.cat-card .gn-card__body { gap: 0.5rem; }
+.cat-card .gn-card__text p { margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Home: "Procuram família". */
+.cat-rail { padding-block: var(--gn-space-m) var(--gn-space-xl); }
+.cat-rail__head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: var(--gn-space-m); }
+.cat-rail__head h2 { margin: 0; }
+.cat-rail__all { font-weight: 650; color: var(--gn-ink); text-underline-offset: 0.2em; white-space: nowrap; }
+.cat-rail__track { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--gn-space-m); }
+.cat-rail__track > li { display: flex; }
+.cat-rail__track .gn-card { width: 100%; }
+@media (max-width: 59.99rem) {
+  /* One card and a bit: the cut-off card says "swipe". Edge to edge, snapping to the page margin. */
+  .cat-rail__track {
+    grid-auto-flow: column; grid-auto-columns: 78%; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scroll-padding-inline: 1.25rem; scrollbar-width: none;
+    margin-inline: -1.25rem; padding: 0.25rem 1.25rem 0.75rem;
+  }
+  .cat-rail__track::-webkit-scrollbar { display: none; }
+  .cat-rail__track > li { scroll-snap-align: start; }
+}
+@media (min-width: 60rem) { .cat-rail__track { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); } }
+
+/* Adotar: quick filter chips. Phones: one row that scrolls sideways; wide screens: wraps. */
+.cat-filter { display: grid; gap: var(--gn-space-m); }
+.cat-filter__chips { display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; margin-inline: -1.25rem; padding: 0.1rem 1.25rem; }
+.cat-filter__chips::-webkit-scrollbar { display: none; }
+.cat-filter__chip {
+  flex: none; display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.75rem; padding: 0 1rem;
+  font: inherit; font-weight: 600; color: var(--gn-ink); background: var(--gn-surface); border: 1.5px solid var(--gn-line); border-radius: 999px; cursor: pointer;
+}
+.cat-filter__chip[aria-pressed="true"] { background: var(--gn-ink); border-color: var(--gn-ink); color: #fff; }
+.cat-filter__count { font-size: var(--gn-text-s); font-weight: 700; color: var(--gn-ink-soft); font-variant-numeric: tabular-nums; }
+.cat-filter__chip[aria-pressed="true"] .cat-filter__count { color: var(--gn-accent); }
+.cat-filter__chip:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 2px; }
+@media (min-width: 60rem) { .cat-filter__chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; } }
+@media (hover: hover) { .cat-filter__chip:hover { border-color: var(--gn-ink); } }
+.cat-filter__list[data-filtro="femea"] [data-f]:not([data-f~="femea"]),
+.cat-filter__list[data-filtro="macho"] [data-f]:not([data-f~="macho"]),
+.cat-filter__list[data-filtro="senior"] [data-f]:not([data-f~="senior"]),
+.cat-filter__list[data-filtro="cuidados"] [data-f]:not([data-f~="cuidados"]) { display: none; }
+.cat-filter__list .gn-grid > [data-f] { display: flex; }
+.cat-filter__list .gn-grid > [data-f] > .gn-card { width: 100%; }
+
+/* A cat's page. Phones: "Quero conhecer" rides above the tab bar while you read. Wide screens: the photo stays in view.
+   A bottom-sticky bar only stays while its own place is still below the screen, so on phones it moves to the end of the column. */
+@media (max-width: 51.99rem) {
+  .cat-profile__cta {
+    order: 99; position: sticky; bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px) + 0.5rem); z-index: 5;
+    flex-wrap: nowrap; margin-inline: -0.5rem; padding: 0.5rem; border-radius: calc(var(--gn-radius) + 0.25rem);
+    background: rgb(255 255 255 / .96); box-shadow: 0 6px 24px rgb(28 26 27 / .14);
+  }
+  .cat-profile__cta > .gn-btn:first-child { flex: 1 1 auto; }
+}
+/* Beside a button the heart takes the button's size and an outline, so it reads as a button too. */
+.cat-profile__cta .gn-fav { flex: none; width: var(--gn-target); height: var(--gn-target); border-radius: var(--gn-radius-s); border: 1.5px solid var(--gn-ink); box-shadow: none; background: var(--gn-surface); }
+@media (min-width: 52rem) { .cat-profile__photo { position: sticky; top: var(--gn-space-l); } }
+
+/* Desktop home photo: on the dark gradient the main button turns white, the second one a white outline. */
+@media (min-width: 60rem) {
+  .home-top:not(.home-top--plain) .gn-btn--primary { background: #fff; border-color: #fff; color: var(--gn-ink); }
+  .home-top:not(.home-top--plain) .gn-btn--secondary { background: transparent; border-color: #fff; color: #fff; }
 }

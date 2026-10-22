@@ -15,7 +15,7 @@
   --gn-brand: #1c1a1b;          /* the logo's black */
   --gn-brand-strong: #000000;
   --gn-brand-soft: #f5f3f1;     /* warm grey behind content */
-  --gn-accent: #ffc83d;         /* "olhos de gato" yellow: main actions and highlights, black text on it */
+  --gn-accent: #ffc83d;         /* "olhos de gato" yellow: small highlights only (Patinhas, active tab, counts), black text on it */
   --gn-accent-strong: #f2b200;  /* hover */
   --gn-accent-soft: #fff3cf;    /* tints: hover backgrounds, selected choices */
   --gn-sand: #f5f3f1;
@@ -97,7 +97,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-section--ink .gn-stat { border-left-color: rgb(255 255 255 / 0.3); }
 .gn-section--ink .gn-progress__track { background: rgb(255 255 255 / 0.22); }
 .gn-section--ink .gn-progress__fill { background: var(--gn-accent); }
-.gn-section--ink .gn-btn--primary { background: var(--gn-accent); color: var(--gn-ink); }
+.gn-section--ink .gn-btn--primary { background: var(--gn-accent); border-color: var(--gn-accent); color: var(--gn-ink); }
 .gn-section--ink a:not(.gn-btn) { color: #fff; }
 .gn-section--ink :focus-visible { outline-color: #fff; }
 .gn-lead { font-size: var(--gn-text-l); color: var(--gn-ink-soft); }
@@ -114,7 +114,8 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-btn:active:not(:disabled) { transform: scale(0.98); }
 .gn-btn__icon { display: inline-flex; width: 1.4em; height: 1.4em; }
 .gn-btn__icon svg { width: 100%; height: 100%; }
-.gn-btn--primary { background: var(--gn-accent); color: var(--gn-ink); }
+/* One action colour, like the logo: black. Yellow stays for small highlights. */
+.gn-btn--primary { background: var(--gn-ink); border-color: var(--gn-ink); color: #fff; }
 .gn-btn--secondary { background: var(--gn-surface); color: var(--gn-ink); border-color: var(--gn-line-strong); }
 .gn-btn--quiet { background: transparent; color: var(--gn-ink); text-decoration: underline; padding-inline: 0.5rem; }
 .gn-btn--urgent { background: var(--gn-surface); color: var(--gn-urgent); border-color: var(--gn-urgent); }
@@ -139,6 +140,10 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-card { position: relative; background: var(--gn-surface); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s; }
 .gn-card__media { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--gn-sand); transition: transform 0.35s ease; }
 .gn-card__body { padding: var(--gn-space-m); display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
+.gn-card__media-wrap { position: relative; overflow: hidden; }
+.gn-card__media-wrap .gn-card__media { display: block; }
+.gn-card__media-action { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; }
+.gn-card__subtitle { margin: -0.35rem 0 0; color: var(--gn-ink-soft); font-size: var(--gn-text-s); }
 .gn-card__title a { color: var(--gn-ink); text-decoration: none; }
 .gn-card__title a::after { content: ""; position: absolute; inset: 0; }
 .gn-card:has(.gn-card__title a:focus-visible) { outline: 3px solid var(--gn-focus); outline-offset: 3px; }
@@ -291,7 +296,7 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-nav__link:hover::after { transform: none; }
   .gn-header--tabbar .gn-nav__link:hover .gn-icon { transform: translateY(-2px); }
   .gn-header__brand:hover { opacity: 0.75; }
-  .gn-btn--primary:hover { background: var(--gn-accent-strong); color: var(--gn-ink); }
+  .gn-btn--primary:hover { background: #000; border-color: #000; color: #fff; }
   .gn-section--ink .gn-btn--primary:hover { background: #fff; color: var(--gn-ink); }
   .gn-btn--secondary:hover { border-color: var(--gn-ink); background: var(--gn-sand); }
   .gn-btn--urgent:hover { background: var(--gn-urgent); color: #fff; }
@@ -340,8 +345,7 @@ a:hover { text-decoration-thickness: 2.5px; }
    Rounder shapes, black-and-white buttons with the yellow kept for the one main action, a lighter header
    and a tab bar that floats on a soft shadow instead of a hard line. Sizes and touch targets do not change. */
 @media (max-width: 63.99rem) {
-  /* A light warm-grey page so white cards, fields and the header stand out clearly; soft sections go one step darker. */
-  :root { --gn-radius: 18px; --gn-radius-s: 14px; --gn-bg: #f2efec; --gn-sand: #e9e5e1; }
+  :root { --gn-radius: 18px; --gn-radius-s: 14px; }
   .gn-btn { font-weight: 650; letter-spacing: -0.005em; }
   .gn-btn--secondary { background: var(--gn-surface); border-color: var(--gn-ink); }
   .gn-header { border-bottom-color: transparent; box-shadow: 0 1px 0 rgb(28 26 27 / .06); }
@@ -349,8 +353,8 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-header--tabbar .gn-nav { border-top: 0; box-shadow: 0 -6px 24px rgb(28 26 27 / .08); }
   .gn-header--tabbar .gn-nav__link { color: #6b6562; }
   .gn-header--tabbar .gn-nav__link[aria-current="page"] { color: var(--gn-ink); }
-  /* White cards on the grey page, with a hairline and a soft lift. */
-  .gn-card { background: var(--gn-surface); border-color: var(--gn-line); box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 8px 22px rgb(28 26 27 / .08); }
+  /* White page, white cards: a clear hairline and the faintest lift; the photo does the rest. */
+  .gn-card { border-color: #dedad6; box-shadow: 0 1px 3px rgb(28 26 27 / .06); }
   /* Opening photos: a rounded picture inset from the edges, like a card, rather than a full-bleed strip. */
   .gn-carousel--hero { margin: 0.75rem 0.75rem 0; border-radius: var(--gn-radius); overflow: hidden; background: var(--gn-sand); }
   /* The inset costs a little height: take it back from the photo so the Patinhas card still fits the first screen. */

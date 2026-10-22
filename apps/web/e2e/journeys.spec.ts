@@ -348,3 +348,31 @@ test("menu links change page inside the app, without a reload or a loader flash"
   expect(await page.evaluate(() => (window as unknown as { __same?: boolean }).__same)).toBe(true);
   expect(errors).toEqual([]);
 });
+
+test("adotar: filter chips narrow the list, and the heart on a photo saves the cat", async ({ page }) => {
+  await page.goto("/adotar");
+  const list = page.locator(".cat-filter__list");
+  await page.getByRole("button", { name: /^Séniores/ }).click();
+  await expect(page.getByRole("button", { name: /^Séniores/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(list.getByRole("link", { name: "Tobias" })).toBeVisible();
+  await expect(list.getByRole("link", { name: "Carvão" })).toBeHidden();
+  await page.getByRole("button", { name: /^Todos/ }).click();
+  await expect(list.getByRole("link", { name: "Carvão" })).toBeVisible();
+  await list.getByRole("button", { name: "Guardar Tobias" }).click();
+  await expect(list.getByRole("button", { name: "Tobias está nos favoritos" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("home: the cats looking for a home are one swipe away, with a link to all of them", async ({ page }) => {
+  await page.goto("/");
+  const rail = page.getByRole("region", { name: "Procuram família" });
+  await expect(rail.getByRole("heading", { level: 3 }).first()).toBeVisible();
+  await rail.getByRole("link", { name: /^Ver os \d+$/ }).click();
+  await expect(page).toHaveURL(/\/adotar\/?$/);
+});
+
+test("a cat's page: on phones 'Quero conhecer' stays on screen while reading", async ({ page }, info) => {
+  test.skip(!info.project.name.startsWith("telemovel"), "phones only");
+  await page.goto("/adotar/tobias");
+  await page.getByRole("heading", { name: "Partilhar o Tobias" }).or(page.getByText("Partilhar o Tobias")).first().scrollIntoViewIfNeeded();
+  await expect(page.getByRole("link", { name: "Quero conhecer o Tobias" })).toBeInViewport();
+});

@@ -1,14 +1,19 @@
 import { Button, Grid, Notice, Section } from "@gn/ui";
+import { isSenior } from "@gn/domain";
 import { CatCard } from "@/components/CatCard";
+import { CatFilter } from "@/components/client/CatFilter";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { PageHero } from "@/components/PageHero";
-import { getPage, listCats } from "@/lib/content";
+import { getPage, listCats, type PublicCat } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
   const page = await getPage("/adotar");
   return buildMetadata({ path: "/adotar", title: page.heading, description: page.intro, overrides: page.seo });
 }
+
+/** The words a filter chip matches against: sex, senior, special needs. */
+const tags = (cat: PublicCat) => [cat.sex, isSenior(cat) && "senior", cat.specialNeeds && "cuidados"].filter(Boolean).join(" ");
 
 export default async function AdoptPage() {
   const [page, available, recovering] = await Promise.all([getPage("/adotar"), listCats("para-adocao"), listCats("a-recuperar")]);
@@ -21,7 +26,17 @@ export default async function AdoptPage() {
         <FavoritesStrip cats={available} />
       </PageHero>
       <Section heading={`${available.length} gatos procuram família`}>
-        <Grid>{available.map((cat) => <CatCard key={cat.id} cat={cat} />)}</Grid>
+        <CatFilter
+          total={available.length}
+          options={[
+            { value: "femea", label: "Fêmeas", count: available.filter((c) => c.sex === "femea").length },
+            { value: "macho", label: "Machos", count: available.filter((c) => c.sex === "macho").length },
+            { value: "senior", label: "Séniores", count: available.filter(isSenior).length },
+            { value: "cuidados", label: "Cuidados especiais", count: available.filter((c) => c.specialNeeds).length },
+          ]}
+        >
+          <Grid>{available.map((cat) => <div key={cat.id} data-f={tags(cat)}><CatCard cat={cat} /></div>)}</Grid>
+        </CatFilter>
       </Section>
       {recovering.length > 0 ? (
         <Section tone="soft" heading="Em breve" intro="Estes gatos ainda estão a recuperar. Pode apadrinhá-los enquanto esperam.">

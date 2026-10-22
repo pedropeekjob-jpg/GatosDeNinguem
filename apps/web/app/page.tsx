@@ -1,4 +1,5 @@
 import { AnimatedLogo, Button, Carousel, Container } from "@gn/ui";
+import { CatRail } from "@/components/CatRail";
 import { FeaturedCat } from "@/components/FeaturedCat";
 import { PatinhasTeaser } from "@/components/PatinhasTeaser";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
@@ -55,6 +56,9 @@ export default async function HomePage() {
           </div>
         </Container>
       </section>
+
+      {/* Every cat looking for a home, one swipe away; the cat of the week has its own section below. */}
+      <CatRail cats={ordered.filter((c) => c !== featured)} total={cats.length} />
 
       {featured ? <FeaturedCat cat={featured} /> : null}
     </>
