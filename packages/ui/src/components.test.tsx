@@ -14,7 +14,6 @@ import {
   SiteHeader,
   StepWizard,
   TextField,
-  TextSizeControl,
 } from "./index";
 
 describe("Button", () => {
@@ -112,25 +111,6 @@ describe("TextField", () => {
     expect(input).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByText("3 de 60 caracteres")).toBeInTheDocument();
     expect(await axeViolations(container)).toEqual([]);
-  });
-});
-
-describe("TextSizeControl", () => {
-  it("changes the text size on the page root and marks the active option", async () => {
-    render(<TextSizeControl />);
-    await userEvent.click(screen.getByRole("button", { name: /Letra muito grande/ }));
-    expect(document.documentElement.dataset.textSize).toBe("muito-grande");
-    expect(screen.getByRole("button", { name: /Letra muito grande/ })).toHaveAttribute("aria-pressed", "true");
-  });
-
-  it("offers one button for small phones that steps through the sizes and says what comes next", async () => {
-    document.documentElement.dataset.textSize = "normal";
-    render(<TextSizeControl />);
-    await userEvent.click(screen.getByRole("button", { name: /Letra normal/ }));
-    const cycle = screen.getByRole("button", { name: /^Tamanho da letra: letra normal\. Mudar para letra grande$/ });
-    await userEvent.click(cycle);
-    expect(document.documentElement.dataset.textSize).toBe("grande");
-    expect(cycle).toHaveAccessibleName("Tamanho da letra: letra grande. Mudar para letra muito grande");
   });
 });
 

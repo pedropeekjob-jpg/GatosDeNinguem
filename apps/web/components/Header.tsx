@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { IconHand, IconHeart, IconHome, IconNews, IconPaw, SiteHeader, TextSizeControl } from "@gn/ui";
+import { IconHand, IconHeart, IconHome, IconNews, IconPaw, SiteHeader } from "@gn/ui";
 
 const items = [
   { href: "/", label: "Início", icon: <IconHome /> },
@@ -19,7 +19,6 @@ export function Header() {
       items={items}
       tabBar
       urgent={{ href: "/sos", label: "Encontrei um gato" }}
-      tools={<TextSizeControl />}
       brand={
 <img className="gn-header__logo" src="/logo.svg" alt="Gatos de Ninguém, página inicial" width={81} height={84} />
       }

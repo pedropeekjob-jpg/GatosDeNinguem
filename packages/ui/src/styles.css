@@ -48,8 +48,6 @@
 }
 
 html { font-size: 100%; -webkit-text-size-adjust: 100%; }
-html[data-text-size="grande"] { font-size: 115%; }
-html[data-text-size="muito-grande"] { font-size: 130%; }
 
 body {
   margin: 0;
@@ -234,21 +232,10 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-header__tools { order: 2; }
   .gn-nav__list { justify-content: center; }
 }
-@media (max-width: 24rem) { html:not([data-text-size]) .gn-header--tabbar .gn-nav__link, html[data-text-size="normal"] .gn-header--tabbar .gn-nav__link { font-size: 0.875rem; white-space: nowrap; } }
-/* Bigger text sizes need room on wide screens: the menu moves to its own row. */
-@media (min-width: 64rem) { html[data-text-size]:not([data-text-size="normal"]) .gn-header__inner { flex-wrap: wrap; } html[data-text-size]:not([data-text-size="normal"]) .gn-nav { flex-basis: 100%; order: 3; } }
+@media (max-width: 24rem) { .gn-header--tabbar .gn-nav__link { font-size: 0.875rem; white-space: nowrap; } }
 .gn-crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem; font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
 .gn-crumbs a { color: var(--gn-ink-soft); }
 .gn-crumbs li + li::before { content: "/"; margin-right: 0.3rem; color: var(--gn-line-strong); }
-.gn-textsize { display: inline-flex; border: 1.5px solid var(--gn-line); border-radius: var(--gn-radius-s); overflow: hidden; }
-.gn-textsize__btn { min-width: 2.75rem; min-height: var(--gn-target); font: inherit; font-weight: 600; background: var(--gn-surface); color: var(--gn-ink); border: 0; cursor: pointer; }
-.gn-textsize__btn + .gn-textsize__btn { border-left: 1.5px solid var(--gn-line); }
-.gn-textsize__btn[aria-pressed="true"] { background: var(--gn-ink); color: #fff; }
-.gn-textsize__cycle { display: none; border: 1.5px solid var(--gn-line); border-radius: var(--gn-radius-s); min-width: var(--gn-target); }
-@media (max-width: 40rem) {
-  .gn-textsize { display: none; }
-  .gn-textsize__cycle { display: inline-block; }
-}
 
 /* Search preview (back office) */
 .gn-serp { margin: 0; padding: var(--gn-space-m); background: #fff; border: 1px solid var(--gn-line); border-radius: var(--gn-radius); font-family: Arial, sans-serif; display: grid; gap: 0.2rem; }

@@ -4,11 +4,11 @@ Many supporters are older and not comfortable with technology. These rules are e
 
 **Reading**
 - Atkinson Hyperlegible font, body text at least 18px (19px by default). Tested on every page.
-- "A / A+ / A++" text size control in the header, remembered per visitor.
+- No text size widget: comfortable sizes by default, and the page reflows when visitors zoom or use their phone's own text size.
 - High contrast (WCAG AA), links always underlined, plain Portuguese, no jargon.
 
 **Finding things**
-- Main menu always visible, never hidden behind a "hamburger". Five items at most.
+- Main menu always visible, never hidden behind a "hamburger". Five items at most. On phones it is a bar fixed to the bottom of the screen, each item an icon plus a word.
 - "Encontrei um gato" (emergency) button on every page.
 - Breadcrumbs ("Está aqui") on inner pages.
 

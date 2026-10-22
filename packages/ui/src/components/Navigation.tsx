@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Button } from "./Button";
 
 export type NavItem = { href: string; label: string; icon?: ReactNode };
@@ -58,53 +58,5 @@ export function Breadcrumbs({ items }: { items: { href?: string; label: string }
         })}
       </ol>
     </nav>
-  );
-}
-
-const SIZES = [
-  { value: "normal", label: "A", name: "Letra normal" },
-  { value: "grande", label: "A+", name: "Letra grande" },
-  { value: "muito-grande", label: "A++", name: "Letra muito grande" },
-] as const;
-type Size = (typeof SIZES)[number]["value"];
-const STORAGE_KEY = "gn-text-size";
-
-/** Lets visitors enlarge all text. Stored on this device only. */
-export function TextSizeControl() {
-  const [size, setSize] = useState<Size>("normal");
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY) as Size | null;
-      if (saved && SIZES.some((s) => s.value === saved)) apply(saved);
-    } catch { /* storage unavailable: keep default */ }
-  }, []);
-
-  function apply(next: Size) {
-    setSize(next);
-    document.documentElement.dataset.textSize = next;
-    try { localStorage.setItem(STORAGE_KEY, next); } catch { /* ignore */ }
-  }
-
-  const index = SIZES.findIndex((s) => s.value === size);
-  const current = SIZES[index]!;
-  const next = SIZES[(index + 1) % SIZES.length]!;
-
-  // Wide screens show the three sizes side by side; small phones show one button that steps through them.
-  return (
-    <div className="gn-textsize-wrap">
-      <div className="gn-textsize" role="group" aria-label="Tamanho da letra">
-        {SIZES.map((s) => (
-          <button key={s.value} type="button" className="gn-textsize__btn" aria-pressed={size === s.value} onClick={() => apply(s.value)}>
-            <span aria-hidden="true">{s.label}</span>
-            <span className="gn-sr-only">{s.name}</span>
-          </button>
-        ))}
-      </div>
-      <button type="button" className="gn-textsize__btn gn-textsize__cycle" onClick={() => apply(next.value)}
-        aria-label={`Tamanho da letra: ${current.name.toLowerCase()}. Mudar para ${next.name.toLowerCase()}`}>
-        <span aria-hidden="true">Aa</span>
-      </button>
-    </div>
   );
 }
