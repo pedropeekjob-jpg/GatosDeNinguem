@@ -2,8 +2,11 @@
   "name": "gatos-de-ninguem",
   "private": true,
   "packageManager": "pnpm@10.28.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
+    "demo": "node scripts/demo.mjs",
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "test": "turbo run test",

@@ -15,10 +15,20 @@ New platform for the Associação Gatos de Ninguém (Viana do Castelo): a public
 
 Requires Node 22 and pnpm 10 (`corepack enable`).
 
+Try everything with one command, no database needed:
+
 ```bash
 pnpm install
-pnpm --filter @gn/web dev          # http://localhost:3000, demo content, no backend needed
+pnpm demo
 ```
+
+| | Address |
+|---|---|
+| Public site | http://localhost:3000 |
+| Back office | http://localhost:5173 (password `demo-gatos-de-ninguem`) |
+| API | http://localhost:4000/health |
+
+Demo content lives in memory: back office edits show on the site, and everything resets when you stop.
 
 Full stack with a database:
 
