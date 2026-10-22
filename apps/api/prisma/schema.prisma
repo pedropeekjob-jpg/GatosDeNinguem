@@ -98,3 +98,62 @@ model Setting {
   key   String @id
   value Json
 }
+
+// ----- Helper accounts and Patinhas -----
+
+model Account {
+  id        String   @id
+  email     String?  @unique
+  phone     String?  @unique
+  createdAt DateTime
+  data      Json
+}
+
+model LoginCode {
+  contact String @id
+  data    Json
+}
+
+model Session {
+  tokenHash String   @id
+  accountId String
+  expiresAt DateTime
+
+  @@index([accountId])
+}
+
+model PatinhasEntry {
+  id        String   @id
+  accountId String?
+  action    String
+  points    Int
+  at        DateTime
+  sourceId  String?
+  data      Json
+
+  @@unique([accountId, sourceId])
+  @@index([at])
+}
+
+model Badge {
+  id   String @id
+  data Json
+}
+
+model Challenge {
+  id    String @id
+  month String
+  data  Json
+
+  @@index([month])
+}
+
+model Redemption {
+  id        String   @id
+  accountId String?
+  status    String
+  createdAt DateTime
+  data      Json
+
+  @@index([accountId])
+}

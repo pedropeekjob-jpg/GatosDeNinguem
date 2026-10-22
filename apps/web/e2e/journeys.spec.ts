@@ -154,3 +154,71 @@ test("home: shelter photos in a full-width carousel, moved with the buttons", as
   // People who ask for reduced motion never get autoplay, but can still start it.
   await expect(carousel.getByRole("button", { name: "Passar automaticamente" })).toBeVisible();
 });
+
+test.describe("contas e Patinhas", () => {
+  for (const path of ["/patinhas", "/conta"]) {
+    test(`${path} is accessible and has SEO basics`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.locator("h1")).toHaveCount(1);
+      await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow).toBeLessThanOrEqual(1);
+      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+      expect(results.violations.map((v) => v.id)).toEqual([]);
+    });
+  }
+
+  test("create an account with just a name and a code, and earn welcome Patinhas", async ({ page }) => {
+    await page.goto("/conta");
+    await page.getByLabel("Email ou telemóvel").fill("maria@exemplo.pt");
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(page.getByRole("heading", { name: /Vamos criar a sua conta/ })).toBeVisible();
+    await page.getByLabel("O seu nome").fill("Maria Silva");
+    await page.getByRole("button", { name: "Enviar o código" }).click();
+    await expect(page.getByText("Precisa de aceitar para criar a conta")).toBeVisible();
+    await page.getByText("Aceito que a associação guarde").click();
+    await page.getByRole("button", { name: "Enviar o código" }).click();
+    const code = (await page.getByText(/Demonstração: o código é/).textContent())!.match(/\d{6}/)![0];
+    await page.getByLabel("Código").fill(code);
+    await page.getByRole("button", { name: "Criar a minha conta" }).click();
+    await expect(page.getByText("Bem-vindo, Maria! Já tem 10 Patinhas.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Olá, Maria!" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /A minha conta \(Maria\)/ })).toBeVisible();
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+
+  test("a helper swaps Patinhas for a partner perk and gets a code", async ({ page }) => {
+    await page.goto("/conta");
+    await page.getByLabel("Email ou telemóvel").fill("912 000 001");
+    await page.getByRole("button", { name: "Continuar" }).click();
+    const code = (await page.getByText(/Demonstração: o código é/).textContent())!.match(/\d{6}/)![0];
+    await page.getByLabel("Código").fill(code);
+    await page.getByRole("button", { name: "Entrar" }).click();
+    await expect(page.getByText("Amigo de Bigodes").first()).toBeVisible();
+    await expect(page.getByRole("progressbar", { name: /Até ao nível 3/ })).toBeVisible();
+    await page.getByRole("button", { name: "Trocar por 100 Patinhas" }).click();
+    await page.getByRole("button", { name: "Sim, trocar" }).click();
+    await expect(page.getByText(/^GN-[A-Z2-9]{5}$/).first()).toBeVisible();
+    await expect(page.locator(".painel__saldo-valor")).toHaveText("185");
+  });
+
+  test("finishing the help quiz while signed in counts once", async ({ page }) => {
+    await page.goto("/conta");
+    await page.getByLabel("Email ou telemóvel").fill("913000002");
+    await page.getByRole("button", { name: "Continuar" }).click();
+    const code = (await page.getByText(/Demonstração: o código é/).textContent())!.match(/\d{6}/)![0];
+    await page.getByLabel("Código").fill(code);
+    await page.getByRole("button", { name: "Entrar" }).click();
+    await expect(page.getByRole("heading", { name: "Olá, João!" })).toBeVisible();
+    await page.goto("/ajudar");
+    const quiz = page.locator("section", { hasText: "Não sabe por onde começar?" });
+    await quiz.getByText("Quase nenhum").click();
+    await quiz.getByRole("button", { name: "Continuar" }).click();
+    await quiz.getByText("Agora não").click();
+    await quiz.getByRole("button", { name: "Continuar" }).click();
+    await quiz.getByText("Não", { exact: true }).click();
+    await quiz.getByRole("button", { name: "Ver sugestão" }).click();
+    await expect(page.getByText("Ganhou 10 Patinhas por fazer o questionário.")).toBeVisible();
+  });
+});

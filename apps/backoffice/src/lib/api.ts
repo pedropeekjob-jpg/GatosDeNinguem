@@ -1,11 +1,12 @@
 import { createContext, useContext } from "react";
+import { patinhasHttp, type PatinhasApi } from "./patinhasApi";
 import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, WeeklyRule } from "./types";
 
 export type AuditItem = { id: string; kind: "pagina" | "gato" | "noticia"; label: string; path: string; title: string; description: string; noindex: boolean };
 export type SeoTarget = { kind: AuditItem["kind"]; id: string };
 
 /** Everything the back office can ask the API. Tests pass a fake implementation. */
-export interface Api {
+export interface Api extends PatinhasApi {
   shifts(range: { from: string; to: string }): Promise<Shift[]>;
   createShift(input: ShiftInput): Promise<Shift>;
   createWeekly(rule: WeeklyRule): Promise<{ created: number }>;
@@ -95,6 +96,7 @@ export function httpApi(baseUrl: string, token: string): Api {
     redirects: () => call("GET", "/seo/redirects"),
     addRedirect: (r) => call("POST", "/seo/redirects", r),
     deleteRedirect: (id) => call("DELETE", `/seo/redirects/${id}`),
+    ...patinhasHttp(call),
   };
 }
 

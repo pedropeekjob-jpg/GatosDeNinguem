@@ -10,6 +10,9 @@ export async function generateMetadata() {
   return buildMetadata({ path: "/parceiros", title: page.heading, description: page.intro, overrides: page.seo });
 }
 
+const withPatinhas = (perk: Perk) =>
+  perk.patinhasCost ? [{ label: "Com Patinhas", value: [`${perk.patinhasCost} Patinhas`, perk.minLevel ? `a partir do nível ${perk.minLevel}` : null].filter(Boolean).join(", ") }] : [];
+
 const audience: Record<Perk["audience"], string> = { amigos: "Para Amigos da associação", voluntarios: "Para voluntários", todos: "Para todos" };
 
 export default async function PartnersPage() {
@@ -27,14 +30,14 @@ export default async function PartnersPage() {
               href={p.website}
               eyebrow={`${partnerCategoryLabel[p.category]} · ${p.town}`}
               media={p.logo ? { src: p.logo.url, alt: p.logo.alt } : undefined}
-              meta={p.perks.map((perk) => ({ label: audience[perk.audience], value: perk.description }))}
+              meta={p.perks.flatMap((perk) => [{ label: audience[perk.audience], value: perk.description }, ...withPatinhas(perk)])}
               badges={p.category === "veterinario" ? <Badge tone="info">Clínica parceira</Badge> : undefined}
             >
               {p.why ? <p>{p.why}</p> : null}
             </Card>
           ))}
         </Grid>
-        <p className="small muted">Para usar uma vantagem, mostre o seu cartão de Amigo ou diga que vem da parte da Gatos de Ninguém.</p>
+        <p className="small muted">Para usar uma vantagem, mostre o seu cartão de Amigo ou diga que vem da parte da Gatos de Ninguém. Também pode trocar <a href="/patinhas">Patinhas</a> por vantagens na <a href="/conta">sua conta</a>.</p>
       </Section>
       <section id="seja-parceiro" className="gn-section gn-section--soft">
         <Container narrow>

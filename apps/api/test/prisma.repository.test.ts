@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.sponsorship.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());

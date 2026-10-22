@@ -7,6 +7,8 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
 const config: NextConfig = {
   ...(staticExport ? { output: "export" as const, trailingSlash: true, basePath } : {}),
   // Workspace packages ship TypeScript source.
+  // Without an API (the GitHub Pages demo, tests) accounts and Patinhas run in the browser on example data.
+  env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1" },
   transpilePackages: ["@gn/ui", "@gn/domain", "@gn/seo"],
   poweredByHeader: false,
   images: { unoptimized: true },

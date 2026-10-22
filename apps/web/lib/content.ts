@@ -1,6 +1,21 @@
 import "server-only";
 import {
+  challengeProgress,
+  currentChallenges,
+  defaultPointsRules,
+  earnedTotal,
   freeSpots,
+  levelFor,
+  levels,
+  seedAccounts,
+  seedBadges,
+  seedChallenges,
+  seedEntries,
+  wallName,
+  type Badge,
+  type Challenge,
+  type Level,
+  type PointsRule,
   openNeeds,
   publicHappyEnding,
   seedCats,
@@ -51,7 +66,8 @@ export async function getSeoSettings(): Promise<SeoSettings> {
 }
 
 export async function getPage(path: string): Promise<Page> {
-  const page = API_URL ? await api<Page>(`/pages?path=${encodeURIComponent(path)}`) : seedPages.find((p) => p.path === path);
+  // Pages added in a new release show their default text until the team edits them.
+  const page = (API_URL ? await api<Page>(`/pages?path=${encodeURIComponent(path)}`) : undefined) ?? seedPages.find((p) => p.path === path);
   if (!page) throw new Error(`Página ${path} não existe no conteúdo`);
   return page;
 }
@@ -120,3 +136,30 @@ export async function listOpenShifts(): Promise<PublicShift[]> {
 }
 
 const withoutSignups = ({ signups: _private, ...shift }: Shift) => shift;
+
+/** The public Patinhas page: ways to earn, levels, badges, this month's challenge and the opt-in thanks wall. */
+export type PatinhasSummary = {
+  levels: Level[];
+  waysToEarn: PointsRule[];
+  badges: Badge[];
+  challenges: { challenge: Challenge; progress: number }[];
+  wall: { name: string; levelName: string }[];
+};
+
+export async function getPatinhasSummary(): Promise<PatinhasSummary> {
+  if (API_URL) {
+    const res = await fetch(`${API_URL}/patinhas`, { next: { revalidate: 300, tags: [CONTENT_TAG] } });
+    if (!res.ok) throw new Error(`API /patinhas respondeu ${res.status}`);
+    return (await res.json()) as PatinhasSummary;
+  }
+  const now = new Date();
+  return {
+    levels,
+    waysToEarn: defaultPointsRules.filter((r) => r.active),
+    badges: seedBadges,
+    challenges: currentChallenges(seedChallenges, now).map((challenge) => ({ challenge, progress: challengeProgress(challenge, seedEntries) })),
+    wall: seedAccounts
+      .filter((a) => a.showOnWall)
+      .map((a) => ({ name: wallName(a), levelName: levelFor(earnedTotal(seedEntries.filter((e) => e.accountId === a.id))).name })),
+  };
+}
