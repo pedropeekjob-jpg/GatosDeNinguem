@@ -217,6 +217,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-nav__link[aria-current="page"]::after { transform: none; height: 3px; background: var(--gn-accent-strong); }
 .gn-nav__link:focus-visible { background: var(--gn-accent-soft); color: var(--gn-ink); }
 .gn-nav__icon { display: inline-flex; }
+.gn-nav__count { min-width: 1.5rem; padding: 0 0.4rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-size: 0.875rem; font-weight: 700; line-height: 1.5rem; text-align: center; font-variant-numeric: tabular-nums; }
 .gn-icon { display: block; width: 1.5rem; height: 1.5rem; }
 /* Icons are for the phone tab bar; wide screens keep plain words. */
 .gn-header--tabbar .gn-nav__icon { display: none; }

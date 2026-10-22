@@ -1,5 +1,6 @@
 /** Loads the demo content into an empty database: pnpm --filter @gn/api db:seed */
 import { PrismaClient } from "@prisma/client";
+import { seedAppointments, seedCareAlerts, seedCatCare, seedMedications, seedVisitNotes } from "@gn/domain";
 import { seedCats, seedFosterPlacements, seedImpact, seedShifts, seedSponsorships, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings } from "@gn/domain";
 import { seedBadges, seedChallenges } from "@gn/domain";
 import { PrismaContentRepository } from "./content/prisma.repository";
@@ -21,6 +22,11 @@ export async function seedDatabase(db: PrismaClient) {
   const patinhas = new PrismaPatinhasRepository(db);
   for (const b of seedBadges) await patinhas.saveBadge(b);
   for (const c of seedChallenges) await patinhas.saveChallenge(c);
+  for (const c of seedCatCare) await repo.saveCatCare(c);
+  for (const m of seedMedications) await repo.saveMedication(m);
+  for (const a of seedAppointments) await repo.saveAppointment(a);
+  for (const n of seedVisitNotes) await repo.saveVisitNote(n);
+  for (const a of seedCareAlerts) await repo.saveCareAlert(a);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

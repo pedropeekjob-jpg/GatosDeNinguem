@@ -2,7 +2,8 @@
 import type { ReactNode } from "react";
 import { Button } from "./Button";
 
-export type NavItem = { href: string; label: string; icon?: ReactNode };
+/** count: a small number next to the label, e.g. unread news. */
+export type NavItem = { href: string; label: string; icon?: ReactNode; count?: number; countLabel?: string };
 
 function isCurrent(itemHref: string, currentPath: string) {
   if (itemHref === "/") return currentPath === "/";
@@ -34,6 +35,7 @@ export function SiteHeader({ brand, homeHref, items, currentPath, urgent, tools,
               <a href={item.href} className="gn-nav__link" aria-current={isCurrent(item.href, currentPath) ? "page" : undefined}>
                 {item.icon ? <span aria-hidden="true" className="gn-nav__icon">{item.icon}</span> : null}
                 <span className="gn-nav__label">{item.label}</span>
+                {item.count ? <span className="gn-nav__count">{item.count}<span className="gn-sr-only"> {item.countLabel ?? "novidades"}</span></span> : null}
               </a>
             </li>
           ))}

@@ -1,3 +1,4 @@
+import type { Appointment, CareAlert, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
 import type { FosterPlacement, Shift, Sponsorship } from "@gn/domain";
 import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Redirect, SeoSettings } from "@gn/domain";
 
@@ -49,6 +50,25 @@ export interface ContentRepository {
   listRedirects(): Promise<Redirect[]>;
   saveRedirect(redirect: Redirect): Promise<Redirect>;
   deleteRedirect(id: string): Promise<void>;
+
+  // Cuidados (team only)
+  listCatCare(): Promise<CatCare[]>;
+  getCatCare(catId: string): Promise<CatCare | undefined>;
+  saveCatCare(care: CatCare): Promise<CatCare>;
+  listMedications(catId?: string): Promise<Medication[]>;
+  getMedication(id: string): Promise<Medication | undefined>;
+  saveMedication(m: Medication): Promise<Medication>;
+  listDoses(range: { from: string; to: string }): Promise<Dose[]>;
+  saveDose(d: Dose): Promise<Dose>;
+  deleteDose(id: string): Promise<void>;
+  listAppointments(catId?: string): Promise<Appointment[]>;
+  getAppointment(id: string): Promise<Appointment | undefined>;
+  saveAppointment(a: Appointment): Promise<Appointment>;
+  listVisitNotes(catId?: string): Promise<VisitNote[]>;
+  saveVisitNote(n: VisitNote): Promise<VisitNote>;
+  /** Newest first. */
+  listCareAlerts(opts?: { since?: string; catId?: string; limit?: number }): Promise<CareAlert[]>;
+  saveCareAlert(a: CareAlert): Promise<CareAlert>;
 }
 
 export const CONTENT_REPOSITORY = Symbol("ContentRepository");

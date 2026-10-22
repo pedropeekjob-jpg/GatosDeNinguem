@@ -1,3 +1,4 @@
+import type { Appointment, CareAlert, CatCare, Dose, Medication, VisitNote } from "./cuidados";
 import type { FosterPlacement, Shift, Sponsorship } from "./escalas";
 import type { z } from "zod";
 import { pageSchema } from "./content";
@@ -404,4 +405,40 @@ export const seedFosterPlacements: FosterPlacement[] = [
 export const seedSponsorships: Sponsorship[] = [
   { id: "sp-1", catSlug: "tobias", sponsorName: "Marta Gomes", email: "marta@example.pt", monthlyAmount: 10, startDate: "2026-03-01", active: true, lastUpdateSentAt: "2026-09-10" },
   { id: "sp-2", catSlug: "estrela", sponsorName: "Escola EB de Darque (exemplo)", monthlyAmount: 25, startDate: "2026-05-01", active: true, lastUpdateSentAt: "2026-10-15" },
+];
+
+/** Example care data: where the demo cats live, their medication and appointments. */
+const ana = { name: "Ana Ribeiro" };
+const rui = { name: "Rui Sousa" };
+
+export const seedCatCare: CatCare[] = [
+  { catId: "cat-1", location: { area: "paquito", spot: "solto" }, since: "2026-09-02T10:00:00.000Z", updatedBy: ana },
+  { catId: "cat-2", location: { area: "colonia", spot: "solto" }, since: "2026-08-15T10:00:00.000Z", updatedBy: ana },
+  { catId: "cat-3", location: { area: "caramelo", spot: "solto" }, since: "2026-07-20T10:00:00.000Z", updatedBy: rui },
+  { catId: "cat-4", location: { area: "carlota", spot: "jaula", cage: "1", reason: "Controlo da diabetes" }, since: "2026-10-18T18:00:00.000Z", updatedBy: rui },
+  { catId: "cat-5", location: { area: "fora", spot: "solto", reason: "Em família temporária (Família Lopes)" }, since: "2026-10-10T12:00:00.000Z", updatedBy: ana },
+];
+
+export const seedMedications: Medication[] = [
+  { id: "med-1", catId: "cat-4", name: "Insulina", dose: "1 unidade", times: ["08:00", "20:00"], withFood: true, instructions: "Dar depois de comer. Picar na pele do pescoço, mudar de lado.", startDate: "2026-10-01", createdBy: rui, updatedAt: now },
+  { id: "med-2", catId: "cat-1", name: "Semintra (rins)", dose: "1 ml", times: ["09:00"], withFood: true, startDate: "2026-09-15", createdBy: ana, updatedAt: now },
+  { id: "med-3", catId: "cat-5", name: "Meloxicam", dose: "0,3 ml", times: ["20:00"], withFood: true, instructions: "Dado pela família temporária.", startDate: "2026-10-10", endDate: "2026-11-09", createdBy: ana, updatedAt: now },
+];
+
+export const seedDoses: Dose[] = [];
+
+export const seedAppointments: Appointment[] = [
+  { id: "con-1", catId: "cat-5", startsAt: "2026-11-05T15:30:00.000Z", clinic: "Clínica Veterinária do Lima (exemplo)", reason: "Revisão da pata", status: "marcada", transportShiftId: "shift-3", createdBy: ana, updatedAt: now },
+  { id: "con-2", catId: "cat-4", startsAt: "2026-11-12T10:00:00.000Z", clinic: "Clínica Veterinária do Lima (exemplo)", reason: "Curva de glicemia", notes: "Ir em jejum: não dar comida nem insulina de manhã.", status: "marcada", createdBy: rui, updatedAt: now },
+];
+
+export const seedVisitNotes: VisitNote[] = [
+  { id: "nota-1", catId: "cat-4", text: "Comeu tudo e deixou-se picar sem problema.", important: false, by: ana, createdAt: "2026-10-21T19:10:00.000Z" },
+  { id: "nota-2", catId: "cat-1", text: "Bebeu muita água hoje. Vale a pena falar com a veterinária na próxima consulta.", important: true, by: rui, createdAt: "2026-10-21T11:00:00.000Z" },
+];
+
+export const seedCareAlerts: CareAlert[] = [
+  { id: "al-1", catId: "cat-4", catName: "Estrela", kind: "localizacao", message: "Estrela mudou de Contentor Carlota, solto para Contentor Carlota, jaula 1. Motivo: Controlo da diabetes.", important: true, by: rui, createdAt: "2026-10-18T18:00:00.000Z" },
+  { id: "al-2", catId: "cat-1", catName: "Tobias", kind: "nota", message: "Sobre Tobias: “Bebeu muita água hoje. Vale a pena falar com a veterinária na próxima consulta.”", important: true, by: rui, createdAt: "2026-10-21T11:00:00.000Z" },
+  { id: "al-3", catId: "cat-4", catName: "Estrela", kind: "nota", message: "Sobre Estrela: “Comeu tudo e deixou-se picar sem problema.”", important: false, by: ana, createdAt: "2026-10-21T19:10:00.000Z" },
 ];

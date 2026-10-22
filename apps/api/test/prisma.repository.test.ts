@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());
@@ -51,5 +51,21 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   it("stores and lists partner applications", async () => {
     await repo.savePartnerApplication({ id: "a1", receivedAt: new Date().toISOString(), businessName: "Padaria", contactName: "Ana", email: "ana@example.pt", town: "Viana", consent: true });
     expect(await repo.listPartnerApplications()).toHaveLength(1);
+  });
+
+  it("stores care: places, medication, doses, appointments, notes and alerts", async () => {
+    expect((await repo.getCatCare("cat-4"))?.location).toMatchObject({ area: "carlota", spot: "jaula", cage: "1" });
+    await repo.saveCatCare({ catId: "cat-4", location: { area: "carlota", spot: "solto" }, since: new Date().toISOString(), updatedBy: { name: "Ana" } });
+    expect((await repo.listCatCare()).find((c) => c.catId === "cat-4")?.location.spot).toBe("solto");
+    expect((await repo.listMedications("cat-4")).map((m) => m.name)).toEqual(["Insulina"]);
+    const dose = { id: "d1", medicationId: "med-1", catId: "cat-4", date: "2026-11-02", time: "08:00", givenAt: new Date().toISOString(), by: { name: "Ana" } };
+    await repo.saveDose(dose);
+    await expect(repo.saveDose({ ...dose, id: "d2" })).rejects.toThrow();
+    expect(await repo.listDoses({ from: "2026-11-02", to: "2026-11-02" })).toHaveLength(1);
+    await repo.deleteDose("d1");
+    expect(await repo.listDoses({ from: "2026-11-01", to: "2026-11-30" })).toHaveLength(0);
+    expect((await repo.listAppointments()).map((a) => a.id)).toEqual(["con-1", "con-2"]);
+    expect((await repo.listVisitNotes("cat-4"))[0]?.text).toContain("Comeu tudo");
+    expect((await repo.listCareAlerts({ since: "2026-10-21T00:00:00.000Z" })).map((a) => a.id)).toEqual(["al-3", "al-2"]);
   });
 });
