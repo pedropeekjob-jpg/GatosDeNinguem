@@ -178,3 +178,12 @@ describe("notes after each visit", () => {
     expect((await req("POST", "/cuidados/notas", { by, catId: "nao-existe", text: "Olá" })).statusCode).toBe(404);
   });
 });
+
+describe("browser access from the back office", () => {
+  it("allows editing methods in the CORS preflight", async () => {
+    const res = await app.inject({ method: "OPTIONS", url: "/cuidados/gatos/cat-3/localizacao", headers: { origin: "http://localhost:5173", "access-control-request-method": "PUT" } });
+    expect(res.headers["access-control-allow-methods"]).toContain("PUT");
+    expect(res.headers["access-control-allow-methods"]).toContain("PATCH");
+    expect(res.headers["access-control-allow-methods"]).toContain("DELETE");
+  });
+});

@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AnimatedLogo, Button, Container, Notice, SiteHeader, TextField } from "@gn/ui";
 import { ApiContext, httpApi, type Api } from "./lib/api";
+import { useUnreadAlerts } from "./lib/equipa";
+import { CuidadoGatoPage } from "./pages/CuidadoGatoPage";
+import { CuidadosPage } from "./pages/CuidadosPage";
 import { EscalasPage } from "./pages/EscalasPage";
 import { FotosPage } from "./pages/FotosPage";
 import { GatosPage } from "./pages/GatosPage";
@@ -15,6 +18,7 @@ import { SeoPage } from "./pages/SeoPage";
 
 const nav = [
   { href: "/", label: "Hoje" },
+  { href: "/cuidados", label: "Cuidados" },
   { href: "/escalas", label: "Escalas" },
   { href: "/gatos", label: "Gatos" },
   { href: "/fotos", label: "Fotos do gatil" },
@@ -62,17 +66,13 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
     <ApiContext.Provider value={api}>
       <QueryClientProvider client={client}>
         <div onClick={onClick}>
-          <SiteHeader
-            brand={<><img className="bo-logo" src="/logo.svg" alt="Gatos de Ninguém" width={54} height={56} /><span className="bo-brand-label">Gestão</span></>}
-            homeHref="/"
-            items={nav}
-            currentPath={location.pathname}
-            tools={onLogout ? <Button variant="quiet" onClick={onLogout}>Sair</Button> : undefined}
-          />
+          <Header currentPath={location.pathname} onLogout={onLogout} />
           <main id="conteudo" className="bo-main">
             <Container>
               <Routes>
                 <Route path="/" element={<HojePage today={today} />} />
+                <Route path="/cuidados" element={<CuidadosPage today={today} />} />
+                <Route path="/cuidados/:catId" element={<CuidadoGatoPage today={today} />} />
                 <Route path="/escalas" element={<EscalasPage today={today} />} />
                 <Route path="/gatos" element={<GatosPage />} />
                 <Route path="/fotos" element={<FotosPage />} />
@@ -88,6 +88,21 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
         </div>
       </QueryClientProvider>
     </ApiContext.Provider>
+  );
+}
+
+/** The menu shows how many care changes this person has not seen yet. */
+function Header({ currentPath, onLogout }: { currentPath: string; onLogout?: () => void }) {
+  const { unread } = useUnreadAlerts();
+  const items = nav.map((item) => (item.href === "/cuidados" ? { ...item, count: unread.length, countLabel: unread.length === 1 ? "novidade por ver" : "novidades por ver" } : item));
+  return (
+    <SiteHeader
+      brand={<><img className="bo-logo" src="/logo.svg" alt="Gatos de Ninguém" width={54} height={56} /><span className="bo-brand-label">Gestão</span></>}
+      homeHref="/"
+      items={items}
+      currentPath={currentPath}
+      tools={onLogout ? <Button variant="quiet" onClick={onLogout}>Sair</Button> : undefined}
+    />
   );
 }
 

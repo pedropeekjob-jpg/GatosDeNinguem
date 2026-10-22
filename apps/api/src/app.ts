@@ -44,6 +44,7 @@ export async function createApp(options: ApiOptions): Promise<NestFastifyApplica
   const app = await NestFactory.create<NestFastifyApplication>(AppModule.register(options), new FastifyAdapter({ bodyLimit: Math.ceil(MAX_UPLOAD_BYTES * 1.4) }), {
     logger: options.logger ?? ["log", "error", "warn"],
   });
-  app.enableCors({ origin: options.corsOrigins ?? true });
+  // Fastify only allows GET, HEAD and POST by default; the back office also edits and deletes.
+  app.enableCors({ origin: options.corsOrigins ?? true, methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"] });
   return app;
 }
