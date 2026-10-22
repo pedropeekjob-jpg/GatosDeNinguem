@@ -173,7 +173,8 @@ test("home: opens on the shelter's real photos, with the welcome and main button
   const carousel = page.getByRole("region", { name: "Fotografias do gatil" });
   await expect(carousel).toBeVisible();
   const box = await carousel.boundingBox();
-  expect(box!.width).toBeGreaterThanOrEqual((page.viewportSize()!.width) - 1);
+  // Full width on wide screens; on phones a rounded picture inset a little from the edges.
+  expect(box!.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - (page.viewportSize()!.width < 960 ? 32 : 1));
   expect(box!.y).toBeLessThan(120); // right under the header: the photos are the top of the page
   await expect(carousel.locator("img").first()).toHaveAttribute("src", /\/fotos\/.+\.webp$/);
   // Nothing to scroll for: the title and the two main buttons are on screen, clear of the phone tab bar.
