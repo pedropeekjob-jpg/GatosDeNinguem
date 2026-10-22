@@ -184,11 +184,14 @@ test("home: opens on the shelter's real photos, with the welcome and main button
     await expect(button).toBeInViewport({ ratio: 1 });
     expect((await button.boundingBox())!.y + (await button.boundingBox())!.height).toBeLessThanOrEqual(tabBarTop);
   }
-  await expect(carousel.getByText("1 / 6")).toBeVisible();
+  await expect(carousel.locator(".gn-carousel__count")).toHaveText("1 / 6");
   await carousel.getByRole("button", { name: "Fotografia seguinte" }).click();
-  await expect(carousel.getByText("2 / 6")).toBeVisible();
+  await expect(carousel.locator(".gn-carousel__count")).toHaveText("2 / 6");
+  // Phones show only the photo and two arrows; wide screens add the caption and the play button.
   // People who ask for reduced motion never get autoplay, but can still start it.
-  await expect(carousel.getByRole("button", { name: "Passar automaticamente" })).toBeVisible();
+  const phone = page.viewportSize()!.width < 960;
+  await expect(carousel.getByRole("button", { name: "Passar automaticamente" })).toBeVisible({ visible: !phone });
+  await expect(carousel.locator(".gn-carousel__slide.is-active .gn-carousel__caption")).toBeVisible({ visible: !phone });
 });
 
 test.describe("contas e Patinhas", () => {
@@ -321,7 +324,11 @@ test.describe("no gatil: the volunteer's shift", () => {
 test("home: Patinhas are explained above the fold, with a link to how they work", async ({ page }) => {
   await page.goto("/");
   const teaser = page.getByRole("complementary", { name: "Cada ajuda vale Patinhas" });
-  await expect(teaser).toBeInViewport();
+  // Whole card in the first screen, clear of the phone tab bar.
+  await expect(teaser).toBeInViewport({ ratio: 1 });
+  const tabBarTop = await page.locator(".gn-nav").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
+  const box = (await teaser.boundingBox())!;
+  expect(box.y + box.height).toBeLessThanOrEqual(tabBarTop);
   await teaser.getByRole("link", { name: "Como funcionam as Patinhas" }).click();
   await expect(page).toHaveURL(/\/patinhas\/?$/);
 });

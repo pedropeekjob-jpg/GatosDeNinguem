@@ -19,6 +19,8 @@ export default async function HomePage() {
   const featured = ordered.length ? ordered[week % ordered.length] : undefined;
   // Shelter photos, managed in the back office (Fotos do gatil).
   const slides = (page.gallery ?? []).filter((p) => !p.hidden).map((p) => ({ src: p.url, alt: p.alt, caption: p.caption }));
+  // Phones show only the first sentence of the welcome: one idea, then the buttons.
+  const [firstSentence, ...more] = page.intro.split(/(?<=[.!?])\s+/);
 
   return (
     <>
@@ -29,7 +31,7 @@ export default async function HomePage() {
           <Container>
             <div className="home-hero__text">
               <h1 id="boas-vindas">{page.heading}</h1>
-              <p className="gn-lead">{page.intro}</p>
+              <p className="gn-lead">{firstSentence}{more.length ? <span className="home-hero__more"> {more.join(" ")}</span> : null}</p>
               <div className="home-actions">
                 <Button href="/adotar">Quero adotar</Button>
                 <Button href="/ajudar" variant="secondary">Quero ajudar</Button>

@@ -224,3 +224,34 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .sponsor-cat img { width: 7.5rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius, 0.75rem); flex: none; }
 .sponsor-cat p { margin: 0 0 0.25rem; }
 .sponsor-cat__name { font-weight: 700; font-size: var(--gn-text-l); }
+
+/* A page ending on a coloured section runs straight into the footer, with no white band between them. */
+main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
+
+/* Phones: one sentence of welcome, a one-line Patinhas note and the cat of the week without its long story.
+   Everything left out is one tap away (cat page, /patinhas) and still shown on wide screens. */
+.home-hero__more { display: none; }
+.patinhas-teaser__long { display: none; }
+@media (max-width: 59.99rem) {
+  .home-top__over { padding-block: 1rem 0.5rem; }
+  .home-hero__text { gap: 0.6rem; }
+  .home-hero__text h1 { font-size: 1.625rem; line-height: 1.12; }
+  .home-hero__text .gn-lead { font-size: var(--gn-text); line-height: 1.5; }
+  .home-next { padding-block: 0.5rem var(--gn-space-l); }
+  .patinhas-teaser { position: relative; align-items: center; padding: 0.7rem 2.75rem 0.7rem 0.8rem; gap: 0.75rem; }
+  .patinhas-teaser__icon { width: 2.25rem; height: 2.25rem; }
+  .patinhas-teaser__title { font-size: var(--gn-text); }
+  .patinhas-teaser__link { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 1.1rem; border-radius: inherit; }
+  .patinhas-teaser__link::after { content: ""; width: 0.6rem; height: 0.6rem; border-top: 2px solid var(--gn-ink); border-right: 2px solid var(--gn-ink); transform: rotate(45deg); }
+  .patinhas-teaser__link:focus-visible { outline: 3px solid var(--gn-ink); outline-offset: 2px; }
+  .patinhas-teaser__link-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .featured__story { display: none; }
+  .featured .gn-lead { font-size: var(--gn-text); }
+  .site-footer__logo { width: 4.5rem; }
+  .site-footer__brand p { font-size: var(--gn-text); }
+}
+@media (min-width: 60rem) {
+  .home-hero__more { display: inline; }
+  .patinhas-teaser__short { display: none; }
+  .patinhas-teaser__long { display: inline; }
+}

@@ -15,6 +15,8 @@ interface CarouselProps {
 }
 
 const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+/** Phones keep opening photos still: nothing moves while people read the welcome below them. */
+const wideScreen = () => typeof window !== "undefined" && !!window.matchMedia?.("(min-width: 60rem)").matches;
 
 /**
  * Full-width photo carousel. Built on native horizontal scrolling with snap points, so it
@@ -27,7 +29,7 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6,
   const [held, setHeld] = useState(false); // pointer over it or keyboard focus inside: never move under someone's hand
   const count = slides.length;
 
-  useEffect(() => { setPlaying(autoplay && count > 1 && !reducedMotion()); }, [autoplay, count]);
+  useEffect(() => { setPlaying(autoplay && count > 1 && !reducedMotion() && (!hero || wideScreen())); }, [autoplay, count, hero]);
 
   const go = useCallback((to: number) => {
     const el = track.current;
@@ -78,7 +80,7 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6,
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
           </button>
           {autoplay ? (
-            <button type="button" className="gn-carousel__btn" onClick={() => setPlaying(!playing)} aria-label={playing ? "Parar a passagem automática" : "Passar automaticamente"}>
+            <button type="button" className="gn-carousel__btn gn-carousel__btn--play" onClick={() => setPlaying(!playing)} aria-label={playing ? "Parar a passagem automática" : "Passar automaticamente"}>
               {playing
                 ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12" /></svg>
                 : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor" /></svg>}

@@ -28,7 +28,7 @@ export function FeaturedCat({ cat }: { cat: PublicCat }) {
                 </div>
               ) : null}
             </div>
-            <p>{cat.story}</p>
+            <p className="featured__story">{cat.story}</p>
             <div className="action-row">
               <Button href={`/adotar/${cat.slug}`}>Conhecer {cat.name}</Button>
               <Button href={`/apadrinhar/${cat.slug}`} variant="secondary">Apadrinhar<span className="gn-sr-only"> {cat.name}</span></Button>
