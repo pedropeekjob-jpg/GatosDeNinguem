@@ -340,7 +340,8 @@ a:hover { text-decoration-thickness: 2.5px; }
    Rounder shapes, black-and-white buttons with the yellow kept for the one main action, a lighter header
    and a tab bar that floats on a soft shadow instead of a hard line. Sizes and touch targets do not change. */
 @media (max-width: 63.99rem) {
-  :root { --gn-radius: 18px; --gn-radius-s: 14px; }
+  /* A light warm-grey page so white cards, fields and the header stand out clearly; soft sections go one step darker. */
+  :root { --gn-radius: 18px; --gn-radius-s: 14px; --gn-bg: #f2efec; --gn-sand: #e9e5e1; }
   .gn-btn { font-weight: 650; letter-spacing: -0.005em; }
   .gn-btn--secondary { background: var(--gn-surface); border-color: var(--gn-ink); }
   .gn-header { border-bottom-color: transparent; box-shadow: 0 1px 0 rgb(28 26 27 / .06); }
@@ -348,7 +349,8 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-header--tabbar .gn-nav { border-top: 0; box-shadow: 0 -6px 24px rgb(28 26 27 / .08); }
   .gn-header--tabbar .gn-nav__link { color: #6b6562; }
   .gn-header--tabbar .gn-nav__link[aria-current="page"] { color: var(--gn-ink); }
-  .gn-card { border-color: transparent; box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 8px 24px rgb(28 26 27 / .06); }
+  /* White cards on the grey page, with a hairline and a soft lift. */
+  .gn-card { background: var(--gn-surface); border-color: var(--gn-line); box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 8px 22px rgb(28 26 27 / .08); }
   /* Opening photos: a rounded picture inset from the edges, like a card, rather than a full-bleed strip. */
   .gn-carousel--hero { margin: 0.75rem 0.75rem 0; border-radius: var(--gn-radius); overflow: hidden; background: var(--gn-sand); }
   /* The inset costs a little height: take it back from the photo so the Patinhas card still fits the first screen. */
