@@ -20,10 +20,7 @@ export function Header() {
       urgent={{ href: "/sos", label: "Encontrei um gato" }}
       tools={<TextSizeControl />}
       brand={
-        <>
-          <img src="/logo.svg" alt="" width={48} height={48} />
-          <span>Gatos de Ninguém</span>
-        </>
+<img className="gn-header__logo" src="/logo.svg" alt="Gatos de Ninguém, página inicial" width={81} height={84} />
       }
     />
   );

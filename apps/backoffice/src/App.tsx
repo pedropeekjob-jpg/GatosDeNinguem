@@ -59,7 +59,7 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
       <QueryClientProvider client={client}>
         <div onClick={onClick}>
           <SiteHeader
-            brand={<><img src="/logo.svg" alt="" width={40} height={40} /><span>Gestão</span></>}
+            brand={<><img className="bo-logo" src="/logo.svg" alt="Gatos de Ninguém" width={54} height={56} /><span className="bo-brand-label">Gestão</span></>}
             homeHref="/"
             items={nav}
             currentPath={location.pathname}
@@ -105,7 +105,7 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
     <main className="bo-login">
       <Container narrow>
         <form className="gn-stack gn-stack--m" onSubmit={submit}>
-          <img src="/logo.svg" alt="" width={72} height={72} />
+          <img src="/logo.svg" alt="" width={116} height={120} />
           <h1>Gestão Gatos de Ninguém</h1>
           <p className="gn-lead">Escreva o código de acesso da equipa.</p>
           <TextField id="token" label="Código de acesso" type="password" autoComplete="current-password" value={token} onChange={(e) => setToken(e.target.value)} />

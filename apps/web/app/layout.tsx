@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible } from "next/font/google";
+import { Atkinson_Hyperlegible, Fredoka } from "next/font/google";
 import { organizationJsonLd } from "@gn/seo";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -9,6 +9,8 @@ import "./globals.css";
 
 // A typeface designed by the Braille Institute for readers with low vision.
 const atkinson = Atkinson_Hyperlegible({ subsets: ["latin", "latin-ext"], weight: ["400", "700"], variable: "--font-atkinson", display: "swap" });
+// Rounded, friendly headings that echo the hand-drawn logo while staying easy to read.
+const fredoka = Fredoka({ subsets: ["latin", "latin-ext"], weight: ["500", "600"], variable: "--font-fredoka", display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSeoSettings();
@@ -20,12 +22,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0e5c57" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#221e20" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSeoSettings();
   return (
-    <html lang="pt-PT" className={atkinson.variable}>
+    <html lang="pt-PT" className={`${atkinson.variable} ${fredoka.variable}`}>
       <body>
         <Header />
         {process.env.NEXT_PUBLIC_STATIC_DEMO === "1" ? (

@@ -19,15 +19,14 @@ export function SiteHeader({ brand, homeHref, items, currentPath, urgent, tools 
   return (
     <header className="gn-header">
       <a className="gn-skip" href="#conteudo">Saltar para o conteúdo</a>
-      <div className="gn-header__top gn-container">
+      <div className="gn-header__inner gn-container">
         <a className="gn-header__brand" href={homeHref}>{brand}</a>
         <div className="gn-header__tools">
           {tools}
           {urgent ? <Button href={urgent.href} variant="urgent" icon={urgent.icon}>{urgent.label}</Button> : null}
         </div>
-      </div>
-      <nav className="gn-nav" aria-label="Menu principal">
-        <ul className="gn-nav__list gn-container">
+        <nav className="gn-nav" aria-label="Menu principal">
+          <ul className="gn-nav__list">
           {items.map((item) => (
             <li key={item.href}>
               <a href={item.href} className="gn-nav__link" aria-current={isCurrent(item.href, currentPath) ? "page" : undefined}>
@@ -36,8 +35,9 @@ export function SiteHeader({ brand, homeHref, items, currentPath, urgent, tools 
               </a>
             </li>
           ))}
-        </ul>
-      </nav>
+          </ul>
+        </nav>
+      </div>
     </header>
   );
 }
