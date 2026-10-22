@@ -28,6 +28,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="pt-PT" className={atkinson.variable}>
       <body>
         <Header />
+        {process.env.NEXT_PUBLIC_STATIC_DEMO === "1" ? (
+          <p className="demo-banner" role="note">
+            <strong>Versão de demonstração.</strong> Os gatos e as notícias são exemplos e os formulários não enviam dados.
+          </p>
+        ) : null}
         <main id="conteudo" tabIndex={-1}>{children}</main>
         <Footer />
         <JsonLd data={organizationJsonLd(settings)} />

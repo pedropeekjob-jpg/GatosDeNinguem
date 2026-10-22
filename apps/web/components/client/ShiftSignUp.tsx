@@ -1,7 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Notice, NextStep, TextField } from "@gn/ui";
-import { postJson } from "@/lib/submit";
+import { signUpForShift } from "@/lib/submit";
 
 type ShiftSummary = { id: string; title: string; startsAt: string; endsAt: string; location: string; when: string };
 
@@ -44,7 +44,7 @@ export function ShiftSignUp({ shift }: { shift: ShiftSummary }) {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setState("sending");
-    const result = await postJson(`/api/turnos/${encodeURIComponent(shift.id)}`, { ...form, consent: consent || undefined });
+    const result = await signUpForShift(shift.id, { ...form, consent: consent || undefined });
     if (result.ok) return setState("done");
     setErrors(result.fieldErrors);
     setSummary(result.message);

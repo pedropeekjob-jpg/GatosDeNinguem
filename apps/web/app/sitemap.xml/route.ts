@@ -2,6 +2,7 @@ import { buildSitemapXml, type SitemapEntry } from "@gn/seo";
 import { getSeoSettings, listCats, listPages, listPosts } from "@/lib/content";
 
 export const revalidate = 3600;
+export const dynamic = "force-static";
 
 /** Built from content, so new cats, news and noindex choices appear automatically. */
 export async function GET() {

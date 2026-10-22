@@ -37,3 +37,12 @@ main { display: block; }
 .reasons { margin: 0; padding-left: 1.2em; display: grid; gap: 0.3rem; }
 .iban { font-family: ui-monospace, Menlo, monospace; font-size: var(--gn-text-l); background: var(--gn-surface); border: 2px dashed var(--gn-line); padding: 0.6rem 0.9rem; border-radius: 8px; overflow-wrap: anywhere; }
 .honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.demo-banner {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #fff4d6;
+  color: #3d2c00;
+  border-bottom: 2px solid #c79a1c;
+  text-align: center;
+}

@@ -1,11 +1,17 @@
 import type { NextConfig } from "next";
 
+/** STATIC_EXPORT=1 builds the demo for GitHub Pages: plain files, demo content, no server. */
+const staticExport = process.env.STATIC_EXPORT === "1";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
+
 const config: NextConfig = {
+  ...(staticExport ? { output: "export" as const, trailingSlash: true, basePath } : {}),
   // Workspace packages ship TypeScript source.
   transpilePackages: ["@gn/ui", "@gn/domain", "@gn/seo"],
   poweredByHeader: false,
   images: { unoptimized: true },
-  async headers() {
+  // Static hosting cannot send headers; the real deploy does.
+  headers: staticExport ? undefined : async () => {
     return [
       {
         source: "/:path*",

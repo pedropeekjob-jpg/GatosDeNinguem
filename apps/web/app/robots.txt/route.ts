@@ -2,6 +2,7 @@ import { buildRobotsTxt } from "@gn/seo";
 import { getSeoSettings } from "@/lib/content";
 
 export const revalidate = 3600;
+export const dynamic = "force-static";
 
 /** Indexing is off unless ALLOW_INDEXING=true, so preview deploys never reach Google. */
 export async function GET() {
