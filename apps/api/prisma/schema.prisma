@@ -216,3 +216,11 @@ model CareAlert {
   @@index([createdAt])
   @@index([catId])
 }
+
+/** Uploaded photos, when UPLOAD_STORAGE=database (hosts without a persistent disk). */
+model Upload {
+  name        String   @id
+  contentType String
+  data        Bytes
+  createdAt   DateTime @default(now())
+}
