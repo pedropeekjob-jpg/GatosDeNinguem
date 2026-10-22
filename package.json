@@ -1,0 +1,21 @@
+{
+  "name": "gatos-de-ninguem",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "demo": "node scripts/demo.mjs",
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "e2e": "pnpm --filter @gn/web e2e"
+  },
+  "devDependencies": {
+    "turbo": "2.5.8",
+    "typescript": "5.8.3",
+    "@types/node": "22.20.5"
+  }
+}

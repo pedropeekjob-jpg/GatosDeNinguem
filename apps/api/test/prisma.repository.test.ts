@@ -1,0 +1,55 @@
+/**
+ * Integration test against a real PostgreSQL. Runs when DATABASE_URL is set
+ * (CI starts a Postgres service); locally: DATABASE_URL=... pnpm --filter @gn/api test
+ */
+import { PrismaClient } from "@prisma/client";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { PrismaContentRepository } from "../src/content/prisma.repository";
+import { seedDatabase } from "../src/seed-db";
+
+const url = process.env.DATABASE_URL;
+
+describe.runIf(Boolean(url))("PrismaContentRepository", () => {
+  const db = new PrismaClient();
+  const repo = new PrismaContentRepository(db);
+
+  beforeAll(async () => {
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.sponsorship.deleteMany()]);
+    await seedDatabase(db);
+  });
+  afterAll(async () => db.$disconnect());
+
+  it("round-trips cats, pages, posts, partners and settings", async () => {
+    expect((await repo.getCatBySlug("tobias"))?.name).toBe("Tobias");
+    expect((await repo.listPages()).length).toBeGreaterThan(3);
+    expect((await repo.listPosts())[0]?.slug).toBe("precisamos-de-areia-e-racao");
+    expect((await repo.listPartners()).length).toBe(3);
+    expect((await repo.getSeoSettings()).siteName).toBe("Gatos de Ninguém");
+  });
+
+  it("updates SEO on an existing cat", async () => {
+    const cat = (await repo.getCatBySlug("mia"))!;
+    await repo.saveCat({ ...cat, seo: { title: "Mia, gata para adoção em Viana" } });
+    expect((await repo.getCat(cat.id))?.seo.title).toBe("Mia, gata para adoção em Viana");
+  });
+
+  it("stores impact numbers and newsletter signups (idempotent by email)", async () => {
+    expect((await repo.getImpact()).catsInShelter).toBe(140);
+    await repo.saveNewsletterSignup({ email: "A@b.pt", interests: [], consent: true, subscribedAt: new Date().toISOString() });
+    await repo.saveNewsletterSignup({ email: "a@b.pt", interests: ["eventos"], consent: true, subscribedAt: new Date().toISOString() });
+    expect(await db.newsletterSignup.count()).toBe(1);
+  });
+
+  it("filters shifts by date range and stores foster placements and sponsorships", async () => {
+    const nov = await repo.listShifts({ from: "2026-11-10T00:00:00.000Z", to: "2026-11-30T00:00:00.000Z" });
+    expect(nov.map((s) => s.id)).toEqual(["shift-2", "shift-4", "shift-5"]);
+    expect((await repo.getShift("shift-1"))?.signups).toHaveLength(1);
+    expect(await repo.listFosterPlacements()).toHaveLength(2);
+    expect(await repo.listSponsorships()).toHaveLength(2);
+  });
+
+  it("stores and lists partner applications", async () => {
+    await repo.savePartnerApplication({ id: "a1", receivedAt: new Date().toISOString(), businessName: "Padaria", contactName: "Ana", email: "ana@example.pt", town: "Viana", consent: true });
+    expect(await repo.listPartnerApplications()).toHaveLength(1);
+  });
+});

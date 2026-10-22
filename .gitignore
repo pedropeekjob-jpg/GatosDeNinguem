@@ -1,0 +1,14 @@
+*.log
+*.tsbuildinfo
+.env
+.env.local
+.next
+.turbo
+coverage
+dist
+node_modules
+playwright-report
+playwright-report/
+storybook-static
+test-results
+test-results/

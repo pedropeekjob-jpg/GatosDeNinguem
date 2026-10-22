@@ -1,0 +1,100 @@
+// Content is stored as validated JSON documents (zod schemas in @gn/domain)
+// with the fields we query on promoted to columns.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cat {
+  id        String   @id
+  slug      String   @unique
+  status    String
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
+model Page {
+  id        String   @id
+  path      String   @unique
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id          String   @id
+  slug        String   @unique
+  publishedAt DateTime
+  data        Json
+  updatedAt   DateTime @updatedAt
+}
+
+model Partner {
+  id     String  @id
+  slug   String  @unique
+  active Boolean @default(true)
+  data   Json
+}
+
+model PartnerApplication {
+  id         String   @id
+  receivedAt DateTime
+  data       Json
+}
+
+model AdoptionInterest {
+  id         String   @id
+  receivedAt DateTime
+  catSlug    String?
+  data       Json
+
+  @@index([catSlug])
+}
+
+model NewsletterSignup {
+  email        String   @id
+  interests    String[]
+  subscribedAt DateTime
+}
+
+model Shift {
+  id       String   @id
+  type     String
+  startsAt DateTime
+  endsAt   DateTime
+  seriesId String?
+  data     Json
+
+  @@index([startsAt])
+  @@index([seriesId])
+}
+
+model FosterPlacement {
+  id      String @id
+  catSlug String
+  status  String
+  data    Json
+}
+
+model Sponsorship {
+  id      String  @id
+  catSlug String
+  active  Boolean @default(true)
+  data    Json
+}
+
+model Redirect {
+  id        String  @id
+  from      String  @unique
+  to        String
+  permanent Boolean @default(true)
+}
+
+model Setting {
+  key   String @id
+  value Json
+}
