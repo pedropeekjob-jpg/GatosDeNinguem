@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { freeSpots, shiftTypeLabel, type ShiftType } from "@gn/domain";
-import { Badge, Button, Checkbox, ChoiceList, Notice, TextField } from "@gn/ui";
+import { AnimatedLogo, Badge, Button, Checkbox, ChoiceList, Notice, TextField } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
 import { addDays, dayLabel, lisbonDate, lisbonToUtc, timeLabel, weekRange, weekStart } from "../lib/dates";
 import type { Shift } from "../lib/types";
@@ -51,7 +51,7 @@ function WeekAgenda({ today }: { today: Date }) {
         <Button variant="secondary" onClick={() => setStart(addDays(start, 7))}>Semana seguinte →</Button>
       </div>
       <h2>Semana de {dayLabel(lisbonToUtc(start, "12:00"))}</h2>
-      {query.isPending ? <p>A carregar…</p> : null}
+      {query.isPending ? <AnimatedLogo variant="loader" size={110} /> : null}
       {query.isError ? <Notice tone="error" title="Não foi possível carregar">{errorMessage(query.error)}</Notice> : null}
       {query.data && query.data.length === 0 ? <Notice tone="info" title="Sem turnos nesta semana">Crie turnos no separador “Criar turnos”.</Notice> : null}
       {query.data && openPlaces > 0 ? <Notice tone="warning" title={`${openPlaces} ${openPlaces === 1 ? "vaga por preencher" : "vagas por preencher"} esta semana`}>Partilhe no grupo de voluntários.</Notice> : null}

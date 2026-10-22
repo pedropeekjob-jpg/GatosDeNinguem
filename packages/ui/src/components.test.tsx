@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { axeViolations } from "../test/axe";
 import {
+  AnimatedLogo,
   Badge,
   Breadcrumbs,
   Button,
@@ -141,6 +142,37 @@ describe("SiteHeader", () => {
     expect(container.querySelector("header")).toHaveClass("gn-header--tabbar");
     expect(screen.getByRole("navigation", { name: "Menu principal" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sobre nós" })).toBeInTheDocument();
+  });
+});
+
+describe("AnimatedLogo", () => {
+  it("is announced as the logo and waits on its first frame until it is on screen", () => {
+    let onSeen: (entries: { isIntersecting: boolean }[]) => void = () => {};
+    vi.stubGlobal("IntersectionObserver", class {
+      constructor(cb: typeof onSeen) { onSeen = cb; }
+      observe() {}
+      disconnect() {}
+    });
+    render(<AnimatedLogo />);
+    const logo = screen.getByRole("img", { name: "Gatos de Ninguém" });
+    expect(logo).toHaveAttribute("data-armed");
+    expect(logo).not.toHaveAttribute("data-play");
+    onSeen([{ isIntersecting: true }]);
+    expect(logo).toHaveAttribute("data-play");
+    vi.unstubAllGlobals();
+  });
+
+  it("as a loader, tells screen readers that something is loading", () => {
+    render(<AnimatedLogo variant="loader" />);
+    expect(screen.getByRole("status")).toHaveTextContent("A carregar…");
+  });
+
+  it("stays still for people who ask for less motion", () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
+    render(<AnimatedLogo />);
+    expect(screen.getByRole("img", { name: "Gatos de Ninguém" })).not.toHaveAttribute("data-armed");
+    window.matchMedia = original;
   });
 });
 

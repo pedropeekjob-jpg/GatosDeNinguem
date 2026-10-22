@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Notice, TextField } from "@gn/ui";
+import { AnimatedLogo, Button, Notice, TextField } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
 import type { Impact } from "../lib/types";
 
@@ -11,7 +11,7 @@ export function NumerosPage() {
   const [draft, setDraft] = useState<Impact>();
   useEffect(() => { if (query.data && !draft) setDraft(query.data); }, [query.data, draft]);
   const save = useMutation({ mutationFn: (i: Impact) => api.saveImpact({ ...i, updatedAt: new Date().toISOString() }) });
-  if (!draft) return <p>A carregar…</p>;
+  if (!draft) return <AnimatedLogo variant="loader" size={110} />;
   const num = (key: "catsInShelter" | "adoptionsThisYear" | "sterilizationsThisYear" | "volunteers", label: string) => (
     <TextField id={`n-${key}`} label={label} type="number" inputMode="numeric" value={String(draft[key])} onChange={(e) => setDraft({ ...draft, [key]: Number(e.target.value) })} />
   );

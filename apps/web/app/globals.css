@@ -34,7 +34,7 @@ main { display: block; }
 .help-list { display: grid; gap: var(--gn-space-m); }
 .site-footer { background: var(--gn-sand); color: var(--gn-ink); padding-block: var(--gn-space-xl) var(--gn-space-l); margin-top: var(--gn-space-xl); }
 .site-footer__brand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gn-space-m) var(--gn-space-l); padding-bottom: var(--gn-space-l); margin-bottom: var(--gn-space-l); border-bottom: 1px solid var(--gn-line); }
-.site-footer__brand img { width: 4.75rem; height: auto; }
+.site-footer__logo { width: 7rem; --gn-alogo-bg: var(--gn-sand); }
 .site-footer__brand p { font-size: var(--gn-text-l); color: var(--gn-ink-soft); max-width: 30rem; }
 .site-footer__grid { display: grid; gap: var(--gn-space-l); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
 .site-footer__title { font-size: var(--gn-h3); }
