@@ -1,6 +1,7 @@
-import { Button, Container } from "@gn/ui";
+import { Button, Container, ProgressMeter, Section, StatTile } from "@gn/ui";
 import { PageHero } from "@/components/PageHero";
-import { getPage } from "@/lib/content";
+import { getImpact, getPage } from "@/lib/content";
+import { formatDate } from "@/lib/format";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -9,7 +10,7 @@ export async function generateMetadata() {
 }
 
 export default async function AboutPage() {
-  const page = await getPage("/sobre");
+  const [page, impact] = await Promise.all([getPage("/sobre"), getImpact()]);
   return (
     <>
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Sobre nós" }]} />
@@ -35,6 +36,20 @@ export default async function AboutPage() {
           </div>
         </div>
       </Container>
+      <Section tone="ink" heading="O nosso trabalho em números" intro={`Atualizado em ${formatDate(impact.updatedAt)}.`}>
+        <div className="stats">
+          <StatTile value={impact.catsInShelter} label="gatos no gatil hoje" />
+          <StatTile value={impact.adoptionsThisYear} label="adoções este ano" />
+          <StatTile value={impact.sterilizationsThisYear} label="esterilizações este ano" />
+          <StatTile value={impact.volunteers} label="voluntários ativos" />
+        </div>
+        {impact.campaign ? (
+          <div className="gn-stack gn-stack--s">
+            <ProgressMeter label={impact.campaign.title} value={impact.campaign.current} max={impact.campaign.goal} valueText={`${impact.campaign.current} de ${impact.campaign.goal} ${impact.campaign.unit}`} />
+            <div><Button href={impact.campaign.href}>Ajudar esta campanha</Button></div>
+          </div>
+        ) : null}
+      </Section>
     </>
   );
 }
