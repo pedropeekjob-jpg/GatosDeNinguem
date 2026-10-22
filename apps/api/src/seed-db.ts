@@ -1,4 +1,8 @@
-/** Loads the demo content into an empty database: pnpm --filter @gn/api db:seed */
+/**
+ * Loads the demo content: pnpm --filter @gn/api db:seed
+ * With --if-empty it does nothing when the database already has cats, so a deploy can run it every time
+ * without overwriting what the team changed.
+ */
 import { PrismaClient } from "@prisma/client";
 import { seedAppointments, seedCareAlerts, seedCatCare, seedMedications, seedVisitNotes } from "@gn/domain";
 import { seedCats, seedFosterPlacements, seedImpact, seedShifts, seedSponsorships, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings } from "@gn/domain";
@@ -31,7 +35,11 @@ export async function seedDatabase(db: PrismaClient) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const db = new PrismaClient();
-  await seedDatabase(db);
+  if (process.argv.includes("--if-empty") && (await db.cat.count()) > 0) {
+    console.log("The database already has content: demo content not loaded.");
+  } else {
+    await seedDatabase(db);
+    console.log("Demo content loaded.");
+  }
   await db.$disconnect();
-  console.log("Demo content loaded.");
 }

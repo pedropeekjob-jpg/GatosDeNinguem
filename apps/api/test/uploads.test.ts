@@ -47,3 +47,33 @@ describe("photo uploads", () => {
     expect((await app.inject({ url: "/uploads/..%2Fpackage.json" })).statusCode).toBe(404);
   });
 });
+
+describe.runIf(Boolean(process.env.DATABASE_URL))("photo uploads kept in the database", () => {
+  let dbApp: NestFastifyApplication;
+  let db: import("@prisma/client").PrismaClient;
+
+  beforeAll(async () => {
+    const { PrismaClient } = await import("@prisma/client");
+    const { databasePhotoStore } = await import("../src/media/photo-store");
+    db = new PrismaClient();
+    dbApp = await createApp({ repository: new InMemoryContentRepository(), adminToken: TOKEN, onContentChanged: async () => {}, logger: false, photoStore: databasePhotoStore(db), publicUrl: "https://api.example.pt" });
+    await dbApp.init();
+    await dbApp.getHttpAdapter().getInstance().ready();
+  });
+  afterAll(async () => { await dbApp.close(); await db.$disconnect(); });
+
+  it("survives without a disk: the photo is served from Postgres", async () => {
+    const res = await dbApp.inject({ method: "POST", url: "/uploads", headers: auth, payload: { type: "image/png", data: PNG } });
+    expect(res.statusCode).toBe(201);
+    const path = (res.json() as { url: string }).url.replace("https://api.example.pt", "");
+    expect(await db.upload.count({ where: { name: path.split("/").pop()! } })).toBe(1);
+    const file = await dbApp.inject({ url: path });
+    expect(file.statusCode).toBe(200);
+    expect(file.headers["content-type"]).toBe("image/png");
+    expect(file.rawPayload.equals(Buffer.from(PNG, "base64"))).toBe(true);
+  });
+
+  it("answers 404 for a photo that was never uploaded", async () => {
+    expect((await dbApp.inject({ url: "/uploads/00000000-0000-0000-0000-000000000000.png" })).statusCode).toBe(404);
+  });
+});

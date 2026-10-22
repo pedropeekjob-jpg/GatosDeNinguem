@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { BadRequestException, Body, Controller, Get, Inject, NotFoundException, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
 import type { FastifyReply, FastifyRequest } from "fastify";
@@ -7,6 +6,7 @@ import { z } from "zod";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
+import { diskPhotoStore, type PhotoStore } from "./photo-store";
 
 /** Photos arrive already resized by the back office, so a few megabytes is plenty. */
 export const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
@@ -19,11 +19,13 @@ const uploadSchema = z.object({
   data: z.string().min(1),
 });
 
-/** Photo uploads for cats and page galleries, kept on disk and served back publicly. */
+/** Photo uploads for cats and page galleries, stored on disk or in the database and served back publicly. */
 @Controller("uploads")
 export class UploadsController {
-  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {}
-  private get dir() { return this.options.uploadDir ?? join(process.cwd(), "uploads"); }
+  private readonly store: PhotoStore;
+  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {
+    this.store = options.photoStore ?? diskPhotoStore(options.uploadDir ?? join(process.cwd(), "uploads"));
+  }
 
   @Post()
   @UseGuards(AdminGuard)
@@ -34,8 +36,7 @@ export class UploadsController {
     if (bytes.length > MAX_UPLOAD_BYTES) throw new BadRequestException("A fotografia é demasiado grande (máximo 6 MB).");
     if (!looksLike(type, bytes)) throw new BadRequestException("O ficheiro não parece ser uma fotografia.");
     const name = `${randomUUID()}.${types[type]}`;
-    await mkdir(this.dir, { recursive: true });
-    await writeFile(join(this.dir, name), bytes);
+    await this.store.save(name, type, bytes);
     const base = this.options.publicUrl ?? `${req.protocol}://${req.headers.host}`;
     return { url: `${base}/uploads/${name}` };
   }
@@ -44,7 +45,7 @@ export class UploadsController {
   async serve(@Param("name") name: string, @Res() res: FastifyReply) {
     const match = /^[0-9a-f-]{36}\.(jpg|png|webp)$/.exec(name);
     if (!match) throw new NotFoundException();
-    const file = await readFile(join(this.dir, name)).catch(() => undefined);
+    const file = await this.store.read(name);
     if (!file) throw new NotFoundException();
     return res.header("content-type", contentTypes[match[1]!]!).header("cache-control", "public, max-age=31536000, immutable").send(file);
   }
