@@ -1,4 +1,4 @@
-:root { --gn-font-body: "Atkinson Hyperlegible Next", system-ui, sans-serif; --gn-font-display: var(--gn-font-body); }
+:root { --gn-font-body: "Inter", system-ui, sans-serif; --gn-font-display: "Inter Tight", "Inter", system-ui, sans-serif; }
 .gn-header .bo-logo { height: 3.5rem; width: auto; }
 .bo-brand-label { font-weight: 650; font-size: 1.25rem; color: var(--gn-ink-soft); padding-left: 0.75rem; border-left: 1px solid var(--gn-line); }
 .bo-main { padding-block: var(--gn-space-l) var(--gn-space-xl); }

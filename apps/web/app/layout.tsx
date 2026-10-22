@@ -1,16 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Amatic_SC, Atkinson_Hyperlegible_Next } from "next/font/google";
+import { Inter, Inter_Tight } from "next/font/google";
 import { organizationJsonLd } from "@gn/seo";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
+import { Splash } from "@/components/Splash";
 import { getSeoSettings } from "@/lib/content";
 import "./globals.css";
 
-// Atkinson Hyperlegible Next: designed by the Braille Institute for readers with low vision, in a clean modern cut.
-const atkinson = Atkinson_Hyperlegible_Next({ subsets: ["latin", "latin-ext"], variable: "--font-atkinson", display: "swap" });
-// Amatic SC: close to the hand lettering of the logo. Only for big headings and numbers.
-const amatic = Amatic_SC({ weight: "700", subsets: ["latin", "latin-ext"], variable: "--font-amatic", display: "swap" });
+// Inter: a clean, modern sans-serif made for screens, very legible at reading sizes. Inter Tight for headings.
+const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
+const interTight = Inter_Tight({ subsets: ["latin", "latin-ext"], variable: "--font-inter-tight", display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSeoSettings();
@@ -27,8 +27,9 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSeoSettings();
   return (
-    <html lang="pt-PT" className={`${atkinson.variable} ${amatic.variable}`}>
+    <html lang="pt-PT" className={`${inter.variable} ${interTight.variable}`}>
       <body>
+        <Splash />
         <Header />
         {process.env.NEXT_PUBLIC_STATIC_DEMO === "1" ? (
           <p className="demo-banner" role="note">

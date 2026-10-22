@@ -3,11 +3,10 @@
  * Built for older visitors: large text, strong contrast, big touch targets,
  * visible underlines and focus, no hover-only behaviour.
  *
- * Minimal and light, like the logo: black ink on white, warm greys, lots of space.
- * Colour is kept for meaning only (red for emergencies, green/blue/amber in badges).
- * The logo's hand: big headings use its hand-drawn lettering, with brush strokes and slightly
- * uneven corners. Everything people read or press (text, buttons, menu, forms) stays in the
- * highly legible body font.
+ * Minimal, light and modern, like the logo: black ink on white, warm greys, generous but not
+ * oversized space. Colour is kept for meaning only (red for emergencies, green/blue/amber in badges).
+ * One clean sans-serif family: Inter for reading, its tighter cut (Inter Tight) for headings.
+ * The hand-drawn look stays in the logo itself.
  */
 :root {
   --gn-ink: #1c1a1b;            /* the logo's ink, 17:1 on white */
@@ -30,28 +29,23 @@
   --gn-focus: #1c1a1b;
   --gn-shadow: none;
 
-  --gn-font-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
-  --gn-font-display: var(--gn-font-body);
-  --gn-font-hand: "Amatic SC", var(--gn-font-body);   /* like the logo's lettering; headings only */
-  /* A brush stroke, used as a mask so it takes the text colour. */
-  --gn-brush: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14'%3E%3Cpath d='M3 9.5C18 5 40 3.2 62 3.6C82 4 100 5.4 117 7.2C118.6 7.4 118.4 9.2 116.8 9.2C98 8.6 80 8.4 62 8.9C42 9.4 22 10.6 5 12.4C2 12.7 1 10.2 3 9.5Z'/%3E%3C/svg%3E");
-  --gn-radius-hand: 18px 11px 20px 10px / 11px 20px 10px 18px;   /* a touch uneven, as if drawn */
-  --gn-radius-hand-s: 12px 8px 13px 7px / 8px 13px 7px 12px;
+  --gn-font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gn-font-display: "Inter Tight", var(--gn-font-body);
 
-  --gn-text: 1.1875rem;         /* 19px body */
-  --gn-text-s: 1.0625rem;       /* 17px minimum for any text */
-  --gn-text-l: 1.3125rem;
-  --gn-h1: clamp(3rem, 10.5vw, 5.25rem);
-  --gn-h2: clamp(2.4rem, 7vw, 3.4rem);
-  --gn-h3: 1.375rem;
+  --gn-text: 1.125rem;          /* 18px body: still large for older readers, without shouting */
+  --gn-text-s: 1rem;            /* 16px minimum for any text */
+  --gn-text-l: 1.1875rem;
+  --gn-h1: clamp(2rem, 5.2vw, 3rem);
+  --gn-h2: clamp(1.5rem, 3.4vw, 2rem);
+  --gn-h3: 1.1875rem;
 
   --gn-space-s: 0.75rem;
   --gn-space-m: 1.25rem;
-  --gn-space-l: 2.5rem;
-  --gn-space-xl: clamp(3.5rem, 8vw, 6rem);
-  --gn-radius: 14px;
-  --gn-radius-s: 10px;
-  --gn-target: 3.25rem;         /* 52px minimum touch target */
+  --gn-space-l: 2rem;
+  --gn-space-xl: clamp(2.75rem, 6vw, 4.5rem);
+  --gn-radius: 12px;
+  --gn-radius-s: 8px;
+  --gn-target: 3rem;            /* 48px minimum touch target */
   --gn-measure: 38rem;
 }
 
@@ -68,18 +62,11 @@ body {
 }
 *, *::before, *::after { box-sizing: border-box; }
 img { max-width: 100%; height: auto; }
-h1, h2, h3, h4 { font-family: var(--gn-font-display); font-weight: 650; line-height: 1.12; letter-spacing: -0.025em; margin: 0; text-wrap: balance; color: var(--gn-ink); }
-h1, h2 { font-family: var(--gn-font-hand); font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
-h1 { font-size: var(--gn-h1); }
-h2 { font-size: var(--gn-h2); }
-/* A brush stroke under page and section titles. */
-/* Headings inside forms, steps and cards are read while doing something: keep them in the plain font. */
-.gn-plain-heading, .gn-wizard__title, .gn-card__title { font-family: var(--gn-font-display); font-weight: 650; font-size: var(--gn-h3); letter-spacing: -0.015em; line-height: 1.2; }
-.gn-brush::after, .gn-section__heading::after {
-  content: ""; display: block; width: 5.5rem; height: 0.7rem; margin-top: 0.45rem; background: currentColor;
-  -webkit-mask: var(--gn-brush) no-repeat center / 100% 100%; mask: var(--gn-brush) no-repeat center / 100% 100%;
-}
-h3 { font-size: var(--gn-h3); letter-spacing: -0.015em; }
+h1, h2, h3, h4 { font-family: var(--gn-font-display); font-weight: 650; line-height: 1.15; letter-spacing: -0.012em; margin: 0; text-wrap: balance; color: var(--gn-ink); }
+h1 { font-size: var(--gn-h1); line-height: 1.1; letter-spacing: -0.022em; }
+h2 { font-size: var(--gn-h2); letter-spacing: -0.018em; }
+.gn-plain-heading, .gn-wizard__title, .gn-card__title { font-size: var(--gn-h3); letter-spacing: -0.01em; line-height: 1.25; }
+h3 { font-size: var(--gn-h3); letter-spacing: -0.01em; }
 p { margin: 0; max-width: var(--gn-measure); }
 a { color: var(--gn-ink); text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1.5px; }
 a:hover { text-decoration-thickness: 2.5px; }
@@ -117,9 +104,9 @@ a:hover { text-decoration-thickness: 2.5px; }
 /* Buttons */
 .gn-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
-  min-height: var(--gn-target); padding: 0.7rem 1.35rem;
+  min-height: var(--gn-target); padding: 0.6rem 1.15rem;
   font: inherit; font-weight: 600; font-size: var(--gn-text); line-height: 1.25; text-align: center;
-  border: 1.5px solid transparent; border-radius: var(--gn-radius-hand-s); cursor: pointer; text-decoration: none;
+  border: 1.5px solid transparent; border-radius: var(--gn-radius-s); cursor: pointer; text-decoration: none;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 .gn-btn__icon { display: inline-flex; width: 1.4em; height: 1.4em; }
@@ -149,7 +136,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-notice--error { border-color: var(--gn-error); background: #fbeceb; }
 
 /* Card */
-.gn-card { position: relative; background: var(--gn-surface); border: 1px solid var(--gn-line); border-radius: var(--gn-radius-hand); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s; }
+.gn-card { position: relative; background: var(--gn-surface); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.15s; }
 .gn-card:has(.gn-card__title a):hover { border-color: var(--gn-line-strong); }
 .gn-card__media { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--gn-sand); }
 .gn-card__body { padding: var(--gn-space-m); display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
@@ -166,7 +153,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 
 /* Stats and progress */
 .gn-stat { display: grid; gap: 0.25rem; padding-left: var(--gn-space-m); border-left: 1px solid var(--gn-line); }
-.gn-stat__value { font-family: var(--gn-font-hand); font-size: clamp(3.25rem, 8vw, 4.25rem); font-weight: 700; letter-spacing: 0.01em; color: var(--gn-ink); font-variant-numeric: tabular-nums; line-height: 1.05; }
+.gn-stat__value { font-family: var(--gn-font-display); font-size: clamp(2rem, 4.5vw, 2.5rem); font-weight: 650; letter-spacing: -0.02em; color: var(--gn-ink); font-variant-numeric: tabular-nums; line-height: 1.05; }
 .gn-stat__label { color: var(--gn-ink-soft); }
 .gn-progress { display: grid; gap: 0.5rem; }
 .gn-progress__label { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-weight: 600; }
@@ -192,7 +179,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-choices__legend { font-weight: 650; font-size: var(--gn-text-l); margin-bottom: 0.5rem; padding: 0; }
 .gn-choice { position: relative; }
 .gn-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
-.gn-choice label { display: flex; gap: 1rem; align-items: center; min-height: 4rem; padding: 0.9rem 1.1rem; background: var(--gn-surface); border: 1.5px solid var(--gn-line); border-radius: var(--gn-radius-s); cursor: pointer; transition: border-color 0.15s; }
+.gn-choice label { display: flex; gap: 1rem; align-items: center; min-height: 3.5rem; padding: 0.8rem 1rem; background: var(--gn-surface); border: 1.5px solid var(--gn-line); border-radius: var(--gn-radius-s); cursor: pointer; transition: border-color 0.15s; }
 .gn-choice label:hover { border-color: var(--gn-line-strong); }
 .gn-choice label::before { content: ""; flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 1.5px solid var(--gn-line-strong); background: var(--gn-surface); }
 .gn-choice input:checked + label { border-color: var(--gn-ink); background: var(--gn-sand); }
@@ -213,8 +200,8 @@ a:hover { text-decoration-thickness: 2.5px; }
 /* Header: logo, tools and menu. Wide screens put it all on one row. */
 .gn-header { background: var(--gn-surface); border-bottom: 1px solid var(--gn-line); }
 .gn-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; padding-block: 0.6rem; }
-.gn-header__brand { display: inline-flex; align-items: center; gap: 0.6rem; flex-shrink: 0; color: var(--gn-ink); text-decoration: none; font-weight: 650; font-size: 1.25rem; min-height: var(--gn-target); border-radius: var(--gn-radius-s); }
-.gn-header__logo { display: block; height: 3.25rem; width: auto; }
+.gn-header__brand { display: inline-flex; align-items: center; gap: 0.6rem; flex-shrink: 0; color: var(--gn-ink); text-decoration: none; font-weight: 650; font-size: 1.125rem; min-height: var(--gn-target); border-radius: var(--gn-radius-s); }
+.gn-header__logo { display: block; height: 2.75rem; width: auto; }
 .gn-header__tools { display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end; min-width: 0; }
 .gn-header .gn-btn--urgent { font-size: var(--gn-text-s); padding-inline: 1rem; white-space: nowrap; }
 .gn-nav__list { list-style: none; margin: 0; padding: 0; display: flex; gap: 0.25rem; }
@@ -222,10 +209,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-nav__link:hover { color: var(--gn-ink); text-decoration: underline; }
 .gn-nav__link { position: relative; }
 .gn-nav__link[aria-current="page"] { color: var(--gn-ink); }
-.gn-nav__link[aria-current="page"]::after {
-  content: ""; position: absolute; left: 0.7rem; right: 0.7rem; bottom: 0.15rem; height: 0.55rem; background: currentColor;
-  -webkit-mask: var(--gn-brush) no-repeat center / 100% 100%; mask: var(--gn-brush) no-repeat center / 100% 100%;
-}
+.gn-nav__link[aria-current="page"]::after { content: ""; position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0.35rem; height: 2px; border-radius: 2px; background: currentColor; }
 .gn-nav__icon { display: inline-flex; }
 .gn-icon { display: block; width: 1.5rem; height: 1.5rem; }
 /* Icons are for the phone tab bar; wide screens keep plain words. */
@@ -252,14 +236,14 @@ a:hover { text-decoration-thickness: 2.5px; }
   }
   .gn-header--tabbar .gn-nav__link:hover { text-decoration: none; }
   .gn-header--tabbar .gn-nav__link[aria-current="page"] { text-decoration: none; font-weight: 700; }
-  .gn-header--tabbar .gn-nav__link[aria-current="page"]::after { left: 50%; right: auto; top: 0.1rem; bottom: auto; width: 2.6rem; height: 0.45rem; margin-left: -1.3rem; }
+  .gn-header--tabbar .gn-nav__link[aria-current="page"]::after { left: 50%; right: auto; top: 0; bottom: auto; width: 2rem; height: 2px; margin-left: -1rem; }
   .gn-header--tabbar .gn-nav__link[aria-current="page"] .gn-icon { stroke-width: 2.3; }
   .gn-header--tabbar .gn-btn--urgent { white-space: normal; line-height: 1.15; text-align: center; min-width: 0; }
   body:has(.gn-header--tabbar) { padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px)); }
 }
 @media (min-width: 64rem) {
   .gn-header__inner { gap: 2rem; padding-block: 0.75rem; }
-  .gn-header__logo { height: 4rem; }
+  .gn-header__logo { height: 3.25rem; }
   .gn-nav { order: 1; flex: 1 1 auto; }
   .gn-header__tools { order: 2; }
   .gn-nav__list { justify-content: center; }
@@ -281,7 +265,7 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-share__buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .gn-toggle[aria-pressed="true"] { background: var(--gn-sand); border-color: var(--gn-ink); color: var(--gn-ink); }
 .gn-nextstep { background: var(--gn-sand); border-radius: var(--gn-radius); padding: var(--gn-space-l) var(--gn-space-m); display: grid; gap: 0.8rem; }
-.gn-nextstep__title { font-family: var(--gn-font-display); font-size: var(--gn-h3); font-weight: 650; letter-spacing: -0.015em; }
+.gn-nextstep__title { font-family: var(--gn-font-display); font-size: var(--gn-h3); font-weight: 650; letter-spacing: -0.01em; }
 .gn-nextstep__actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 
 /* Animated logo (AnimatedLogo): its own animation lives inside the SVG (logoRig.ts). */
