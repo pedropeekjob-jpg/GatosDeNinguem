@@ -81,6 +81,22 @@ describe("back office", () => {
     expect(list.find((s: { id: string }) => s.id === "sp-2").needsUpdate).toBe(false);
   });
 
+  it("takes sponsorship requests from the site as pending, for the team to confirm", async () => {
+    const res = await req("POST", "/escalas/padrinhos/pedido", { catSlug: "tobias", name: "Ana Lima", email: "ana@example.pt", monthlyAmount: 10, consent: true });
+    expect(res.statusCode).toBe(201);
+    const list = (await req("GET", "/escalas/padrinhos", undefined, true)).json();
+    const asked = list.find((s: { sponsorName: string }) => s.sponsorName === "Ana Lima");
+    expect(asked).toMatchObject({ catSlug: "tobias", monthlyAmount: 10, active: false, pending: true, startDate: "2026-11-01", needsUpdate: false });
+    const confirmed = await req("POST", "/escalas/padrinhos", { ...asked, needsUpdate: undefined, active: true, pending: undefined }, true);
+    expect(confirmed.statusCode).toBe(201);
+    expect(confirmed.json()).toMatchObject({ id: asked.id, active: true });
+  });
+
+  it("refuses sponsorship requests for unknown cats or with too little", async () => {
+    expect((await req("POST", "/escalas/padrinhos/pedido", { catSlug: "nao-existe", name: "Ana", email: "ana@example.pt", monthlyAmount: 10, consent: true })).statusCode).toBe(404);
+    expect((await req("POST", "/escalas/padrinhos/pedido", { catSlug: "tobias", name: "Ana", email: "ana@example.pt", monthlyAmount: 1, consent: true })).statusCode).toBe(400);
+  });
+
   it("records a foster family taking a cat", async () => {
     const res = await req("POST", "/escalas/familias-temporarias", { id: "fat-2", catSlug: "estrela", status: "ativa", startDate: "2026-11-02", familyName: "Família Pires" }, true);
     expect(res.statusCode).toBe(201);

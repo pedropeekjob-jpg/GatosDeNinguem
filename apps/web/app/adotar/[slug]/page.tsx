@@ -75,7 +75,7 @@ export default async function CatPage({ params }: Props) {
             {cat.status !== "adotado" ? (
               <Notice tone="info" title={`Não pode adotar? Pode apadrinhar ${pronoun} ${cat.name}`}>
                 <p>A partir de 5 euros por mês ajuda a pagar a comida e o veterinário, e recebe notícias.</p>
-                <p><a href="/ajudar#apadrinhar">Saber como apadrinhar</a></p>
+                <p><a href={`/apadrinhar/${cat.slug}`}>Apadrinhar {pronoun} {cat.name}</a></p>
               </Notice>
             ) : null}
             <ShareBar url={url} text={cat.status === "adotado" ? `${cat.name} encontrou família!` : `Conheça ${pronoun} ${cat.name}, procura família em Viana do Castelo`} label={`Partilhar ${pronoun} ${cat.name}`} />

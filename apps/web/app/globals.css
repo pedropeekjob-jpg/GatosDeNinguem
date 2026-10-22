@@ -190,3 +190,9 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .gatil__agora .loc, .gatil__gato-cartao .loc { background: var(--gn-surface); }
 .account-link__count { display: inline-grid; place-items: center; min-width: 1.35rem; height: 1.35rem; padding-inline: 0.3rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-size: 0.75rem; font-weight: 700; line-height: 1; }
 .gatil__turno h2 { color: #fff; }
+
+/* Sponsoring one cat: a small reminder of who it is above the form. */
+.sponsor-cat { display: flex; gap: var(--gn-space-m, 1rem); align-items: flex-start; margin-block: var(--gn-space-l, 1.5rem); }
+.sponsor-cat img { width: 7.5rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius, 0.75rem); flex: none; }
+.sponsor-cat p { margin: 0 0 0.25rem; }
+.sponsor-cat__name { font-weight: 700; font-size: var(--gn-text-l); }

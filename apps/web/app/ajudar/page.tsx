@@ -51,7 +51,7 @@ export default async function HelpPage() {
           <div className="gn-stack gn-stack--m">
             <h2>Apadrinhar um gato</h2>
             <p>Escolha um gato e contribua todos os meses para a comida e o veterinário. Recebe fotografias e notícias do seu afilhado. Os gatos seniores e com doenças crónicas são os que mais precisam.</p>
-            <div className="action-row"><Button href="/adotar">Escolher um gato</Button></div>
+            <div className="action-row"><Button href="/apadrinhar">Escolher um gato para apadrinhar</Button></div>
           </div>
         </Container>
       </section>

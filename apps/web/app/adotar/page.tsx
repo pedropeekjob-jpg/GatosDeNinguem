@@ -25,6 +25,7 @@ export default async function AdoptPage() {
       </Section>
       {recovering.length > 0 ? (
         <Section tone="soft" heading="Em breve" intro="Estes gatos ainda estão a recuperar. Pode apadrinhá-los enquanto esperam.">
+          <div className="action-row"><Button href="/apadrinhar" variant="secondary">Apadrinhar um gato</Button></div>
           <Grid>{recovering.map((cat) => <CatCard key={cat.id} cat={cat} />)}</Grid>
         </Section>
       ) : null}

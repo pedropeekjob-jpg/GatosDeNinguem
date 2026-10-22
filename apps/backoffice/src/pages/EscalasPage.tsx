@@ -4,7 +4,7 @@ import { freeSpots, shiftTypeLabel, type ShiftType } from "@gn/domain";
 import { AnimatedLogo, Badge, Button, Checkbox, ChoiceList, Notice, TextField } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
 import { addDays, dayLabel, lisbonDate, lisbonToUtc, timeLabel, weekRange, weekStart } from "../lib/dates";
-import type { Shift } from "../lib/types";
+import type { Shift, Sponsorship } from "../lib/types";
 
 type Tab = "calendario" | "novo" | "familias" | "padrinhos";
 
@@ -228,20 +228,46 @@ function Fosters() {
 
 function Sponsors() {
   const api = useApi();
+  const qc = useQueryClient();
   const list = useQuery({ queryKey: ["sponsors"], queryFn: () => api.sponsorships() });
+  const confirm = useMutation({
+    mutationFn: ({ needsUpdate: _n, pending: _p, ...s }: Sponsorship & { needsUpdate: boolean }) => api.saveSponsorship({ ...s, active: true, startDate: lisbonDate(new Date().toISOString()) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sponsors"] }),
+  });
+  const asked = list.data?.filter((s) => s.pending) ?? [];
   const due = list.data?.filter((s) => s.needsUpdate) ?? [];
+  const euros = (n: number) => n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
   return (
     <div className="gn-stack gn-stack--m">
+      {asked.length > 0 ? (
+        <section className="gn-stack gn-stack--s" aria-labelledby="pedidos-padrinhos">
+          <h2 id="pedidos-padrinhos">{asked.length === 1 ? "1 pedido novo de apadrinhamento" : `${asked.length} pedidos novos de apadrinhamento`}</h2>
+          <p className="small muted">Pedidos feitos no site. Contacte a pessoa para combinar a contribuição e confirme quando estiver tudo certo.</p>
+          <ul className="gn-stack gn-stack--s">
+            {asked.map((s) => (
+              <li key={s.id} className="gn-card"><div className="gn-card__body gn-stack gn-stack--s">
+                <p><strong>{s.sponsorName}</strong> quer apadrinhar <strong>{s.catSlug}</strong> com {euros(s.monthlyAmount)} por mês.</p>
+                <p className="small">{[s.email, s.phone].filter(Boolean).join(" · ")} · pedido a {s.startDate}</p>
+                {s.message ? <p className="small">“{s.message}”</p> : null}
+                <div className="action-row">
+                  <Button onClick={() => confirm.mutate(s)} disabled={confirm.isPending}>Confirmar padrinho<span className="gn-sr-only"> {s.sponsorName}</span></Button>
+                </div>
+              </div></li>
+            ))}
+          </ul>
+          {confirm.error ? <Notice tone="error" title="Não foi confirmado">{errorMessage(confirm.error)}</Notice> : null}
+        </section>
+      ) : null}
       {due.length > 0 ? <Notice tone="warning" title={`${due.length} ${due.length === 1 ? "padrinho espera" : "padrinhos esperam"} notícias`}>Envie uma fotografia ou novidade do gato este mês.</Notice> : null}
       <div className="table-wrap">
         <table className="table">
           <thead><tr><th scope="col">Padrinho</th><th scope="col">Gato</th><th scope="col">Por mês</th><th scope="col">Últimas notícias</th></tr></thead>
           <tbody>
-            {list.data?.map((s) => (
+            {list.data?.filter((s) => !s.pending).map((s) => (
               <tr key={s.id}>
                 <td>{s.sponsorName}{s.email ? <><br /><span className="small muted">{s.email}</span></> : null}</td>
                 <td>{s.catSlug}</td>
-                <td>{s.monthlyAmount.toLocaleString("pt-PT", { style: "currency", currency: "EUR" })}</td>
+                <td>{euros(s.monthlyAmount)}</td>
                 <td>{s.needsUpdate ? <Badge tone="warning">Enviar notícias</Badge> : s.lastUpdateSentAt}</td>
               </tr>
             ))}
