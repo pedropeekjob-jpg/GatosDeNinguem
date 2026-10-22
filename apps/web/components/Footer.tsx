@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="site-footer">
       <Container>
         <div className="site-footer__brand">
-          <img src="/logo-branco.svg" alt="Gatos de Ninguém" width={116} height={120} />
+          <img src="/logo.svg" alt="Gatos de Ninguém" width={77} height={80} />
           <p>Resgatamos, tratamos e encontramos famílias para os gatos de rua de Viana do Castelo.</p>
         </div>
         <div className="site-footer__grid">

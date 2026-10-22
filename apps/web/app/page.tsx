@@ -38,7 +38,7 @@ export default async function HomePage() {
               <FavoritesStrip cats={cats} />
             </div>
             <div className="home-hero__art" aria-hidden="true">
-              <img src="/logo.svg" alt="" width={400} height={416} />
+              {cats.slice(0, 3).map((c) => <img key={c.slug} src={c.photos[0]!.url} alt="" width={400} height={300} />)}
             </div>
           </div>
         </Container>

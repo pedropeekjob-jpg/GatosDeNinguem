@@ -77,4 +77,4 @@ API tests against Postgres run when `DATABASE_URL` is set. Every public page is 
 
 ## Brand
 
-The official logo is in `apps/*/public/logo.svg` (ink) and `logo-branco.svg` (white, for dark backgrounds), traced from the association's artwork. Colours and fonts live as tokens at the top of `packages/ui/src/styles.css`: ink `#221e20` from the logo, warm paper `#faf6f0`, and ginger `#b13c0c` for main actions. Every text colour passes WCAG AA, checked by axe in the tests.
+The official logo is in `apps/*/public/logo.svg` (ink) and `logo-branco.svg` (white), traced from the association's artwork. The look is minimal, like the logo: black ink on white, warm greys and generous space, with colour kept for meaning only (red for emergencies, soft tints in badges). Type is Atkinson Hyperlegible Next. All tokens live at the top of `packages/ui/src/styles.css`, and every text colour passes WCAG AA (checked by axe in the tests).
