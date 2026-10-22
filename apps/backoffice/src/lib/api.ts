@@ -25,6 +25,9 @@ export interface Api {
   createPost(input: PostInput): Promise<Post>;
   updatePost(id: string, changes: Partial<PostInput>): Promise<Post>;
   pages(): Promise<Page[]>;
+  updatePage(id: string, changes: Partial<Pick<Page, "heading" | "intro" | "gallery" | "carousel">>): Promise<Page>;
+  /** Stores a photo (already resized) and returns its public address. */
+  uploadPhoto(photo: { type: string; data: string }): Promise<{ url: string }>;
   partners(): Promise<Partner[]>;
   partnerApplications(): Promise<{ id: string; businessName: string; contactName: string; email: string; phone?: string; town: string; offer?: string; receivedAt: string }[]>;
   adoptionInterests(): Promise<{ id: string; catSlug?: string; name: string; phone: string; town: string; bestTime: string; message?: string; receivedAt: string }[]>;
@@ -78,6 +81,8 @@ export function httpApi(baseUrl: string, token: string): Api {
     createPost: (input) => call("POST", "/posts", input),
     updatePost: (id, changes) => call("PATCH", `/posts/${id}`, changes),
     pages: () => call("GET", "/pages"),
+    updatePage: (id, changes) => call("PATCH", `/pages/${id}`, changes),
+    uploadPhoto: (photo) => call("POST", "/uploads", photo),
     partners: () => call("GET", "/partners"),
     partnerApplications: () => call("GET", "/partners/applications"),
     adoptionInterests: () => call("GET", "/adoptions/interest"),
@@ -102,5 +107,7 @@ export function useApi(): Api {
 
 export function errorMessage(err: unknown): string {
   if (err instanceof ApiError) return err.issues.length ? `${err.message} ${err.issues.map((i) => i.message).join(" ")}` : err.message;
+  // fetch reports a lost connection as a TypeError; other errors carry a message written for people.
+  if (err instanceof Error && !(err instanceof TypeError)) return err.message;
   return "Não foi possível falar com o servidor. Verifique a ligação.";
 }

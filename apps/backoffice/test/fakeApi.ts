@@ -10,7 +10,7 @@ import type { Api } from "../src/lib/api";
 export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
   let shifts: Shift[] = structuredClone(seedShifts);
   let cats = structuredClone(seedCats);
-  const pages = structuredClone(seedPages);
+  let pages = structuredClone(seedPages);
   let redirects = structuredClone(seedRedirects);
   let n = 0;
   const id = () => `novo-${++n}`;
@@ -40,6 +40,8 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
     createPost: async (input) => ({ ...input, id: id(), updatedAt: now.toISOString() }),
     updatePost: async (pid, changes) => ({ ...seedPosts.find((p) => p.id === pid)!, ...changes }),
     pages: async () => pages,
+    updatePage: async (pid, changes) => { pages = pages.map((p) => (p.id === pid ? { ...p, ...changes } : p)); return pages.find((p) => p.id === pid)!; },
+    uploadPhoto: vi.fn(async () => ({ url: `/demo/novo-${++n}.jpg` })),
     partners: async () => [],
     partnerApplications: async () => [],
     adoptionInterests: async () => [{ id: "i1", catSlug: "tobias", name: "Maria Silva", phone: "912345678", town: "Viana do Castelo", bestTime: "tarde", receivedAt: now.toISOString() }],

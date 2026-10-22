@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
 import { Splash } from "@/components/Splash";
+import { ScrollReveal } from "@/components/client/ScrollReveal";
 import { getSeoSettings } from "@/lib/content";
 import "./globals.css";
 
@@ -38,6 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : null}
         <main id="conteudo" tabIndex={-1}>{children}</main>
         <Footer />
+        <ScrollReveal />
         <JsonLd data={organizationJsonLd(settings)} />
       </body>
     </html>

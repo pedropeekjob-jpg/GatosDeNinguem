@@ -34,5 +34,7 @@ const app = await createApp({
   adminToken,
   onContentChanged: revalidateSite,
   corsOrigins: process.env.CORS_ORIGINS?.split(",").map((s) => s.trim()),
+  uploadDir: process.env.UPLOAD_DIR,
+  publicUrl: process.env.PUBLIC_API_URL,
 });
 await app.listen({ port: Number(process.env.PORT ?? 4000), host: "0.0.0.0" });

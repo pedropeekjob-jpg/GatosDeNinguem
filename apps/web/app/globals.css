@@ -12,7 +12,7 @@ main { display: block; }
 @media (min-width: 60rem) {
   .home-hero__grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 4rem; }
   /* The logo's cat comes to life beside the welcome. */
-  .home-hero__art { display: grid; place-items: center; }
+  .home-hero__art { display: grid; place-items: center; animation: rise-in 0.8s 0.2s cubic-bezier(.2,.8,.2,1) both; }
   .home-actions { grid-template-columns: repeat(3, auto); justify-content: start; }
   .home-actions .gn-btn { white-space: nowrap; }
 }
@@ -40,17 +40,19 @@ main { display: block; }
 .site-footer__small { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
 .discover-card { display: grid; gap: var(--gn-space-m); }
 .match-pill { display: inline-flex; gap: 0.4rem; align-items: center; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 6px; background: var(--gn-sand); color: var(--gn-ink); }
-.match-pill--super { background: var(--gn-ink); color: #fff; }
+.match-pill--super { background: var(--gn-accent); color: var(--gn-ink); }
 .reasons { margin: 0; padding-left: 1.2em; display: grid; gap: 0.3rem; }
 .iban { font-family: ui-monospace, Menlo, monospace; font-size: var(--gn-text-l); background: var(--gn-sand); padding: 0.6rem 0.9rem; border-radius: var(--gn-radius-s); overflow-wrap: anywhere; }
 .honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
+/* Full width: the global p rule caps paragraphs at a reading measure, which this strip must ignore. */
 .demo-banner {
+  max-width: none;
   margin: 0;
-  padding: 0.75rem 1rem;
-  background: var(--gn-sand);
+  padding: 0.5rem 1rem;
+  background: var(--gn-accent);
   color: var(--gn-ink);
-  border-bottom: 1px solid var(--gn-line);
+  font-size: var(--gn-text-s);
   text-align: center;
 }
 
@@ -58,8 +60,8 @@ main { display: block; }
 .featured__grid { display: grid; gap: var(--gn-space-l); align-items: center; }
 .featured__photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius-hand); }
 .featured__body { display: grid; gap: var(--gn-space-m); justify-items: start; }
-.featured__eyebrow { margin: 0; font-size: var(--gn-text-s); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gn-ink-soft); }
-.featured__name { margin: -0.25rem 0 0; font-size: clamp(2.25rem, 5vw, 3rem); line-height: 1.05; }
+.featured__eyebrow { margin: 0; padding: 0.2rem 0.7rem; border-radius: 999px; background: var(--gn-accent); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gn-ink); }
+.featured__name { margin: -0.25rem 0 0; font-size: clamp(1.875rem, 4.2vw, 2.5rem); line-height: 1.05; }
 .featured__facts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; margin: 0; padding-block: 0.9rem; border-block: 1px solid var(--gn-line); width: 100%; }
 .featured__facts dl { display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; margin: 0; }
 .featured__facts dt { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
@@ -74,3 +76,15 @@ main { display: block; }
 .splash.is-done { opacity: 0; pointer-events: none; transition: opacity 0.35s; }
 @keyframes splash-out { to { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .splash { display: none; } }
+
+/* Motion. Everything is visible without it: animations only add an entrance. */
+.home-hero__text > * { animation: rise-in 0.6s cubic-bezier(.2,.8,.2,1) both; }
+.home-hero__text > :nth-child(2) { animation-delay: 0.08s; }
+.home-hero__text > :nth-child(3) { animation-delay: 0.16s; }
+.home-hero__text > :nth-child(4) { animation-delay: 0.24s; }
+.page-hero .gn-container > * { animation: rise-in 0.5s cubic-bezier(.2,.8,.2,1) both; }
+.page-hero .gn-container > :nth-child(2) { animation-delay: 0.06s; }
+.page-hero .gn-container > :nth-child(3) { animation-delay: 0.12s; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px); } }
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease var(--reveal-delay, 0ms), transform 0.6s cubic-bezier(.2,.8,.2,1) var(--reveal-delay, 0ms); }
+.reveal.reveal--in { opacity: 1; transform: none; }
