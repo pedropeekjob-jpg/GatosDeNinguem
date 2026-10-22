@@ -109,52 +109,54 @@ const STYLE = `
 @keyframes gns-letters{from{opacity:0}8.06%{opacity:1}}
 @keyframes gns-o{0%,70.44%{opacity:0}75.37%,100%{opacity:1}}
 
-/* 2. Peek: slide out from behind the circle and follow the ball with the eyes, sinking slowly into the crouch
-   for the jump; the body never stops, so the peek flows straight into the leap. */
+/* 2. Peek: slide out from behind the circle and follow the ball with the eyes, leaning back and sinking slowly
+   into the crouch for the jump (clear of the circle, so nothing pops into view when it leaps); the body never
+   stops, so the peek flows straight into the leap. */
 @keyframes gns-peek{
-  0%,9.85%{transform:translate(690px,415px) scale(.55);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1.15)}
+  0%,5%{transform:translate(690px,415px) scale(.55);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1.15)}
   20.94%{transform:translate(912px,415px) scale(.55);animation-timing-function:cubic-bezier(.45,0,.85,.6)}
-  38.18%{transform:translate(895px,432px) scale(.55,.53);animation-timing-function:linear}
+  38.18%{transform:translate(960px,432px) scale(.55,.53);animation-timing-function:linear}
   38.6%{opacity:1}
-  39%,100%{transform:translate(895px,428px) scale(.55);opacity:0}}
+  39%,100%{transform:translate(960px,428px) scale(.55);opacity:0}}
 @keyframes gns-look{
   0%,16.01%{transform:rotate(-8deg);animation-timing-function:ease-in-out}
   20.32%{transform:rotate(9deg) translate(0,10px);animation-timing-function:ease-in-out}
   30.79%{transform:rotate(-22deg);animation-timing-function:ease-in-out}
   37.56%,100%{transform:none}}
 @keyframes gns-grip{
-  0%,12.32%{transform:translate(-70px,0);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1.1)}
+  0%,8%{transform:translate(-70px,0);opacity:1;animation-timing-function:cubic-bezier(.2,.8,.3,1.1)}
   19.7%,35.71%{transform:none;opacity:1;animation-timing-function:ease-in}
   38.6%{opacity:1}
   39%,100%{transform:translate(-40px,0);opacity:0}}
 
 /* 3. Leap: across in a straight line, up and down in an arc, growing as it comes towards us. */
 @keyframes gns-leap-x{
-  0%,38.18%{transform:translate(895px,0);opacity:0;animation-timing-function:linear}
-  38.35%{opacity:1;animation-timing-function:linear}
+  0%,38.18%{transform:translate(960px,0);opacity:0;animation-timing-function:cubic-bezier(.4,.15,.6,1)}
+  38.35%{opacity:1;animation-timing-function:cubic-bezier(.4,.15,.6,1)}
   55.67%{transform:none;opacity:1}
   56.8%,100%{transform:none;opacity:0}}
 @keyframes gns-leap-y{
-  0%,38.18%{transform:translate(0,428px);animation-timing-function:cubic-bezier(.25,.6,.45,1)}
+  0%,38.18%{transform:translate(0,428px);animation-timing-function:cubic-bezier(.35,.35,.45,1)}
   46.8%{transform:translate(0,-20px);animation-timing-function:cubic-bezier(.55,0,.75,.4)}
   55.67%,100%{transform:translate(0,24px)}}
 @keyframes gns-leap-s{
-  0%,38.18%{transform:scale(.55);animation-timing-function:ease-out}
-  41.87%{transform:scale(.6,.57) rotate(5deg);animation-timing-function:ease-in-out}
-  48.03%{transform:scale(.82) rotate(-7deg);animation-timing-function:ease-in-out}
+  0%,38.18%{transform:scale(.55);animation-timing-function:cubic-bezier(.45,.05,.55,.95)}
   55.67%,100%{transform:scale(1.02,.97) rotate(-1deg)}}
-/* Just before landing the body swings down under the head, into the logo's curled shape. */
-@keyframes gns-tuck{0%,48.65%{transform:none;animation-timing-function:ease-in}55.67%,100%{transform:rotate(80deg) scale(1.05,1.2)}}
+/* The body unfolds from behind the head as the cat springs out, and just before landing swings down under
+   the head, into the logo's curled shape. */
+@keyframes gns-tuck{0%,38.18%{transform:scale(.3,.4);animation-timing-function:cubic-bezier(.2,.6,.4,1)}44%{transform:none;animation-timing-function:ease-in}55.67%,100%{transform:rotate(80deg) scale(1.05,1.2)}}
 @keyframes gns-land{
-  0%,54.93%{opacity:0;transform:scale(1.06,.92)}
-  55.91%{opacity:1;transform:scale(1.06,.92);animation-timing-function:cubic-bezier(.3,1.4,.5,1)}
+  0%,54.4%{opacity:0;transform:scale(1.06,.92)}
+  56.2%{opacity:1;transform:scale(1.06,.92);animation-timing-function:cubic-bezier(.3,1.4,.5,1)}
   61.82%,100%{opacity:1;transform:none}}
 @keyframes gns-head{
   0%,56.65%{transform:rotate(-4deg);animation-timing-function:ease-in-out}
   60.59%{transform:rotate(3deg);animation-timing-function:ease-in-out}
   65.52%{transform:rotate(-4deg);animation-timing-function:ease-in-out}
   71.67%{transform:rotate(3deg);animation-timing-function:ease-in-out}
-  79.06%,100%{transform:none}}
+  79.06%{transform:rotate(-1.5deg);animation-timing-function:ease-in-out}
+  86.5%{transform:rotate(2deg);animation-timing-function:ease-in-out}
+  92%,100%{transform:none}}
 @keyframes gns-face{
   0%,56.65%{transform:translate(-20px,6px) scale(.9,1);animation-timing-function:ease-in-out}
   60.59%{transform:translate(40px,10px) scale(.84,1);animation-timing-function:ease-in-out}
@@ -162,13 +164,13 @@ const STYLE = `
   71.67%{transform:translate(44px,8px) scale(.84,1);animation-timing-function:ease-in-out}
   81.53%,100%{transform:none}}
 @keyframes gns-ear{0%,74.14%{transform:none;animation-timing-function:ease-out}77.22%{transform:rotate(14deg);animation-timing-function:ease-in-out}80.3%{transform:rotate(4deg);animation-timing-function:ease-in-out}82.76%,100%{transform:none}}
-@keyframes gns-tip{0%,67%{transform:rotate(-30deg);animation-timing-function:ease-out}73.5%{transform:rotate(9deg);animation-timing-function:ease-in-out}77.5%{transform:rotate(-4deg);animation-timing-function:ease-in-out}81%,100%{transform:none}}
-@keyframes gns-pour{0%,54.9%{stroke-dashoffset:1;animation-timing-function:linear}60.4%,100%{stroke-dashoffset:0}}
-@keyframes gns-sweep{0%,59.6%{stroke-dashoffset:1;animation-timing-function:cubic-bezier(.3,.45,.55,1)}73.5%,100%{stroke-dashoffset:0}}
+@keyframes gns-tip{0%,69.5%{transform:rotate(-30deg);animation-timing-function:ease-out}76%{transform:rotate(9deg);animation-timing-function:ease-in-out}80%{transform:rotate(-4deg);animation-timing-function:ease-in-out}83.5%,100%{transform:none}}
+@keyframes gns-pour{0%,54.9%{stroke-dashoffset:1;animation-timing-function:cubic-bezier(.25,.6,.5,1)}63%,100%{stroke-dashoffset:0}}
+@keyframes gns-sweep{0%,60.5%{stroke-dashoffset:1;animation-timing-function:cubic-bezier(.3,.45,.55,1)}76%,100%{stroke-dashoffset:0}}
 /* 4. Wink: the open right eye closes into the logo's wink. */
 @keyframes gns-wink{
-  0%,54.93%{opacity:0}
-  55.91%,82.76%{opacity:1;transform:none;animation-timing-function:ease-in}
+  0%,54.3%{opacity:0}
+  54.4%,82.76%{opacity:1;transform:none;animation-timing-function:ease-in}
   86.45%{opacity:1;transform:scale(1,.08)}
   87.07%,100%{opacity:0;transform:scale(1,.08)}}
 @keyframes gns-arm{
