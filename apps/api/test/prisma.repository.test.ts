@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.sponsorship.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());
@@ -38,6 +38,14 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     await repo.saveNewsletterSignup({ email: "A@b.pt", interests: [], consent: true, subscribedAt: new Date().toISOString() });
     await repo.saveNewsletterSignup({ email: "a@b.pt", interests: ["eventos"], consent: true, subscribedAt: new Date().toISOString() });
     expect(await db.newsletterSignup.count()).toBe(1);
+  });
+
+  it("filters shifts by date range and stores foster placements and sponsorships", async () => {
+    const nov = await repo.listShifts({ from: "2026-11-10T00:00:00.000Z", to: "2026-11-30T00:00:00.000Z" });
+    expect(nov.map((s) => s.id)).toEqual(["shift-2", "shift-4", "shift-5"]);
+    expect((await repo.getShift("shift-1"))?.signups).toHaveLength(1);
+    expect(await repo.listFosterPlacements()).toHaveLength(2);
+    expect(await repo.listSponsorships()).toHaveLength(2);
   });
 
   it("stores and lists partner applications", async () => {

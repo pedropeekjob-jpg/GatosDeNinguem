@@ -3,11 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
-  "dependencies": { "@gn/domain": "workspace:*" },
-  "devDependencies": { "vitest": "3.2.7" }
+  "dependencies": {
+    "@gn/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "6.4.5",
+    "vitest": "3.2.7"
+  }
 }

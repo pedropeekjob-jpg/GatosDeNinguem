@@ -65,7 +65,7 @@ export default async function HelpPage() {
               <li><strong>Transporte ao veterinário:</strong> se tem carro, leve gatos às consultas.</li>
               <li><strong>Eventos:</strong> ajude na banca solidária e nos Open Days.</li>
             </ul>
-            <Notice tone="info" title="Em breve: escolher o seu turno no site">Vai poder ver o calendário e marcar o seu turno com um toque. Por agora, fale connosco no Facebook ou Instagram.</Notice>
+            <div className="action-row"><Button href="/ajudar/turnos">Ver turnos livres e inscrever-me</Button></div>
           </div>
         </Container>
       </section>

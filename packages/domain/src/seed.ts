@@ -1,3 +1,4 @@
+import type { FosterPlacement, Shift, Sponsorship } from "./escalas";
 import type { Cat, Impact, Page, Partner, Post, Redirect, SeoSettings } from "./index";
 
 /**
@@ -294,6 +295,14 @@ export const seedPages: Page[] = [
     updatedAt: now,
   },
   {
+    id: "page-turnos",
+    path: "/ajudar/turnos",
+    heading: "Escolha o seu turno de voluntariado",
+    intro: "Veja os dias em que precisamos de ajuda e marque o seu lugar. Não precisa de experiência.",
+    seo: { title: "Voluntariado no gatil em Viana do Castelo: turnos livres" },
+    updatedAt: now,
+  },
+  {
     id: "page-sos",
     path: "/sos",
     heading: "Encontrei um gato. O que faço?",
@@ -348,4 +357,23 @@ export const seedRedirects: Redirect[] = [
   { id: "r2", from: "/gatos/como-ajudar", to: "/ajudar", permanent: true },
   { id: "r3", from: "/gatos/manual-de-emerg-ncia", to: "/sos", permanent: true },
   { id: "r4", from: "/gatos/miss-o", to: "/sobre", permanent: true },
+];
+
+/** Example schedules for previews (November 2026). */
+export const seedShifts: Shift[] = [
+  { id: "shift-1", type: "limpeza", title: "Limpeza e mimos de sábado", startsAt: "2026-11-07T10:00:00.000Z", endsAt: "2026-11-07T12:00:00.000Z", location: "Gatil, Santa Marta de Portuzelo", capacity: 4, seriesId: "serie-sabado", signups: [{ volunteerId: "vol-1", name: "Ana Ribeiro", phone: "912000001", signedUpAt: now }] },
+  { id: "shift-2", type: "limpeza", title: "Limpeza e mimos de sábado", startsAt: "2026-11-14T10:00:00.000Z", endsAt: "2026-11-14T12:00:00.000Z", location: "Gatil, Santa Marta de Portuzelo", capacity: 4, seriesId: "serie-sabado", signups: [] },
+  { id: "shift-3", type: "transporte-vet", title: "Levar a Pimenta à revisão", startsAt: "2026-11-05T15:00:00.000Z", endsAt: "2026-11-05T16:30:00.000Z", location: "Gatil → Clínica Veterinária do Lima", capacity: 1, catSlug: "pimenta", clinic: "Clínica Veterinária do Lima (exemplo)", notes: "Levar a transportadora azul.", signups: [] },
+  { id: "shift-4", type: "evento", title: "Open Day: montagem", startsAt: "2026-11-15T09:00:00.000Z", endsAt: "2026-11-15T10:00:00.000Z", location: "Gatil", capacity: 3, eventName: "Open Day de novembro", signups: [] },
+  { id: "shift-5", type: "evento", title: "Open Day: banca solidária", startsAt: "2026-11-15T10:00:00.000Z", endsAt: "2026-11-15T13:00:00.000Z", location: "Gatil", capacity: 2, eventName: "Open Day de novembro", signups: [{ volunteerId: "vol-2", name: "Rui Sousa", phone: "912000002", signedUpAt: now }] },
+];
+
+export const seedFosterPlacements: FosterPlacement[] = [
+  { id: "fat-1", catSlug: "pimenta", status: "ativa", startDate: "2026-10-10", expectedEndDate: "2026-11-20", familyName: "Família Lopes", notes: "Recuperação da pata." },
+  { id: "fat-2", catSlug: "estrela", status: "procura-familia", startDate: "2026-11-01", notes: "Precisa de alguém que dê insulina 2x por dia." },
+];
+
+export const seedSponsorships: Sponsorship[] = [
+  { id: "sp-1", catSlug: "tobias", sponsorName: "Marta Gomes", email: "marta@example.pt", monthlyAmount: 10, startDate: "2026-03-01", active: true, lastUpdateSentAt: "2026-09-10" },
+  { id: "sp-2", catSlug: "estrela", sponsorName: "Escola EB de Darque (exemplo)", monthlyAmount: 25, startDate: "2026-05-01", active: true, lastUpdateSentAt: "2026-10-15" },
 ];

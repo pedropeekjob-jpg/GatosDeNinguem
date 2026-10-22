@@ -1,0 +1,9 @@
+{
+  "name": "Gestão Gatos de Ninguém",
+  "short_name": "Gestão GN",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8f6",
+  "theme_color": "#0e5c57",
+  "icons": [{ "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

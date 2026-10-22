@@ -1,8 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["CI"],
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**", "!.next/cache/**"] },
-    "test": { "outputs": [] },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "env": ["API_URL", "ALLOW_INDEXING", "DEMO_NOW", "VITE_API_URL"]
+    },
+    "test": { "outputs": [], "env": ["DATABASE_URL"] },
     "typecheck": { "outputs": [] },
     "dev": { "cache": false, "persistent": true }
   }

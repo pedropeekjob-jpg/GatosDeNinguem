@@ -6,6 +6,8 @@ export type ApiOptions = {
   adminToken: string;
   /** Called after any write so the public site can refresh its cached pages. */
   onContentChanged: (what: { type: "cat" | "page" | "post" | "seo"; path?: string }) => Promise<void>;
+  /** Injectable clock for tests. */
+  now?: () => Date;
   logger?: false | ("log" | "error" | "warn")[];
   corsOrigins?: string[];
 };

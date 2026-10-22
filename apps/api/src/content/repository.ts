@@ -1,3 +1,4 @@
+import type { FosterPlacement, Shift, Sponsorship } from "@gn/domain";
 import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Redirect, SeoSettings } from "@gn/domain";
 
 export type StoredAdoptionInterest = AdoptionInterest & { id: string; receivedAt: string };
@@ -32,6 +33,15 @@ export interface ContentRepository {
   getImpact(): Promise<Impact>;
   saveImpact(impact: Impact): Promise<Impact>;
   saveNewsletterSignup(signup: NewsletterSignup & { subscribedAt: string }): Promise<void>;
+
+  listShifts(range?: { from?: string; to?: string }): Promise<Shift[]>;
+  getShift(id: string): Promise<Shift | undefined>;
+  saveShifts(shifts: Shift[]): Promise<void>;
+  deleteShift(id: string): Promise<void>;
+  listFosterPlacements(): Promise<FosterPlacement[]>;
+  saveFosterPlacement(p: FosterPlacement): Promise<FosterPlacement>;
+  listSponsorships(): Promise<Sponsorship[]>;
+  saveSponsorship(s: Sponsorship): Promise<Sponsorship>;
 
   getSeoSettings(): Promise<SeoSettings>;
   saveSeoSettings(settings: SeoSettings): Promise<SeoSettings>;

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -127,4 +127,23 @@ test("partner application form validates and thanks", async ({ page }) => {
   await page.getByText("Aceito que a associação me contacte sobre esta parceria").click();
   await page.getByRole("button", { name: "Quero ser parceiro" }).click();
   await expect(page.getByText("Obrigado! Entraremos em contacto em breve.")).toBeVisible();
+});
+
+test("volunteer finds a free shift from Ajudar and signs up", async ({ page }) => {
+  await page.goto("/ajudar");
+  await page.getByRole("link", { name: "Ver turnos livres e inscrever-me" }).click();
+  await expect(page).toHaveURL(/\/ajudar\/turnos$/);
+  // Days are headings, so screen readers can jump from day to day.
+  await expect(page.getByRole("heading", { level: 2, name: "Quinta-feira, 5 de novembro" })).toBeVisible();
+  const shift = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Levar a Pimenta à revisão" }) });
+  await expect(shift.getByText("Falta 1 pessoa")).toBeVisible();
+  await shift.getByRole("button", { name: "Quero ajudar neste turno" }).click();
+  await shift.getByRole("button", { name: "Confirmar inscrição" }).click();
+  await expect(shift.getByText("Indique o seu nome")).toBeVisible();
+  await shift.getByLabel("O seu nome").fill("Maria Fernandes");
+  await shift.getByLabel("Telemóvel").fill("912 345 678");
+  await shift.getByText("Aceito que a associação me contacte sobre este turno").click();
+  await shift.getByRole("button", { name: "Confirmar inscrição" }).click();
+  await expect(shift.getByText("Está inscrito. Obrigado!")).toBeVisible();
+  await expect(shift.getByRole("link", { name: "Pôr no meu calendário" })).toHaveAttribute("href", /^data:text\/calendar/);
 });

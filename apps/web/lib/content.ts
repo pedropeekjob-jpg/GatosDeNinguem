@@ -1,5 +1,7 @@
 import "server-only";
 import {
+  freeSpots,
+  openNeeds,
   publicHappyEnding,
   seedCats,
   seedImpact,
@@ -8,6 +10,8 @@ import {
   seedPosts,
   seedRedirects,
   seedSeoSettings,
+  seedFosterPlacements,
+  seedShifts,
   sortNewestFirst,
   type Cat,
   type Impact,
@@ -16,6 +20,7 @@ import {
   type Post,
   type Redirect,
   type SeoSettings,
+  type Shift,
 } from "@gn/domain";
 
 /**
@@ -93,3 +98,25 @@ export async function getImpact(): Promise<Impact> {
 export async function listRedirects(): Promise<Redirect[]> {
   return API_URL ? (await api<Redirect[]>("/seo/redirects"))! : seedRedirects;
 }
+
+/** A shift as the public sees it: how many places are left, never who signed up. */
+export type PublicShift = Omit<Shift, "signups"> & { taken: number; free: number };
+
+/**
+ * Upcoming shifts with free places. Not cached for long: places fill up.
+ * Demo mode pretends today is 1 Nov 2026 (or DEMO_NOW) so the example shifts are always upcoming.
+ */
+export async function listOpenShifts(): Promise<PublicShift[]> {
+  if (API_URL) {
+    const res = await fetch(`${API_URL}/escalas/vagas`, { next: { revalidate: 60 } });
+    if (!res.ok) throw new Error(`API /escalas/vagas respondeu ${res.status}`);
+    const needs = (await res.json()) as { kind: string; shift?: PublicShift }[];
+    return needs.flatMap((n) => (n.kind === "turno" && n.shift ? [n.shift] : []));
+  }
+  const now = new Date(process.env.DEMO_NOW ?? "2026-11-01T09:00:00.000Z");
+  return openNeeds(seedShifts, seedFosterPlacements, now, 30).flatMap((n) =>
+    n.kind === "turno" ? [{ ...withoutSignups(n.shift), taken: n.shift.signups.length, free: freeSpots(n.shift) }] : [],
+  );
+}
+
+const withoutSignups = ({ signups: _private, ...shift }: Shift) => shift;

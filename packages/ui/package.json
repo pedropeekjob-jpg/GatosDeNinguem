@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "sideEffects": ["*.css"],
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./styles.css": "./src/styles.css"
@@ -12,7 +14,10 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
-  "peerDependencies": { "react": "^19.1.0", "react-dom": "^19.1.0" },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "6.10.0",
     "@testing-library/react": "16.3.3",
@@ -24,6 +29,7 @@
     "jsdom": "26.1.0",
     "react": "19.1.10",
     "react-dom": "19.1.10",
+    "vite": "6.4.5",
     "vitest": "3.2.7"
   }
 }

@@ -61,6 +61,32 @@ model NewsletterSignup {
   subscribedAt DateTime
 }
 
+model Shift {
+  id       String   @id
+  type     String
+  startsAt DateTime
+  endsAt   DateTime
+  seriesId String?
+  data     Json
+
+  @@index([startsAt])
+  @@index([seriesId])
+}
+
+model FosterPlacement {
+  id      String @id
+  catSlug String
+  status  String
+  data    Json
+}
+
+model Sponsorship {
+  id      String  @id
+  catSlug String
+  active  Boolean @default(true)
+  data    Json
+}
+
 model Redirect {
   id        String  @id
   from      String  @unique

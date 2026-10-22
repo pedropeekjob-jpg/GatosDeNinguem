@@ -1,3 +1,4 @@
+import { seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship } from "@gn/domain";
 import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
@@ -13,6 +14,9 @@ export class InMemoryContentRepository implements ContentRepository {
   private applications: StoredPartnerApplication[] = [];
   private interests: StoredAdoptionInterest[] = [];
   private settings: SeoSettings;
+  private shifts = new Map<string, Shift>(seedShifts.map((x) => [x.id, structuredClone(x)]));
+  private placements = new Map<string, FosterPlacement>(seedFosterPlacements.map((x) => [x.id, structuredClone(x)]));
+  private sponsorships = new Map<string, Sponsorship>(seedSponsorships.map((x) => [x.id, structuredClone(x)]));
   private impact: Impact = clone(seedImpact);
   private newsletter = new Map<string, NewsletterSignup & { subscribedAt: string }>();
 
@@ -52,6 +56,20 @@ export class InMemoryContentRepository implements ContentRepository {
   async getImpact() { return clone(this.impact); }
   async saveImpact(impact: Impact) { this.impact = clone(impact); return clone(impact); }
   async saveNewsletterSignup(s: NewsletterSignup & { subscribedAt: string }) { this.newsletter.set(s.email.toLowerCase(), clone(s)); }
+
+  async listShifts(range: { from?: string; to?: string } = {}) {
+    return [...this.shifts.values()]
+      .filter((x) => (!range.from || x.endsAt >= range.from) && (!range.to || x.startsAt <= range.to))
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+      .map(clone);
+  }
+  async getShift(id: string) { const x = this.shifts.get(id); return x && clone(x); }
+  async saveShifts(shifts: Shift[]) { shifts.forEach((x) => this.shifts.set(x.id, clone(x))); }
+  async deleteShift(id: string) { this.shifts.delete(id); }
+  async listFosterPlacements() { return [...this.placements.values()].map(clone); }
+  async saveFosterPlacement(p: FosterPlacement) { this.placements.set(p.id, clone(p)); return clone(p); }
+  async listSponsorships() { return [...this.sponsorships.values()].map(clone); }
+  async saveSponsorship(x: Sponsorship) { this.sponsorships.set(x.id, clone(x)); return clone(x); }
 
   async getSeoSettings() { return clone(this.settings); }
   async saveSeoSettings(settings: SeoSettings) { this.settings = clone(settings); return clone(settings); }
