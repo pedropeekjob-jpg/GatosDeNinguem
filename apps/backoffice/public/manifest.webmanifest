@@ -3,7 +3,7 @@
   "short_name": "Gestão GN",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#faf6f0",
-  "theme_color": "#221e20",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [{ "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml" }]
 }
