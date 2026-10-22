@@ -7,6 +7,7 @@ const when = (iso: string) => new Intl.DateTimeFormat("pt-PT", { dateStyle: "med
 export function PedidosPage() {
   const api = useApi();
   const adoptions = useQuery({ queryKey: ["interests"], queryFn: () => api.adoptionInterests() });
+  const sponsors = useQuery({ queryKey: ["sponsors"], queryFn: () => api.sponsorships() });
   const partners = useQuery({ queryKey: ["partner-applications"], queryFn: () => api.partnerApplications() });
   return (
     <div className="gn-stack gn-stack--l">
@@ -20,6 +21,20 @@ export function PedidosPage() {
             <tbody>
               {adoptions.data?.map((i) => (
                 <tr key={i.id}><td>{when(i.receivedAt)}</td><td><strong>{i.name}</strong><br />{i.phone}<br /><span className="small muted">{i.town}</span></td><td>{i.catSlug ?? "—"}</td><td>{i.message ?? "—"}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section className="gn-stack gn-stack--s">
+        <h2>Querem apadrinhar um gato</h2>
+        <p className="small muted">Depois de combinar com a pessoa, confirme em <a href="/escalas">Escalas</a>, separador Padrinhos.</p>
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th scope="col">Pedido a</th><th scope="col">Pessoa</th><th scope="col">Gato</th><th scope="col">Por mês</th><th scope="col">Mensagem</th></tr></thead>
+            <tbody>
+              {sponsors.data?.filter((s) => s.pending).map((s) => (
+                <tr key={s.id}><td>{s.startDate}</td><td><strong>{s.sponsorName}</strong><br />{s.email}{s.phone ? <><br />{s.phone}</> : null}</td><td>{s.catSlug}</td><td>{s.monthlyAmount.toLocaleString("pt-PT", { style: "currency", currency: "EUR" })}</td><td>{s.message ?? "—"}</td></tr>
               ))}
             </tbody>
           </table>

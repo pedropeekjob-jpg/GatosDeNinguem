@@ -105,8 +105,45 @@ export const sponsorshipSchema = z.object({
   active: z.boolean().default(true),
   /** Date of the last news sent to the godparent, to remind the team monthly. */
   lastUpdateSentAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  /** Asked on the site and not yet confirmed by the team (inactive until then). */
+  pending: z.boolean().optional(),
+  message: z.string().max(1000).optional(),
 });
 export type Sponsorship = z.infer<typeof sponsorshipSchema>;
+
+/** Smallest monthly amount we ask of a godparent. */
+export const MIN_SPONSOR_AMOUNT = 5;
+
+/** "Quero apadrinhar" form on the site. The team calls or writes back, then confirms it in the back office. */
+export const sponsorshipRequestSchema = z.object({
+  catSlug: z.string().min(1),
+  name: z.string({ required_error: "Indique o seu nome" }).min(2, "Indique o seu nome"),
+  email: z.string({ required_error: "Indique um email para receber notícias" }).email("Indique um email válido"),
+  phone: z.string().min(9, "Indique um telefone com pelo menos 9 números").optional().or(z.literal("")),
+  monthlyAmount: z.coerce
+    .number({ invalid_type_error: "Indique um valor em euros" })
+    .min(MIN_SPONSOR_AMOUNT, `O valor mínimo é ${MIN_SPONSOR_AMOUNT} euros por mês`)
+    .max(1000, "Para valores acima de 1000 euros fale connosco"),
+  message: z.string().max(1000).optional(),
+  consent: z.literal(true, { errorMap: () => ({ message: "Precisa de aceitar para o contactarmos" }) }),
+});
+export type SponsorshipRequest = z.infer<typeof sponsorshipRequestSchema>;
+
+/** Turns a site request into an inactive sponsorship the team confirms later. */
+export function sponsorshipFromRequest(r: SponsorshipRequest, id: string, today: string): Sponsorship {
+  return {
+    id,
+    catSlug: r.catSlug,
+    sponsorName: r.name,
+    email: r.email,
+    ...(r.phone ? { phone: r.phone } : {}),
+    monthlyAmount: r.monthlyAmount,
+    startDate: today,
+    active: false,
+    pending: true,
+    ...(r.message ? { message: r.message } : {}),
+  };
+}
 
 // ---------- rules ----------
 

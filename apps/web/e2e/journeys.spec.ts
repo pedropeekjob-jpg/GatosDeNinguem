@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -56,6 +56,32 @@ test("adopt: from the list to sending a request to meet a cat", async ({ page })
   await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Obrigado! Recebemos o seu pedido.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Ver outros gatos" })).toBeVisible();
+});
+
+test("sponsor: Apadrinhar leads to sponsoring that cat, not to adopting it", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".featured").getByRole("link", { name: /^Apadrinhar/ }).click();
+  await expect(page).toHaveURL(/\/apadrinhar\/[a-z0-9-]+$/);
+  await expect(page.getByRole("heading", { level: 1, name: /^Apadrinhar/ })).toBeVisible();
+
+  // From Ajudar, the sponsoring section lists cats to sponsor and each one opens its own form.
+  await page.goto("/ajudar");
+  await page.getByRole("link", { name: "Escolher um gato para apadrinhar" }).click();
+  await expect(page).toHaveURL(/\/apadrinhar$/);
+  await page.getByRole("link", { name: "Tobias" }).click();
+  await expect(page).toHaveURL(/\/apadrinhar\/tobias$/);
+
+  await page.getByText("Outro valor").click();
+  await page.getByLabel("Valor por mês, em euros").fill("2");
+  await page.getByRole("button", { name: "Quero apadrinhar o Tobias" }).click();
+  await expect(page.getByText("O valor mínimo é 5 euros por mês")).toBeVisible();
+  await expect(page.getByText("Indique o seu nome").first()).toBeVisible();
+  await page.getByLabel("Valor por mês, em euros").fill("15");
+  await page.getByLabel("O seu nome").fill("Ana Lima");
+  await page.getByLabel("Email", { exact: true }).fill("ana@example.pt");
+  await page.getByText("Aceito que a associação me contacte").click();
+  await page.getByRole("button", { name: "Quero apadrinhar o Tobias" }).click();
+  await expect(page.getByText("Obrigado! Tobias agradece.")).toBeVisible();
 });
 
 test("descobrir: answer questions, see a match with reasons, save a cat", async ({ page }) => {

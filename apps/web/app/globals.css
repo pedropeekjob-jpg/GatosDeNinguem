@@ -199,3 +199,9 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .route-loading { min-height: 50vh; display: grid; place-items: center; animation: route-loading-in 0.2s 0.3s both; }
 @keyframes route-loading-in { from { opacity: 0; } }
 .splash[hidden] { display: none; }
+
+/* Sponsoring one cat: a small reminder of who it is above the form. */
+.sponsor-cat { display: flex; gap: var(--gn-space-m, 1rem); align-items: flex-start; margin-block: var(--gn-space-l, 1.5rem); }
+.sponsor-cat img { width: 7.5rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius, 0.75rem); flex: none; }
+.sponsor-cat p { margin: 0 0 0.25rem; }
+.sponsor-cat__name { font-weight: 700; font-size: var(--gn-text-l); }

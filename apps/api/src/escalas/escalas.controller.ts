@@ -10,6 +10,8 @@ import {
   signUp,
   signUpErrorMessage,
   sponsorsDueUpdate,
+  sponsorshipFromRequest,
+  sponsorshipRequestSchema,
   sponsorshipSchema,
   volunteerSignupInputSchema,
   weeklyRuleSchema,
@@ -159,6 +161,18 @@ export class EscalasController {
   async savePlacement(@Body() body: unknown) {
     const input = parseBody(fosterPlacementSchema.extend({ id: fosterPlacementSchema.shape.id.optional() }), body);
     return this.repo.saveFosterPlacement({ ...input, id: input.id ?? randomUUID() });
+  }
+
+  /** "Quero apadrinhar" form. Public; saved as a pending sponsorship the team confirms. A hidden "website_url" field catches spam bots. */
+  @Post("padrinhos/pedido")
+  @HttpCode(201)
+  async requestSponsorship(@Body() body: unknown) {
+    if (body && typeof body === "object" && (body as Record<string, unknown>).website_url) return { ok: true };
+    const input = parseBody(sponsorshipRequestSchema, body);
+    const cat = await this.repo.getCatBySlug(input.catSlug);
+    if (!cat || cat.status === "adotado") throw new NotFoundException("Este gato já não precisa de padrinho. Escolha outro, por favor.");
+    await this.repo.saveSponsorship(sponsorshipFromRequest(input, randomUUID(), this.now().toISOString().slice(0, 10)));
+    return { ok: true };
   }
 
   @Get("padrinhos")

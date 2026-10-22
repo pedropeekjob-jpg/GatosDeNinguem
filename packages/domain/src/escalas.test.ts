@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cancelSignUp, checkIn, expandWeeklyRule, freeSpots, lisbonToUtc, openNeeds, signUp, sponsorsDueUpdate, volunteerHours, type Shift } from "./escalas";
+import { cancelSignUp, checkIn, expandWeeklyRule, freeSpots, lisbonToUtc, openNeeds, signUp, sponsorsDueUpdate, sponsorshipFromRequest, sponsorshipRequestSchema, volunteerHours, type Shift } from "./escalas";
 
 const shift: Shift = {
   id: "s1",
@@ -99,5 +99,27 @@ describe("sponsorsDueUpdate", () => {
       "2026-10-22",
     );
     expect(due.map((s) => s.id)).toEqual(["a"]);
+  });
+});
+
+describe("sponsorship requests from the site", () => {
+  const valid = { catSlug: "tobias", name: "Ana Lima", email: "ana@example.pt", monthlyAmount: "10", consent: true };
+
+  it("accepts the amount as typed in the form and an empty phone", () => {
+    const r = sponsorshipRequestSchema.parse({ ...valid, phone: "" });
+    expect(r.monthlyAmount).toBe(10);
+  });
+
+  it("asks for at least 5 euros, an email and consent", () => {
+    const r = sponsorshipRequestSchema.safeParse({ ...valid, monthlyAmount: 2, email: "", consent: undefined });
+    expect(r.success).toBe(false);
+    const fields = r.success ? [] : r.error.issues.map((i) => i.path[0]);
+    expect(fields).toEqual(expect.arrayContaining(["monthlyAmount", "email", "consent"]));
+  });
+
+  it("becomes an inactive sponsorship waiting for the team", () => {
+    const s = sponsorshipFromRequest(sponsorshipRequestSchema.parse(valid), "sp-9", "2026-11-01");
+    expect(s).toMatchObject({ id: "sp-9", catSlug: "tobias", sponsorName: "Ana Lima", active: false, pending: true, startDate: "2026-11-01" });
+    expect(sponsorsDueUpdate([s], "2026-12-31")).toEqual([]);
   });
 });

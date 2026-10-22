@@ -3,13 +3,14 @@ import { Badge, Card } from "@gn/ui";
 import type { PublicCat } from "@/lib/content";
 import { FavoriteButton } from "./client/FavoriteButton";
 
-export function CatCard({ cat, titleAs = "h3" }: { cat: PublicCat; titleAs?: "h2" | "h3" }) {
+/** sponsor: the card leads to sponsoring the cat instead of its adoption page. */
+export function CatCard({ cat, titleAs = "h3", sponsor }: { cat: PublicCat; titleAs?: "h2" | "h3"; sponsor?: boolean }) {
   const photo = cat.photos[0]!;
   return (
     <Card
       titleAs={titleAs}
       title={cat.name}
-      href={`/adotar/${cat.slug}`}
+      href={sponsor ? `/apadrinhar/${cat.slug}` : `/adotar/${cat.slug}`}
       media={{ src: photo.url, alt: photo.alt }}
       badges={
         <>
@@ -22,7 +23,7 @@ export function CatCard({ cat, titleAs = "h3" }: { cat: PublicCat; titleAs?: "h2
         { label: "Idade", value: ageLabel(cat.ageYears) },
         { label: "Sexo", value: cat.sex === "femea" ? "Fêmea" : "Macho" },
       ]}
-      actions={cat.status === "para-adocao" ? <FavoriteButton slug={cat.slug} name={cat.name} /> : undefined}
+      actions={cat.status === "para-adocao" && !sponsor ? <FavoriteButton slug={cat.slug} name={cat.name} /> : undefined}
     >
       <p>{cat.summary}</p>
     </Card>
