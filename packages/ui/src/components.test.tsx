@@ -1,0 +1,177 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { axeViolations } from "../test/axe";
+import {
+  Badge,
+  Breadcrumbs,
+  Button,
+  Card,
+  ChoiceList,
+  Notice,
+  ProgressMeter,
+  SearchPreview,
+  SiteHeader,
+  StepWizard,
+  TextField,
+  TextSizeControl,
+} from "./index";
+
+describe("Button", () => {
+  it("renders a real button by default and a link when given href", () => {
+    render(
+      <>
+        <Button onClick={() => {}}>Doar</Button>
+        <Button href="/adotar">Adotar</Button>
+      </>,
+    );
+    expect(screen.getByRole("button", { name: "Doar" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Adotar" })).toHaveAttribute("href", "/adotar");
+  });
+
+  it("hides decorative icons from screen readers", () => {
+    render(<Button icon={<svg data-testid="i" />}>Doar</Button>);
+    expect(screen.getByTestId("i").parentElement).toHaveAttribute("aria-hidden", "true");
+  });
+});
+
+describe("Card", () => {
+  it("shows any content without knowing what it is", async () => {
+    const { container } = render(
+      <Card
+        media={{ src: "/x.svg", alt: "Foto de exemplo" }}
+        eyebrow="Exemplo"
+        title="Título qualquer"
+        href="/algum-sitio"
+        meta={[{ label: "Idade", value: "3 anos" }]}
+        badges={<Badge tone="info">Novo</Badge>}
+      >
+        Texto livre
+      </Card>,
+    );
+    expect(screen.getByRole("link", { name: "Título qualquer" })).toHaveAttribute("href", "/algum-sitio");
+    expect(screen.getByRole("img", { name: "Foto de exemplo" })).toBeInTheDocument();
+    expect(screen.getByText("Idade")).toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("ChoiceList", () => {
+  it("is a labelled radio group operable by click and keyboard", async () => {
+    const onChange = vi.fn();
+    const { container } = render(
+      <ChoiceList
+        name="tempo"
+        legend="Quanto tempo tem por mês?"
+        options={[
+          { value: "pouco", label: "Quase nenhum", hint: "Pode partilhar ou doar" },
+          { value: "algum", label: "Umas horas" },
+        ]}
+        value="pouco"
+        onChange={onChange}
+      />,
+    );
+    expect(screen.getByRole("group", { name: "Quanto tempo tem por mês?" })).toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText(/Umas horas/));
+    expect(onChange).toHaveBeenCalledWith("algum");
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("StepWizard", () => {
+  it("tells the user where they are and offers big back/next buttons", async () => {
+    const onBack = vi.fn();
+    const onNext = vi.fn();
+    render(
+      <StepWizard step={2} total={4} title="Pergunta" onBack={onBack} onNext={onNext} nextLabel="Continuar">
+        conteúdo
+      </StepWizard>,
+    );
+    expect(screen.getByText("Passo 2 de 4")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(onBack).toHaveBeenCalled();
+    expect(onNext).toHaveBeenCalled();
+  });
+
+  it("hides Voltar on the first step and can disable Continuar", () => {
+    render(<StepWizard step={1} total={3} title="t" onNext={() => {}} nextDisabled>c</StepWizard>);
+    expect(screen.queryByRole("button", { name: "Voltar" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled();
+  });
+});
+
+describe("TextField", () => {
+  it("links label, hint and error, and counts characters against a recommendation", async () => {
+    const { container } = render(
+      <TextField id="t" label="Título" hint="Aparece no Google" error="Demasiado longo" value="abc" onChange={() => {}} recommended={{ min: 2, max: 60 }} />,
+    );
+    const input = screen.getByLabelText("Título");
+    expect(input).toHaveAccessibleDescription(/Aparece no Google/);
+    expect(input).toHaveAccessibleDescription(/Demasiado longo/);
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("3 de 60 caracteres")).toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("TextSizeControl", () => {
+  it("changes the text size on the page root and marks the active option", async () => {
+    render(<TextSizeControl />);
+    await userEvent.click(screen.getByRole("button", { name: /Letra muito grande/ }));
+    expect(document.documentElement.dataset.textSize).toBe("muito-grande");
+    expect(screen.getByRole("button", { name: /Letra muito grande/ })).toHaveAttribute("aria-pressed", "true");
+  });
+});
+
+describe("SiteHeader", () => {
+  it("marks the current page and always shows the urgent action", () => {
+    render(
+      <SiteHeader
+        brand={<span>Marca</span>}
+        homeHref="/"
+        items={[
+          { href: "/adotar", label: "Adotar" },
+          { href: "/ajudar", label: "Ajudar" },
+        ]}
+        currentPath="/adotar/mia"
+        urgent={{ href: "/sos", label: "Encontrei um gato" }}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "Adotar" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Ajudar" })).not.toHaveAttribute("aria-current");
+    expect(screen.getByRole("link", { name: "Encontrei um gato" })).toBeInTheDocument();
+  });
+});
+
+describe("Breadcrumbs", () => {
+  it("renders a labelled trail with the last item as current", () => {
+    render(<Breadcrumbs items={[{ href: "/", label: "Início" }, { href: "/adotar", label: "Adotar" }, { label: "Mia" }]} />);
+    expect(screen.getByRole("navigation", { name: "Está aqui" })).toBeInTheDocument();
+    expect(screen.getByText("Mia")).toHaveAttribute("aria-current", "page");
+  });
+});
+
+describe("misc", () => {
+  it("ProgressMeter exposes value to assistive tech", () => {
+    render(<ProgressMeter label="Esterilizações" value={18} max={30} />);
+    expect(screen.getByRole("progressbar", { name: "Esterilizações" })).toHaveAttribute("aria-valuenow", "18");
+  });
+
+  it("Notice uses status role for info and alert for errors", () => {
+    render(
+      <>
+        <Notice tone="info" title="Nota">a</Notice>
+        <Notice tone="error" title="Erro">b</Notice>
+      </>,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Nota");
+    expect(screen.getByRole("alert")).toHaveTextContent("Erro");
+  });
+
+  it("SearchPreview truncates like a search result", () => {
+    render(<SearchPreview title={"T".repeat(80)} url="https://gatosdeninguem.pt/adotar" description={"D".repeat(200)} />);
+    expect(screen.getByText(/^T+…$/).textContent!.length).toBeLessThanOrEqual(61);
+    expect(screen.getByText(/^D+…$/).textContent!.length).toBeLessThanOrEqual(161);
+  });
+});
