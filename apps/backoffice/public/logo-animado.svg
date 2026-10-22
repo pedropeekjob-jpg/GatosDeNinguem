@@ -53,11 +53,15 @@
 .gnc--intro .gnc-ball-y{animation:gns-ball-y 3.74s both}
 .gnc--intro .gnc-ball-sq{animation:gns-ball-sq 3.74s both}
 .gnc--intro .gnc-yarn{animation:gns-spin 3.74s both}
+.gnc--intro .gnc-yarn .gnc-cut{animation:gns-yarn 3.74s both}
 /* Inline, the intro waits until the logo is on screen. */
 .gnc[data-armed]:not([data-play]) *{animation-play-state:paused!important}
 
 @keyframes gns-letters{from{opacity:0}8.06%{opacity:1}}
-@keyframes gns-o{0%,70.44%{opacity:0}75.37%,100%{opacity:1}}
+@keyframes gns-o{0%,70%{opacity:0}73.5%,100%{opacity:1}}
+/* The ball loses its stripes as it squeezes into the shape of the "O", and the "O" is fully drawn underneath
+   before the ball fades, so the two never show as a grey double image. */
+@keyframes gns-yarn{0%,69.5%{opacity:1}72%,100%{opacity:0}}
 
 /* 2. Peek: slide out from behind the circle and follow the ball with the eyes, leaning back and sinking slowly
    into the crouch for the jump (clear of the circle, so nothing pops into view when it leaps); the body never
@@ -83,12 +87,12 @@
 @keyframes gns-leap-x{
   0%,38.18%{transform:translate(960px,0);opacity:0;animation-timing-function:cubic-bezier(.4,.15,.6,1)}
   38.35%{opacity:1;animation-timing-function:cubic-bezier(.4,.15,.6,1)}
-  55.67%{transform:none;opacity:1}
-  56.8%,100%{transform:none;opacity:0}}
+  55.67%{transform:translate(-30px,0);opacity:1}
+  56.8%,100%{transform:translate(-30px,0);opacity:0}}
 @keyframes gns-leap-y{
   0%,38.18%{transform:translate(0,428px);animation-timing-function:cubic-bezier(.35,.35,.45,1)}
   46.8%{transform:translate(0,-20px);animation-timing-function:cubic-bezier(.55,0,.75,.4)}
-  55.67%,100%{transform:translate(0,24px)}}
+  55.67%,100%{transform:translate(0,92px)}}
 @keyframes gns-leap-s{
   0%,38.18%{transform:scale(.55);animation-timing-function:cubic-bezier(.45,.05,.55,.95)}
   55.67%,100%{transform:scale(1.02,.97) rotate(-1deg)}}
@@ -141,7 +145,8 @@
   51.72%{transform:translate(540px,0);animation-timing-function:linear}
   58.5%{transform:translate(566px,0);animation-timing-function:linear}
   69.21%{transform:translate(739px,0);opacity:1}
-  74.14%,100%{transform:translate(739px,0);opacity:0}}
+  74%{opacity:1}
+  75.5%,100%{transform:translate(739px,0);opacity:0}}
 @keyframes gns-ball-y{
   0%,12.32%{transform:translate(0,880px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
   19.33%{transform:translate(0,1060px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
