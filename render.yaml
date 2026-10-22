@@ -1,0 +1,98 @@
+# Test environment on Render (free plan): public site, back office, API and Postgres.
+# Set up once with New → Blueprint on render.com (steps in docs/DEPLOY.md).
+# After that every merge to main redeploys, once the GitHub checks have passed.
+#
+# The addresses below assume Render kept the service names. If Render added a suffix
+# (shown on each service's page), change them here and merge.
+#   site         https://gatosdeninguem-site.onrender.com
+#   back office  https://gatosdeninguem-gestao.onrender.com
+#   API          https://gatosdeninguem-api.onrender.com
+
+databases:
+  - name: gatosdeninguem-db
+    plan: free
+    region: frankfurt
+    databaseName: gatos
+    user: gn
+
+services:
+  - type: web
+    name: gatosdeninguem-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    autoDeployTrigger: checksPass
+    buildCommand: scripts/deploy/render-build.sh api
+    # Free services have no pre-deploy step, so migrations and the first demo content run at start.
+    startCommand: cd apps/api && node_modules/.bin/prisma migrate deploy && node dist/seed-db.js --if-empty && node dist/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gatosdeninguem-db
+          property: connectionString
+      # Back office password (16+ characters). Render asks for it when the Blueprint is created.
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: REVALIDATE_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://gatosdeninguem-gestao.onrender.com
+      - key: WEB_REVALIDATE_URL
+        value: https://gatosdeninguem-site.onrender.com/api/revalidate
+      # The free disk is wiped on every deploy, so photos are kept in Postgres.
+      - key: UPLOAD_STORAGE
+        value: database
+      # Optional: sign-in codes by email. Without it codes are only written to the API log.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: LOGIN_EMAIL_FROM
+        sync: false
+
+  - type: web
+    name: gatosdeninguem-site
+    runtime: node
+    plan: free
+    region: frankfurt
+    autoDeployTrigger: checksPass
+    buildCommand: scripts/deploy/render-build.sh web
+    startCommand: cd apps/web && node_modules/.bin/next start -p $PORT
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: API_URL
+        value: https://gatosdeninguem-api.onrender.com
+      - key: REVALIDATE_SECRET
+        fromService:
+          type: web
+          name: gatosdeninguem-api
+          envVarKey: REVALIDATE_SECRET
+      # A test environment: keep it out of Google.
+      - key: ALLOW_INDEXING
+        value: "false"
+
+  - type: web
+    name: gatosdeninguem-gestao
+    runtime: static
+    autoDeployTrigger: checksPass
+    buildCommand: scripts/deploy/render-build.sh backoffice
+    staticPublishPath: apps/backoffice/dist
+    routes:
+      # The back office is a single-page app: every address loads index.html.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Robots-Tag
+        value: noindex, nofollow
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_URL
+        value: https://gatosdeninguem-api.onrender.com
+      - key: VITE_SITE_URL
+        value: https://gatosdeninguem-site.onrender.com

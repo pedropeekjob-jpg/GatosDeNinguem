@@ -1,10 +1,11 @@
 import { createApp } from "./app";
 import { InMemoryContentRepository } from "./content/in-memory.repository";
 import type { ContentRepository } from "./content/repository";
+import type { PhotoStore } from "./media/photo-store";
 import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/repository";
 import { lisbonNow, lisbonToUtc, type Account, type CareAlert, type Contact } from "@gn/domain";
 
-async function repositories(): Promise<{ repository: ContentRepository; patinhas: PatinhasRepository }> {
+async function repositories(): Promise<{ repository: ContentRepository; patinhas: PatinhasRepository; photoStore?: PhotoStore }> {
   if (!process.env.DATABASE_URL) {
     console.warn("DATABASE_URL not set: using in-memory demo content (changes are lost on restart).");
     const repository = new InMemoryContentRepository();
@@ -30,7 +31,9 @@ async function repositories(): Promise<{ repository: ContentRepository; patinhas
   const { PrismaContentRepository } = await import("./content/prisma.repository");
   const { PrismaPatinhasRepository } = await import("./patinhas/prisma.repository");
   const db = new PrismaClient();
-  return { repository: new PrismaContentRepository(db), patinhas: new PrismaPatinhasRepository(db) };
+  // UPLOAD_STORAGE=database keeps photos in Postgres, for hosts whose disk is wiped on every deploy.
+  const photoStore = process.env.UPLOAD_STORAGE === "database" ? (await import("./media/photo-store")).databasePhotoStore(db) : undefined;
+  return { repository: new PrismaContentRepository(db), patinhas: new PrismaPatinhasRepository(db), photoStore };
 }
 
 /** Sign-in codes go by email through Resend when RESEND_API_KEY is set; otherwise they are only written to the log. */
@@ -102,6 +105,7 @@ const app = await createApp({
   notifyVolunteers,
   corsOrigins: process.env.CORS_ORIGINS?.split(",").map((s) => s.trim()),
   uploadDir: process.env.UPLOAD_DIR,
-  publicUrl: process.env.PUBLIC_API_URL,
+  // Render sets RENDER_EXTERNAL_URL to the service's public https address.
+  publicUrl: process.env.PUBLIC_API_URL ?? process.env.RENDER_EXTERNAL_URL,
 });
 await app.listen({ port: Number(process.env.PORT ?? 4000), host: "0.0.0.0" });

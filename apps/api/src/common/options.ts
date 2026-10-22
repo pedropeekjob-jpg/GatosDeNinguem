@@ -1,5 +1,6 @@
 import type { Account, CareAlert, Contact } from "@gn/domain";
 import type { ContentRepository } from "../content/repository";
+import type { PhotoStore } from "../media/photo-store";
 import type { PatinhasRepository } from "../patinhas/repository";
 
 export type ApiOptions = {
@@ -22,6 +23,8 @@ export type ApiOptions = {
   corsOrigins?: string[];
   /** Folder for uploaded photos (default: ./uploads). */
   uploadDir?: string;
+  /** Overrides uploadDir, e.g. to keep photos in the database on hosts without a persistent disk. */
+  photoStore?: PhotoStore;
   /** Public address of this API, used in uploaded photo URLs (default: from the request). */
   publicUrl?: string;
 };

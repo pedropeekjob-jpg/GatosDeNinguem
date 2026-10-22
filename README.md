@@ -46,7 +46,11 @@ Without `DATABASE_URL` the API runs on in-memory demo content; without `API_URL`
 
 `.github/workflows/pages.yml` publishes a static demo of the public site on every push to `main`. It uses the example content, and forms check what you type but send nothing. Turn it on once in **Settings → Pages → Source: GitHub Actions**. To build it locally: `BASE_PATH=/GatosDeNinguem pnpm --filter @gn/web export:pages` (output in `apps/web/out`).
 
-GitHub Pages only serves files, so the API, the back office, saved forms, redirects and live SEO edits need a Node host for production (for example Vercel for the site plus Render or Railway for the API and Postgres).
+GitHub Pages only serves files, so the API, the back office, saved forms, redirects and live SEO edits need a Node host.
+
+## Test environment (Render)
+
+`render.yaml` deploys the site, the back office, the API and Postgres on Render's free plan, and redeploys on every merge to `main` once the checks pass. Setup steps and limits: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Tests (test-first, mobile-first)
 
@@ -69,6 +73,10 @@ API tests against Postgres run when `DATABASE_URL` is set. Every public page is 
 | `API_URL` | web | API base URL. Empty → demo content |
 | `ALLOW_INDEXING` | web | `true` only on the production domain |
 | `VITE_API_URL` | backoffice | API base URL |
+| `UPLOAD_DIR` | api | Folder for uploaded photos (default `./uploads`) |
+| `UPLOAD_STORAGE` | api | `database` keeps photos in Postgres instead, for hosts without a persistent disk |
+| `PUBLIC_API_URL` | api | Public address used in photo URLs (on Render, `RENDER_EXTERNAL_URL`) |
+| `VITE_SITE_URL` | backoffice | Public site address, for links to the site |
 | `RESEND_API_KEY`, `LOGIN_EMAIL_FROM` | api | Sends sign-in codes by email (Resend). Without it codes only go to the log |
 
 ## Accounts and Patinhas
@@ -81,6 +89,7 @@ Without an API (the GitHub Pages demo and `next start` without `API_URL`) all of
 
 ## Docs
 
+- [docs/DEPLOY.md](docs/DEPLOY.md): the test environment on Render.
 - [docs/SEO.md](docs/SEO.md): what the SEO specialist can change in the back office, without a developer.
 - [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md): rules that keep the site easy for older visitors.
 

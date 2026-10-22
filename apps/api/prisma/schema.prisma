@@ -226,3 +226,11 @@ model CareTask {
 
   @@index([status])
 }
+
+/** Uploaded photos, when UPLOAD_STORAGE=database (hosts without a persistent disk). */
+model Upload {
+  name        String   @id
+  contentType String
+  data        Bytes
+  createdAt   DateTime @default(now())
+}
