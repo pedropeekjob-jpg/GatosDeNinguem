@@ -22,28 +22,37 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="home-hero">
-        <Container>
-          <div className="home-hero__grid">
+      {/* The page opens on the shelter's own photos, with the welcome laid over them on wide screens and right below them on phones. */}
+      <section className={slides.length ? "home-top" : "home-top home-top--plain"} aria-labelledby="boas-vindas">
+        <Carousel hero slides={slides} label="Fotografias do gatil" autoplay={page.carousel?.autoplay} intervalSeconds={page.carousel?.intervalSeconds} />
+        <div className="home-top__over">
+          <Container>
             <div className="home-hero__text">
-              <h1>{page.heading}</h1>
+              <h1 id="boas-vindas">{page.heading}</h1>
               <p className="gn-lead">{page.intro}</p>
               <div className="home-actions">
                 <Button href="/adotar">Quero adotar</Button>
                 <Button href="/ajudar" variant="secondary">Quero ajudar</Button>
                 <Button href="/sos" variant="urgent">Encontrei um gato</Button>
               </div>
+            </div>
+          </Container>
+        </div>
+      </section>
+
+      <section className="home-next">
+        <Container>
+          <div className="home-next__grid">
+            <div className="gn-stack gn-stack--m">
               <PatinhasTeaser />
               <FavoritesStrip cats={cats} />
             </div>
-            <div className="home-hero__art">
-              <AnimatedLogo size={380} />
+            <div className="home-next__art" aria-hidden="true">
+              <AnimatedLogo size={200} />
             </div>
           </div>
         </Container>
       </section>
-
-      <Carousel slides={slides} label="Fotografias do gatil" autoplay={page.carousel?.autoplay} intervalSeconds={page.carousel?.intervalSeconds} />
 
       {featured ? <FeaturedCat cat={featured} /> : null}
     </>

@@ -4,17 +4,36 @@
 main { display: block; }
 .page-hero { padding-block: var(--gn-space-l) var(--gn-space-s); }
 .page-hero .gn-container { display: grid; gap: var(--gn-space-m); }
-.home-hero { padding-block: var(--gn-space-xl) var(--gn-space-l); }
-.home-hero__grid { display: grid; gap: var(--gn-space-l); align-items: center; }
-.home-hero__text { display: grid; gap: var(--gn-space-m); }
-.home-hero__art { display: none; }
-.home-actions { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); padding-top: 0.75rem; }
+/* Home opening. Phones: photo, then the welcome below it, all inside the first screen.
+   Wide screens: the welcome sits on the photo, over a dark gradient so the text stays readable on any photo. */
+.home-top { position: relative; }
+.home-top__over { padding-block: var(--gn-space-m) var(--gn-space-m); }
+.home-hero__text { display: grid; gap: 0.75rem; }
+.home-hero__text h1 { font-size: clamp(1.625rem, 4.4vw, 2.75rem); }
+.home-actions { display: grid; gap: 0.6rem; grid-template-columns: 1fr 1fr; padding-top: 0.25rem; }
+/* Phones already have "Encontrei um gato" at the top of the screen; repeating it would push the welcome off the first screen. */
+.home-actions .gn-btn--urgent { display: none; }
 @media (min-width: 60rem) {
-  .home-hero__grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 4rem; }
-  /* The logo's cat comes to life beside the welcome. */
-  .home-hero__art { display: grid; place-items: center; animation: rise-in 0.8s 0.2s cubic-bezier(.2,.8,.2,1) both; }
-  .home-actions { grid-template-columns: repeat(3, auto); justify-content: start; }
+  .home-top:not(.home-top--plain) .home-top__over {
+    position: absolute; inset: 0; display: grid; align-items: end; padding-block: var(--gn-space-xl) 6.5rem; pointer-events: none;
+    background: linear-gradient(90deg, rgb(0 0 0 / .74) 0%, rgb(0 0 0 / .62) 38%, rgb(0 0 0 / 0) 72%);
+  }
+  .home-top:not(.home-top--plain) .home-hero__text { max-width: 36rem; pointer-events: auto; color: #fff; text-shadow: 0 1px 12px rgb(0 0 0 / .35); }
+  .home-top:not(.home-top--plain) .home-hero__text h1 { color: #fff; }
+  .home-top:not(.home-top--plain) .home-hero__text .gn-lead { color: rgb(255 255 255 / .92); }
+  .home-top:not(.home-top--plain) .gn-btn { text-shadow: none; }
+  .home-top--plain .home-top__over { padding-block: var(--gn-space-xl); }
+  .home-actions { grid-template-columns: repeat(3, auto); justify-content: start; padding-top: 0.75rem; }
+  .home-actions .gn-btn--urgent { display: inline-flex; }
   .home-actions .gn-btn { white-space: nowrap; }
+}
+.home-next { padding-block: var(--gn-space-m) var(--gn-space-l); }
+.home-next__grid { display: grid; gap: var(--gn-space-l); align-items: center; }
+.home-next__art { display: none; }
+@media (min-width: 60rem) {
+  .home-next__grid { grid-template-columns: minmax(0, 1fr) auto; }
+  /* The logo's cat comes to life beside the Patinhas. */
+  .home-next__art { display: grid; place-items: center; }
 }
 .stats { display: grid; gap: var(--gn-space-l) var(--gn-space-m); grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
 .muted { color: var(--gn-ink-soft); }

@@ -321,4 +321,13 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-carousel__btn:active { transform: scale(.94); }
 .gn-carousel__btn:focus-visible { outline: 3px solid var(--gn-ink); outline-offset: 2px; }
 @media (hover: hover) { .gn-carousel__btn:hover { background: var(--gn-accent-soft); } }
+/* Opening photos of a page (home). Phones keep the photo short so the welcome below it fits the first screen. */
+.gn-carousel--hero .gn-carousel__slide { aspect-ratio: 16 / 10; max-height: 34vh; }
+.gn-carousel--hero .gn-carousel__caption { padding: 2rem var(--gn-space-m) 4.5rem; font-size: var(--gn-text-s); }
+.gn-carousel--hero .gn-carousel__controls { bottom: 0.5rem; right: 0.5rem; }
+@media (min-width: 60rem) {
+  .gn-carousel--hero .gn-carousel__slide { aspect-ratio: auto; height: clamp(26rem, 72vh, 48rem); max-height: none; }
+  .gn-carousel--hero .gn-carousel__caption { inset: auto max(var(--gn-space-l), calc((100vw - 72rem) / 2)) 5.5rem auto; max-width: 24rem; padding: 0.45rem 0.9rem; border-radius: 12px; text-align: right; text-shadow: none; background: rgb(0 0 0 / .62); }
+  .gn-carousel--hero .gn-carousel__controls { right: max(var(--gn-space-l), calc((100vw - 72rem) / 2)); bottom: var(--gn-space-l); }
+}
 .gn-carousel__count { min-width: 3.25rem; text-align: center; font-size: var(--gn-text-s); font-weight: 600; font-variant-numeric: tabular-nums; }

@@ -134,7 +134,7 @@ test("SEO: cat pages carry structured data and Open Graph", async ({ page }) => 
   const jsonLd = await page.locator('script[type="application/ld+json"]').allTextContents();
   expect(jsonLd.join()).toContain('"BreadcrumbList"');
   expect(jsonLd.join()).toContain('"AnimalShelter"');
-  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /gato-tigrado\.svg/);
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/fotos\/gato-tigrado-dani\.webp$/);
   await expect(page).toHaveTitle("Mia, gata para adoção em Viana do Castelo | Gatos de Ninguém");
 });
 
@@ -168,15 +168,25 @@ test("volunteer finds a free shift from Ajudar and signs up", async ({ page }) =
   await expect(shift.getByRole("link", { name: "Pôr no meu calendário" })).toHaveAttribute("href", /^data:text\/calendar/);
 });
 
-test("home: shelter photos in a full-width carousel, moved with the buttons", async ({ page }) => {
+test("home: opens on the shelter's real photos, with the welcome and main buttons in the first screen", async ({ page }) => {
   await page.goto("/");
   const carousel = page.getByRole("region", { name: "Fotografias do gatil" });
   await expect(carousel).toBeVisible();
   const box = await carousel.boundingBox();
   expect(box!.width).toBeGreaterThanOrEqual((page.viewportSize()!.width) - 1);
-  await expect(carousel.getByText("1 / 4")).toBeVisible();
+  expect(box!.y).toBeLessThan(120); // right under the header: the photos are the top of the page
+  await expect(carousel.locator("img").first()).toHaveAttribute("src", /\/fotos\/.+\.webp$/);
+  // Nothing to scroll for: the title and the two main buttons are on screen, clear of the phone tab bar.
+  await expect(page.getByRole("heading", { level: 1 })).toBeInViewport({ ratio: 1 });
+  const tabBarTop = await page.locator(".gn-nav").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
+  for (const name of ["Quero adotar", "Quero ajudar"]) {
+    const button = page.locator(".home-actions").getByRole("link", { name });
+    await expect(button).toBeInViewport({ ratio: 1 });
+    expect((await button.boundingBox())!.y + (await button.boundingBox())!.height).toBeLessThanOrEqual(tabBarTop);
+  }
+  await expect(carousel.getByText("1 / 6")).toBeVisible();
   await carousel.getByRole("button", { name: "Fotografia seguinte" }).click();
-  await expect(carousel.getByText("2 / 4")).toBeVisible();
+  await expect(carousel.getByText("2 / 6")).toBeVisible();
   // People who ask for reduced motion never get autoplay, but can still start it.
   await expect(carousel.getByRole("button", { name: "Passar automaticamente" })).toBeVisible();
 });

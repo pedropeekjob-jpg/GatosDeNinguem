@@ -10,6 +10,8 @@ interface CarouselProps {
   /** Move on by itself. Never happens for people who ask their device for reduced motion. */
   autoplay?: boolean;
   intervalSeconds?: number;
+  /** Opening photos of a page: taller, and the first photo loads before anything else. */
+  hero?: boolean;
 }
 
 const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -18,7 +20,7 @@ const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.
  * Full-width photo carousel. Built on native horizontal scrolling with snap points, so it
  * still works by swiping (or scrolling) without JavaScript; buttons and autoplay are an extra.
  */
-export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6 }: CarouselProps) {
+export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6, hero = false }: CarouselProps) {
   const track = useRef<HTMLUListElement>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -49,7 +51,7 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6 
   if (!count) return null;
   return (
     <section
-      className="gn-carousel"
+      className={hero ? "gn-carousel gn-carousel--hero" : "gn-carousel"}
       aria-roledescription="carrossel"
       aria-label={label}
       onPointerEnter={() => setHeld(true)}
@@ -61,7 +63,7 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6 
       <ul ref={track} className="gn-carousel__track" onScroll={onScroll} tabIndex={0} aria-label="Fotografias">
         {slides.map((s, i) => (
           <li key={`${s.src}-${i}`} className={i === index ? "gn-carousel__slide is-active" : "gn-carousel__slide"} aria-roledescription="diapositivo" aria-label={`${i + 1} de ${count}`} aria-hidden={i !== index ? true : undefined}>
-            <img src={s.src} alt={s.alt} loading={i === 0 ? "eager" : "lazy"} />
+            <img src={s.src} alt={s.alt} loading={i === 0 ? "eager" : "lazy"} fetchPriority={hero && i === 0 ? "high" : undefined} />
             {s.caption ? <p className="gn-carousel__caption">{s.caption}</p> : null}
           </li>
         ))}
