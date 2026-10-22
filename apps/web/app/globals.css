@@ -143,3 +143,50 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .patinhas-teaser__title { font-family: var(--gn-font-display); font-weight: 650; font-size: var(--gn-text-l); letter-spacing: -0.01em; }
 .patinhas-teaser__body { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
 .patinhas-teaser__body a { color: var(--gn-ink); font-weight: 600; white-space: nowrap; }
+
+/* No gatil: the volunteer's shift page */
+.gatil { padding-bottom: var(--gn-space-l); }
+.gatil h2, .gatil h3, .gatil h4 { margin: 0; }
+.gatil p { margin: 0; }
+.gatil__turno { display: grid; gap: 0.35rem; padding: var(--gn-space-m); border-radius: var(--gn-radius); background: var(--gn-ink); color: #fff; }
+.gatil__turno a { color: var(--gn-accent); }
+.gatil__turno h2::first-letter { text-transform: uppercase; }
+.gatil__quando { font-size: var(--gn-text-s); font-weight: 650; color: var(--gn-accent); text-transform: uppercase; letter-spacing: 0.06em; }
+.gatil__lista { list-style: none; margin: 0; padding: 0; display: grid; }
+.gatil__lista > li { padding-block: 0.9rem; border-bottom: 1px solid var(--gn-line); }
+.gatil__lista > li:first-child { border-top: 1px solid var(--gn-line); }
+.gatil__dose { display: grid; grid-template-columns: 3.6rem 1fr; gap: 0.75rem; }
+.gatil__hora { font-family: var(--gn-font-display); font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gatil__dose--feita .gatil__hora { color: var(--gn-ink-soft); text-decoration: line-through; }
+.gatil__gato { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; }
+.gatil__ok { font-weight: 650; }
+.gatil__ok::before { content: "✓ "; }
+.gatil__importante { padding: 0.5rem 0.75rem; border-left: 4px solid var(--gn-accent); background: var(--gn-accent-soft); border-radius: var(--gn-radius-s); }
+.gatil__resto summary, .gatil__silenciar summary, .gatil__gato-cartao summary { cursor: pointer; font-weight: 650; min-height: 44px; display: flex; align-items: center; }
+.gatil__pedido { display: grid; gap: 0.4rem; }
+.gatil__pedido--meu { padding-inline: 0.75rem; background: var(--gn-sand); }
+.gatil__gatos { display: grid; gap: var(--gn-space-m); }
+.gatil__gato-cartao { display: grid; gap: 0.75rem; padding: var(--gn-space-m); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); background: var(--gn-surface); }
+.gatil__gato-cartao--dentro { padding: 0.75rem; }
+.gatil__cartao { display: grid; gap: 0.5rem; padding: var(--gn-space-m); border-radius: var(--gn-radius); background: var(--gn-sand); }
+.gatil__gato-topo { display: flex; align-items: center; gap: 0.75rem; }
+.gatil__gato-topo img { width: 64px; height: 64px; object-fit: cover; border-radius: 50%; flex: none; }
+.gatil__gato-topo > div { display: grid; gap: 0.25rem; justify-items: start; }
+.gatil__agora { display: grid; gap: 0.4rem; padding: 0.75rem; border-radius: var(--gn-radius-s); background: var(--gn-sand); }
+.gatil__rotulo { font-size: var(--gn-text-s); font-weight: 650; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gn-ink-soft); }
+.gatil__notas { margin: 0.25rem 0 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+.gatil__nova { font-weight: 650; }
+.gatil__titulo { display: flex; align-items: center; gap: 0.6rem; }
+.gatil__grupo { display: grid; gap: 0.35rem; justify-items: start; }
+.gatil__grupo--importante { padding-inline: 0.75rem; border-left: 4px solid var(--gn-accent); }
+.gatil__silenciar { padding: 0.25rem var(--gn-space-m) var(--gn-space-m); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); }
+.gatil__silenciar fieldset { border: 0; margin: 0; padding: 0; }
+.gatil__silenciar legend { font-weight: 650; margin-bottom: 0.4rem; }
+.gatil__resumo { display: grid; gap: 0.75rem; justify-items: start; padding: var(--gn-space-m); border-radius: var(--gn-radius); border: 2px solid var(--gn-ink); background: var(--gn-accent-soft); }
+.gatil__resumo h2 { margin: 0; }
+.loc { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 6px; font-size: var(--gn-text-s); font-weight: 650; background: var(--gn-sand); }
+.loc--cage { background: var(--gn-accent-soft); box-shadow: inset 0 0 0 1.5px var(--gn-accent-strong); }
+.loc--unknown { color: var(--gn-warning); }
+.gatil__agora .loc, .gatil__gato-cartao .loc { background: var(--gn-surface); }
+.account-link__count { display: inline-grid; place-items: center; min-width: 1.35rem; height: 1.35rem; padding-inline: 0.3rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-size: 0.75rem; font-weight: 700; line-height: 1; }
+.gatil__turno h2 { color: #fff; }

@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { firstName, monthLabel, type EarnAction } from "@gn/domain";
 import { Badge, Button, Checkbox, Notice, ProgressMeter, TextField } from "@gn/ui";
 import { contaClient, type MeuPainel } from "@/lib/conta";
+import { GatilResumo } from "./NoGatil";
 
 const n = new Intl.NumberFormat("pt-PT");
 const day = new Intl.DateTimeFormat("pt-PT", { day: "numeric", month: "long", timeZone: "Europe/Lisbon" });
@@ -24,6 +25,8 @@ export function Painel({ painel, welcome, onChange, onSignedOut }: { painel: Meu
           Ganhou-as por criar a conta. Veja abaixo como ganhar mais e o que pode trocar.
         </Notice>
       ) : null}
+
+      <GatilResumo />
 
       <section className="painel__resumo" aria-labelledby="painel-ola">
         <h2 id="painel-ola">Olá, {firstName(account.name)}!</h2>

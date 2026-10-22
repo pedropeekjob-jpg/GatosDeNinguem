@@ -6,12 +6,16 @@ import { cookies } from "next/headers";
  */
 const COOKIE = "gn-sessao";
 const MAX_AGE = 180 * 24 * 60 * 60;
-const allowed = new Set(["codigo", "entrar", "sair", "eu", "eu/questionario", "eu/trocas"]);
+const allowed = new Set([
+  "codigo", "entrar", "sair", "eu", "eu/questionario", "eu/trocas",
+  "eu/cuidados", "eu/cuidados/resumo", "eu/cuidados/tomas", "eu/cuidados/nao-consigo", "eu/cuidados/notas", "eu/cuidados/vistas", "eu/cuidados/preferencias",
+]);
+const allowedPattern = /^eu\/cuidados\/tarefas\/[A-Za-z0-9-]{1,64}\/(aceitar|devolver)$/;
 
 async function forward(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const path = (await params).path.join("/");
   const api = process.env.API_URL;
-  if (!api || !allowed.has(path)) return Response.json({ message: "Não encontrado." }, { status: 404 });
+  if (!api || !(allowed.has(path) || allowedPattern.test(path))) return Response.json({ message: "Não encontrado." }, { status: 404 });
 
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
@@ -43,4 +47,4 @@ async function forward(request: Request, { params }: { params: Promise<{ path: s
   return Response.json(data, { status: res.status });
 }
 
-export { forward as GET, forward as POST, forward as PATCH, forward as DELETE };
+export { forward as GET, forward as POST, forward as PUT, forward as PATCH, forward as DELETE };

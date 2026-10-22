@@ -1,29 +1,24 @@
 import { Body, ConflictException, Controller, ForbiddenException, Get, Headers, HttpCode, Inject, Param, Post, Put } from "@nestjs/common";
 import {
+  buildVolunteerCare,
+  canHandleDose,
   cantGiveInputSchema,
   careNotificationPrefsSchema,
   defaultCarePrefs,
-  groupAlertsByCat,
-  isMedicationActive,
-  isMuted,
+  lisbonNow,
   noteAlert,
-  relevantAlerts,
-  splitRoundForShift,
-  unreadForVolunteer,
   visitNoteInputSchema,
   volunteerDuty,
   type Author,
-  type Cat,
-  type Shift,
+  type VolunteerCare,
 } from "@gn/domain";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { parseBody } from "../common/validation";
 import { PatinhasService } from "../patinhas/service";
-import { CareService, catSummary } from "./care.service";
+import { CareService } from "./care.service";
 
 const doseSchema = z.object({ medicationId: z.string(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), time: z.string().regex(/^\d{2}:\d{2}$/) });
-const NOTIFICATION_DAYS = 14;
 
 /**
  * The volunteer's own care page on the site. Volunteers never see the back office: they see the cats of
@@ -49,86 +44,32 @@ export class VoluntarioCuidadosController {
 
   /** May this person mark or hand over this dose? Today, on their gatil shift, or a request they took. */
   private async canHandleDose(ctx: Awaited<ReturnType<VoluntarioCuidadosController["context"]>>, medicationId: string, date: string, time: string) {
-    if (date !== ctx.today) throw new ConflictException("Só pode registar doses de hoje.");
     const med = await this.care.medication(medicationId);
-    const tasks = await this.repo.listCareTasks({ status: ["aceite"] });
-    const taken = tasks.some((t) => t.medicationId === medicationId && t.date === date && t.time === time && t.acceptedBy?.accountId === ctx.account.id);
     const location = (await this.repo.getCatCare(med.catId))?.location;
-    const onShift = ctx.duty.isToday && location?.area !== "fora";
-    if (!onShift && !taken) throw new ForbiddenException("Esta dose não faz parte do seu turno.");
+    const check = canHandleDose(
+      { isToday: ctx.duty.isToday, accountId: ctx.account.id, today: ctx.today },
+      { medicationId, date, time },
+      { catInShelter: !!location && location.area !== "fora", tasks: await this.repo.listCareTasks({ status: ["aceite"] }) },
+    );
+    if (!check.ok) {
+      if (check.reason === "dia") throw new ConflictException("Só pode registar doses de hoje.");
+      throw new ForbiddenException("Esta dose não faz parte do seu turno.");
+    }
     return med;
   }
 
   @Get()
-  async overview(@Headers("authorization") auth?: string) {
-    const ctx = await this.context(auth);
-    const { account, duty } = ctx;
-    const prefs = (await this.repo.getCarePrefs(account.id)) ?? defaultCarePrefs;
-    const base = { volunteer: duty.isVolunteer, phoneMissing: !account.phone, prefs };
-    if (!duty.isVolunteer) return { ...base, shift: null, isToday: false, during: [], rest: [], cats: [], transports: [], tasks: { open: [], mine: [] }, notifications: [], unread: 0 };
-
-    const [cats, care, meds, appointments, tasks] = await Promise.all([
-      this.repo.listCats(), this.repo.listCatCare(), this.repo.listMedications(), this.repo.listAppointments(), this.repo.listCareTasks({ status: ["aberta", "aceite"] }),
+  async overview(@Headers("authorization") auth?: string): Promise<VolunteerCare> {
+    const account = await this.patinhas.accountFromHeader(auth);
+    const now = this.care.now();
+    const since = new Date(now.getTime() - 180 * 86_400_000).toISOString();
+    const [shifts, cats, care, medications, doses, tasks, appointments, notes, alerts, prefs] = await Promise.all([
+      this.repo.listShifts({ from: since }), this.repo.listCats(), this.repo.listCatCare(), this.repo.listMedications(),
+      this.repo.listDoses({ from: lisbonNow(new Date(now.getTime() - 86_400_000)).date, to: lisbonNow(new Date(now.getTime() + 15 * 86_400_000)).date }), this.repo.listCareTasks(),
+      this.repo.listAppointments(), this.repo.listVisitNotes(), this.repo.listCareAlerts({ since: new Date(now.getTime() - 14 * 86_400_000).toISOString(), limit: 200 }),
+      this.repo.getCarePrefs(account.id),
     ]);
-    const careById = new Map(care.map((c) => [c.catId, c]));
-
-    // The shift: that day's doses, split into "during your shift" and the rest of the day.
-    const shiftDate = duty.shift ? new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon" }).format(new Date(duty.shift.startsAt)) : ctx.today;
-    const round = duty.shift ? (await this.care.round(shiftDate)).filter((r) => r.location?.area !== "fora") : [];
-    const { during, rest } = duty.shift ? splitRoundForShift(round, duty.shift) : { during: [], rest: [] };
-
-    // "Como tratar de cada gato": the cats that need something, what they need now first.
-    const weekAgo = new Date(this.care.now().getTime() - 7 * 86_400_000).toISOString();
-    const notes = await this.repo.listVisitNotes();
-    const guide = (cat: Cat) => {
-      const where = careById.get(cat.id)?.location ?? null;
-      const medsToday = meds.filter((m) => m.catId === cat.id && isMedicationActive(m, shiftDate));
-      const catNotes = notes.filter((n) => n.catId === cat.id);
-      return {
-        cat: catSummary(cat),
-        location: where,
-        specialNeeds: cat.specialNeeds,
-        medications: medsToday.map(({ id, name, dose, times, withFood, instructions }) => ({ id, name, dose, times, withFood, instructions })),
-        importantNotes: catNotes.filter((n) => n.important && n.createdAt >= weekAgo).slice(0, 3),
-        latestNotes: catNotes.slice(0, 3),
-        nextAppointment: appointments.find((a) => a.catId === cat.id && a.status === "marcada" && a.startsAt >= this.care.now().toISOString()) ?? null,
-      };
-    };
-    const needsCare = (c: Cat) => {
-      const where = careById.get(c.id)?.location;
-      if (!where || where.area === "fora") return false;
-      return where.spot === "jaula" || !!c.specialNeeds || meds.some((m) => m.catId === c.id && isMedicationActive(m, shiftDate)) || notes.some((n) => n.catId === c.id && n.important && n.createdAt >= weekAgo);
-    };
-    const shiftCats = duty.shift ? cats.filter((c) => c.status !== "adotado" && needsCare(c)).sort((a, b) => a.name.localeCompare(b.name, "pt")) : [];
-
-    const transports = duty.transports.map((shift: Shift) => {
-      const appointment = appointments.find((a) => a.transportShiftId === shift.id) ?? null;
-      const cat = cats.find((c) => c.id === appointment?.catId || c.slug === shift.catSlug);
-      return { shift: { id: shift.id, title: shift.title, startsAt: shift.startsAt, endsAt: shift.endsAt, location: shift.location, notes: shift.notes, clinic: shift.clinic }, appointment, guide: cat ? guide(cat) : null };
-    });
-
-    const mine = tasks.filter((t) => t.acceptedBy?.accountId === account.id || (t.status === "aberta" && t.createdBy.accountId === account.id));
-    const open = tasks.filter((t) => t.status === "aberta" && t.createdBy.accountId !== account.id);
-
-    const catIds = new Set([...shiftCats.map((c) => c.id), ...transports.flatMap((t) => (t.guide ? [t.guide.cat.id] : [])), ...mine.map((t) => t.catId)]);
-    const since = new Date(this.care.now().getTime() - NOTIFICATION_DAYS * 86_400_000).toISOString();
-    const allTasks = await this.repo.listCareTasks();
-    const relevant = relevantAlerts(await this.repo.listCareAlerts({ since, limit: 200 }), { catIds, tasks: allTasks, since });
-    const unread = unreadForVolunteer(relevant, prefs);
-    const unreadIds = new Set(unread.map((a) => a.id));
-
-    return {
-      ...base,
-      shift: duty.shift ? { id: duty.shift.id, title: duty.shift.title, startsAt: duty.shift.startsAt, endsAt: duty.shift.endsAt, location: duty.shift.location, team: duty.shift.signups.map((s) => s.name) } : null,
-      isToday: duty.isToday,
-      during,
-      rest,
-      cats: shiftCats.map(guide),
-      transports,
-      tasks: { open, mine },
-      notifications: groupAlertsByCat(relevant.map((a) => ({ ...a, unread: unreadIds.has(a.id), muted: isMuted(a, prefs) }))),
-      unread: unread.length,
-    };
+    return buildVolunteerCare({ account, now, shifts, cats, care, medications, doses, tasks, appointments, notes, alerts, prefs: prefs ?? undefined });
   }
 
   /** Just the bell count, for the header on every page. */

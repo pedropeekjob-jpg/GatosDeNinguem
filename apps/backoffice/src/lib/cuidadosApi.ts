@@ -1,9 +1,9 @@
-import type { Appointment, AppointmentInput, AppointmentStatus, Author, CareAlert, CatCare, CatLocation, CatStatus, Dose, Medication, MedicationInput, Photo, VisitNote, VisitNoteInput } from "@gn/domain";
+import type { Appointment, AppointmentInput, AppointmentStatus, Author, CareAlert, CareTask, CatCare, CatLocation, CatStatus, Dose, Medication, MedicationInput, Photo, VisitNote, VisitNoteInput } from "@gn/domain";
 
 export type CatSummary = { id: string; name: string; slug: string; status: CatStatus; photo?: Photo };
 export type ShelterRow = { cat: CatSummary; care: CatCare | null; activeMedications: string[]; nextAppointment: Appointment | null };
 export type CatFile = { cat: CatSummary; care: CatCare | null; medications: Medication[]; appointments: Appointment[]; notes: VisitNote[]; alerts: CareAlert[] };
-export type RoundRow = { medication: Medication; time: string; given?: Dose; cat: CatSummary; location: CatLocation | null };
+export type RoundRow = { medication: Medication; time: string; given?: Dose; cat: CatSummary; location: CatLocation | null; task?: CareTask | null };
 export type UpcomingAppointment = Appointment & { cat: CatSummary; transport: { shiftId: string; volunteers: string[]; free: number } | null };
 export type AppointmentChanges = Partial<Pick<Appointment, "startsAt" | "clinic" | "reason" | "notes" | "outcome">> & { status?: AppointmentStatus };
 
@@ -23,6 +23,9 @@ export interface CuidadosApi {
   updateAppointment(id: string, changes: AppointmentChanges, by: Author): Promise<Appointment>;
   addNote(input: VisitNoteInput, by: Author): Promise<VisitNote>;
   careAlerts(): Promise<CareAlert[]>;
+  /** Help requests from volunteers who could not give a dose: open ones and those closed this week. */
+  careTasks(): Promise<CareTask[]>;
+  cancelTask(id: string, by: Author): Promise<CareTask>;
 }
 
 type Call = <T>(method: string, path: string, body?: unknown) => Promise<T>;
@@ -43,5 +46,7 @@ export function cuidadosHttp(call: Call): CuidadosApi {
     updateAppointment: (id, changes, by) => call("PATCH", `/cuidados/consultas/${id}`, { ...changes, by }),
     addNote: (input, by) => call("POST", "/cuidados/notas", { ...input, by }),
     careAlerts: () => call("GET", "/cuidados/novidades?limite=100"),
+    careTasks: () => call("GET", "/cuidados/tarefas"),
+    cancelTask: (id, by) => call("POST", `/cuidados/tarefas/${id}/cancelar`, { by }),
   };
 }

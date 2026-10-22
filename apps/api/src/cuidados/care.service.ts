@@ -1,8 +1,8 @@
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import {
+  careRound,
   isMuted,
   lisbonNow,
-  medicationRound,
   normalizePhone,
   taskAlert,
   volunteerPhones,
@@ -17,7 +17,7 @@ import { randomUUID } from "node:crypto";
 import type { ApiOptions } from "../common/options";
 import type { PatinhasRepository } from "../patinhas/repository";
 
-export const catSummary = (c: Cat) => ({ id: c.id, name: c.name, slug: c.slug, status: c.status, photo: c.photos[0] });
+export { catSummary } from "@gn/domain";
 const OPEN: CareTask["status"][] = ["aberta", "aceite"];
 
 /** Care rules shared by the back office (managers) and the volunteers' own area on the site. */
@@ -45,21 +45,10 @@ export class CareService {
 
   /** Every dose due on a day, which cat, where it is, who gave it, and any help request about it. */
   async round(date: string) {
-    const [meds, doses, cats, care, tasks] = await Promise.all([
+    const [medications, doses, cats, care, tasks] = await Promise.all([
       this.repo.listMedications(), this.repo.listDoses({ from: date, to: date }), this.repo.listCats(), this.repo.listCatCare(), this.repo.listCareTasks({ status: OPEN }),
     ]);
-    const catById = new Map(cats.map((c) => [c.id, c]));
-    const careById = new Map(care.map((c) => [c.catId, c]));
-    return medicationRound(meds.filter((m) => catById.has(m.catId)), doses, date).map((r) => {
-      const cat = catById.get(r.medication.catId)!;
-      return {
-        ...r,
-        cat: catSummary(cat),
-        location: careById.get(cat.id)?.location ?? null,
-        specialNeeds: cat.specialNeeds,
-        task: tasks.find((t) => t.medicationId === r.medication.id && t.date === date && t.time === r.time) ?? null,
-      };
-    });
+    return careRound({ medications, doses, cats, care, tasks }, date);
   }
 
   /** Records a dose once; closes any help request for it and tells everyone it is solved. */

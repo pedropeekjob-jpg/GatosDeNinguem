@@ -47,6 +47,25 @@ describe("Cuidados: medicação de hoje", () => {
   });
 });
 
+describe("Cuidados: pedidos de ajuda dos voluntários", () => {
+  it("shows who could not give a dose and lets a manager call it off", async () => {
+    const user = userEvent.setup();
+    const { container, api } = renderAt("/cuidados");
+    const requests = await screen.findByRole("region", { name: "Pedidos de ajuda dos voluntários" });
+    expect(within(requests).getByText("Dar Insulina (1 unidade) a Estrela, hoje às 20:00")).toBeInTheDocument();
+    expect(within(requests).getByText("À espera de alguém")).toBeInTheDocument();
+    expect(within(requests).getByText(/Rui Sousa não conseguiu/)).toBeInTheDocument();
+    const evening = screen.getByRole("article", { name: "Estrela, Insulina às 20:00" });
+    expect(within(evening).getByText(/Pedido de ajuda: Rui Sousa não conseguiu/)).toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+
+    await user.type(screen.getByLabelText("O seu nome"), "Marta Gestora");
+    await user.click(within(requests).getByRole("button", { name: /Já não é preciso/ }));
+    expect(api.cancelTask).toHaveBeenCalledWith("pedido-1", { name: "Marta Gestora" });
+    await waitFor(() => expect(within(requests).getByText("Cancelado")).toBeInTheDocument());
+  });
+});
+
 describe("Cuidados: onde estão", () => {
   it("shows each space with loose and caged cats", async () => {
     const user = userEvent.setup();

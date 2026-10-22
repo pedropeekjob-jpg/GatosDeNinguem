@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { careAlertKindLabel, hasCages, lisbonNow, shelterAreaLabel, shelterAreas, type CareAlert, type ShelterArea } from "@gn/domain";
+import { careAlertKindLabel, hasCages, lisbonNow, shelterAreaLabel, shelterAreas, type CareAlert, type CareTask, type ShelterArea } from "@gn/domain";
 import { AnimatedLogo, Badge, Button, Notice } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
 import type { RoundRow, ShelterRow } from "../lib/cuidadosApi";
@@ -66,6 +66,7 @@ function Round({ today }: { today: Date }) {
       {round.data && items.length === 0 ? <Notice tone="info" title="Não há medicação marcada para este dia" /> : null}
       {missing.length > 0 ? <Notice tone="warning" title={`${missing.length} ${missing.length === 1 ? "dose ainda não foi dada" : "doses ainda não foram dadas"}`}>Confirme no gatil e marque quando der.</Notice> : null}
       {give.isError ? <Notice tone="error" title="Não foi registado">{errorMessage(give.error)}</Notice> : null}
+      <HelpRequests today={now.date} />
       {[...byTime.entries()].map(([time, rows]) => (
         <section key={time} className="gn-stack gn-stack--s" aria-labelledby={`hora-${time}`}>
           <h3 id={`hora-${time}`} className="round-time">{time}</h3>
@@ -80,6 +81,7 @@ function Round({ today }: { today: Date }) {
                 <p><LocationTag location={r.location} /></p>
                 <p className="care-card__what"><strong>{r.medication.name}</strong> · {r.medication.dose}{r.medication.withFood ? " · com comida" : ""}</p>
                 {r.medication.instructions ? <p className="small">{r.medication.instructions}</p> : null}
+                {!r.given && r.task ? <p className="care-card__task">{r.task.status === "aceite" ? `${r.task.acceptedBy!.name} ficou com esta dose.` : `Pedido de ajuda: ${r.task.createdBy.name} não conseguiu (“${r.task.comment}”). À espera de alguém.`}</p> : null}
                 {r.given ? (
                   <div className="action-row">
                     <span className="small">Dada por <strong>{r.given.by.name}</strong> às {timeLabel(r.given.givenAt)}.</span>
@@ -97,6 +99,50 @@ function Round({ today }: { today: Date }) {
         </section>
       ))}
     </div>
+  );
+}
+
+const taskStatus: Record<CareTask["status"], { label: string; tone: "warning" | "info" | "success" | "neutral" }> = {
+  aberta: { label: "À espera de alguém", tone: "warning" },
+  aceite: { label: "Alguém ficou com isto", tone: "info" },
+  feita: { label: "Feito", tone: "success" },
+  cancelada: { label: "Cancelado", tone: "neutral" },
+};
+
+/** What volunteers asked for help with on their own page, who took it, and a way to call it off. */
+function HelpRequests({ today }: { today: string }) {
+  const api = useApi();
+  const qc = useQueryClient();
+  const [author] = useAuthor();
+  const tasks = useQuery({ queryKey: ["careTasks"], queryFn: () => api.careTasks(), refetchInterval: 60_000 });
+  const cancel = useMutation({
+    mutationFn: (id: string) => api.cancelTask(id, author!),
+    onSettled: () => Promise.all([qc.invalidateQueries({ queryKey: ["careTasks"] }), qc.invalidateQueries({ queryKey: ["round"] }), qc.invalidateQueries({ queryKey: ["careAlerts"] })]),
+  });
+  const list = [...(tasks.data ?? [])].sort((a, b) => Number(b.status === "aberta") - Number(a.status === "aberta") || b.createdAt.localeCompare(a.createdAt));
+  if (list.length === 0) return null;
+  return (
+    <section className="gn-stack gn-stack--s help-requests" aria-labelledby="pedidos-ajuda">
+      <h2 id="pedidos-ajuda">Pedidos de ajuda dos voluntários</h2>
+      <p className="small muted">Quando alguém não consegue dar uma dose, o pedido vai para todos os voluntários até alguém ficar com ele. Todos são avisados quando fica resolvido.</p>
+      {cancel.isError ? <Notice tone="error" title="Não foi cancelado">{errorMessage(cancel.error)}</Notice> : null}
+      <ul className="help-requests__list">
+        {list.map((t) => (
+          <li key={t.id}>
+            <div className="care-card__head">
+              <strong>{t.what} a {t.catName}, {t.date === today ? "hoje" : dayLabel(lisbonToUtc(t.date, "12:00"))}{t.time ? ` às ${t.time}` : ""}</strong>
+              <Badge tone={taskStatus[t.status].tone}>{taskStatus[t.status].label}</Badge>
+            </div>
+            <p className="small">{t.createdBy.name} não conseguiu: “{t.comment}”</p>
+            {t.acceptedBy ? <p className="small">Ficou com: <strong>{t.acceptedBy.name}</strong></p> : null}
+            {t.closedBy ? <p className="small">{t.status === "feita" ? "Feito por" : "Cancelado por"} {t.closedBy.name}</p> : null}
+            {t.status === "aberta" || t.status === "aceite" ? (
+              <Button variant="quiet" onClick={() => cancel.mutate(t.id)} disabled={!author || cancel.isPending}>Já não é preciso<span className="gn-sr-only">: {t.what} a {t.catName}</span></Button>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
