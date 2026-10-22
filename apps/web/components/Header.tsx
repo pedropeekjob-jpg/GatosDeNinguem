@@ -1,13 +1,13 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { SiteHeader, TextSizeControl } from "@gn/ui";
+import { IconHand, IconHeart, IconHome, IconNews, IconPaw, SiteHeader, TextSizeControl } from "@gn/ui";
 
 const items = [
-  { href: "/", label: "Início" },
-  { href: "/adotar", label: "Adotar" },
-  { href: "/ajudar", label: "Ajudar" },
-  { href: "/noticias", label: "Notícias" },
-  { href: "/sobre", label: "Sobre nós" },
+  { href: "/", label: "Início", icon: <IconHome /> },
+  { href: "/adotar", label: "Adotar", icon: <IconHeart /> },
+  { href: "/ajudar", label: "Ajudar", icon: <IconHand /> },
+  { href: "/noticias", label: "Notícias", icon: <IconNews /> },
+  { href: "/sobre", label: "Sobre nós", icon: <IconPaw /> },
 ];
 
 export function Header() {
@@ -17,6 +17,7 @@ export function Header() {
       homeHref="/"
       currentPath={pathname}
       items={items}
+      tabBar
       urgent={{ href: "/sos", label: "Encontrei um gato" }}
       tools={<TextSizeControl />}
       brand={

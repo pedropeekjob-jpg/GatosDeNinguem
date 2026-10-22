@@ -122,6 +122,16 @@ describe("TextSizeControl", () => {
     expect(document.documentElement.dataset.textSize).toBe("muito-grande");
     expect(screen.getByRole("button", { name: /Letra muito grande/ })).toHaveAttribute("aria-pressed", "true");
   });
+
+  it("offers one button for small phones that steps through the sizes and says what comes next", async () => {
+    document.documentElement.dataset.textSize = "normal";
+    render(<TextSizeControl />);
+    await userEvent.click(screen.getByRole("button", { name: /Letra normal/ }));
+    const cycle = screen.getByRole("button", { name: /^Tamanho da letra: letra normal\. Mudar para letra grande$/ });
+    await userEvent.click(cycle);
+    expect(document.documentElement.dataset.textSize).toBe("grande");
+    expect(cycle).toHaveAccessibleName("Tamanho da letra: letra grande. Mudar para letra muito grande");
+  });
 });
 
 describe("SiteHeader", () => {
@@ -141,6 +151,16 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "Adotar" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Ajudar" })).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("link", { name: "Encontrei um gato" })).toBeInTheDocument();
+  });
+
+  it("can show the menu as a phone tab bar with icons, keeping the words as link names", () => {
+    const { container } = render(
+      <SiteHeader brand={<span>Marca</span>} homeHref="/" currentPath="/" tabBar
+        items={[{ href: "/", label: "Início", icon: <svg /> }, { href: "/sobre", label: "Sobre nós", icon: <svg /> }]} />,
+    );
+    expect(container.querySelector("header")).toHaveClass("gn-header--tabbar");
+    expect(screen.getByRole("navigation", { name: "Menu principal" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sobre nós" })).toBeInTheDocument();
   });
 });
 

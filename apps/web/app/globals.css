@@ -55,3 +55,18 @@ main { display: block; }
   border-bottom: 1px solid var(--gn-line);
   text-align: center;
 }
+
+/* Gato da semana: big picture beside the story on wide screens, stacked on phones. */
+.featured__grid { display: grid; gap: var(--gn-space-l); align-items: center; }
+.featured__photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius); }
+.featured__body { display: grid; gap: var(--gn-space-m); justify-items: start; }
+.featured__eyebrow { margin: 0; font-size: var(--gn-text-s); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gn-ink-soft); }
+.featured__name { margin: -0.5rem 0 0; font-size: clamp(2.25rem, 6vw, 3.25rem); line-height: 1.05; }
+.featured__facts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; margin: 0; padding-block: 0.9rem; border-block: 1px solid var(--gn-line); width: 100%; }
+.featured__facts dl { display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; margin: 0; }
+.featured__facts dt { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.featured__facts dd { margin: 0; font-weight: 650; }
+.featured__badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+@media (min-width: 52rem) {
+  .featured__grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: var(--gn-space-xl); }
+}

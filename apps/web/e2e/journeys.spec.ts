@@ -44,7 +44,14 @@ test("touch targets are at least 44px tall", async ({ page }) => {
 test("text size control enlarges the page text", async ({ page }) => {
   await page.goto("/");
   const before = await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize));
-  await page.getByRole("button", { name: "Letra muito grande" }).click();
+  // Wide screens show the three sizes; phones show one button that steps through them.
+  const biggest = page.getByRole("button", { name: "Letra muito grande" });
+  if (await biggest.isVisible()) await biggest.click();
+  else {
+    const step = page.getByRole("button", { name: /^Tamanho da letra/ });
+    await step.click();
+    await step.click();
+  }
   const after = await page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize));
   expect(after).toBeGreaterThan(before * 1.2);
 });

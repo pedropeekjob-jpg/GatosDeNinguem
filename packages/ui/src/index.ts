@@ -5,6 +5,7 @@ export { Container, Grid, Section, Stack, StatTile } from "./components/Layout";
 export { Notice, ProgressMeter } from "./components/Feedback";
 export { Checkbox, ChoiceList, TextArea, TextField, type Choice } from "./components/Form";
 export { Breadcrumbs, SiteHeader, TextSizeControl, type NavItem } from "./components/Navigation";
+export { IconHand, IconHeart, IconHome, IconNews, IconPaw } from "./components/icons";
 export { StepWizard } from "./components/StepWizard";
 export { SearchPreview } from "./components/SearchPreview";
 export { NextStep, ShareBar, ToggleButton } from "./components/Engagement";

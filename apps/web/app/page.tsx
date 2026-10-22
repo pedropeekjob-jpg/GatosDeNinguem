@@ -1,5 +1,6 @@
 import { postCategoryLabel } from "@gn/domain";
 import { Badge, Button, Card, Container, Grid, ProgressMeter, Section, StatTile } from "@gn/ui";
+import { FeaturedCat } from "@/components/FeaturedCat";
 import { CatCard } from "@/components/CatCard";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { HelpQuiz } from "@/components/client/HelpQuiz";
@@ -59,20 +60,7 @@ export default async function HomePage() {
         ) : null}
       </Section>
 
-      {featured ? (
-        <Section tone="soft" heading={`Gato da semana: ${featured.name}`} intro={featured.summary}>
-          <Grid min="20rem">
-            <CatCard cat={featured} />
-            <div className="gn-stack gn-stack--m">
-              <p>{featured.story}</p>
-              <div className="action-row">
-                <Button href={`/adotar/${featured.slug}`}>Conhecer {featured.name}</Button>
-                <Button href="/ajudar#apadrinhar" variant="secondary">Apadrinhar</Button>
-              </div>
-            </div>
-          </Grid>
-        </Section>
-      ) : null}
+      {featured ? <FeaturedCat cat={featured} /> : null}
 
       <Section heading="Como posso ajudar?" intro="Responda a três perguntas e sugerimos a forma de ajudar que mais lhe convém.">
         <HelpQuiz />
