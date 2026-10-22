@@ -1,5 +1,6 @@
 import { AnimatedLogo, Button, Carousel, Container } from "@gn/ui";
 import { FeaturedCat } from "@/components/FeaturedCat";
+import { PatinhasTeaser } from "@/components/PatinhasTeaser";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { getPage, listCats } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
@@ -32,6 +33,7 @@ export default async function HomePage() {
                 <Button href="/ajudar" variant="secondary">Quero ajudar</Button>
                 <Button href="/sos" variant="urgent">Encontrei um gato</Button>
               </div>
+              <PatinhasTeaser />
               <FavoritesStrip cats={cats} />
             </div>
             <div className="home-hero__art">

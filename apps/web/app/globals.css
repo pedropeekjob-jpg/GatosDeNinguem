@@ -134,3 +134,12 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .nivel__num, .nivel__pontos { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
 .nivel__nome { font-size: var(--gn-text-l); }
 .mural { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+
+/* Patinhas, on the home page above the fold: a yellow paw, one line and a link. */
+.patinhas-teaser { display: flex; gap: 0.9rem; align-items: flex-start; padding: 0.9rem 1rem; border-radius: var(--gn-radius); background: var(--gn-accent-soft); border: 1px solid #f3dd9c; max-width: 36rem; }
+.patinhas-teaser__icon { flex: none; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--gn-accent); color: var(--gn-ink); }
+.patinhas-teaser__icon .gn-icon { width: 1.4rem; height: 1.4rem; }
+.patinhas-teaser__text { display: grid; gap: 0.2rem; }
+.patinhas-teaser__title { font-family: var(--gn-font-display); font-weight: 650; font-size: var(--gn-text-l); letter-spacing: -0.01em; }
+.patinhas-teaser__body { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.patinhas-teaser__body a { color: var(--gn-ink); font-weight: 600; white-space: nowrap; }

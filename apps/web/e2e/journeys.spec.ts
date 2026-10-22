@@ -222,3 +222,11 @@ test.describe("contas e Patinhas", () => {
     await expect(page.getByText("Ganhou 10 Patinhas por fazer o questionário.")).toBeVisible();
   });
 });
+
+test("home: Patinhas are explained above the fold, with a link to how they work", async ({ page }) => {
+  await page.goto("/");
+  const teaser = page.getByRole("complementary", { name: "Cada ajuda vale Patinhas" });
+  await expect(teaser).toBeInViewport();
+  await teaser.getByRole("link", { name: "Como funcionam as Patinhas" }).click();
+  await expect(page).toHaveURL(/\/patinhas\/?$/);
+});
