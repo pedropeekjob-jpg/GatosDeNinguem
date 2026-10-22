@@ -1,4 +1,4 @@
-import type { Contact } from "@gn/domain";
+import type { Account, CareAlert, Contact } from "@gn/domain";
 import type { ContentRepository } from "../content/repository";
 import type { PatinhasRepository } from "../patinhas/repository";
 
@@ -8,6 +8,8 @@ export type ApiOptions = {
   patinhas?: PatinhasRepository;
   /** Delivers a sign-in code by email or SMS. */
   sendLoginCode?: (to: Contact, code: string) => Promise<void>;
+  /** Tells volunteers about a help request or its resolution (SMS, email, push…). Each person's mutes are already applied. */
+  notifyVolunteers?: (to: Account[], alert: CareAlert) => Promise<void>;
   /** Demo only: returns the sign-in code in the response so it can be shown on screen. */
   exposeLoginCodes?: boolean;
   /** Bearer token for back office writes. Replaced by per-user login in a later phase. */

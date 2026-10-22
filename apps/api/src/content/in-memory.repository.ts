@@ -1,4 +1,4 @@
-import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
+import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CareNotificationPrefs, type CareTask, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship } from "@gn/domain";
 import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
@@ -26,6 +26,8 @@ export class InMemoryContentRepository implements ContentRepository {
   private appointments = new Map<string, Appointment>(seedAppointments.map((x) => [x.id, structuredClone(x)]));
   private notes = new Map<string, VisitNote>(seedVisitNotes.map((x) => [x.id, structuredClone(x)]));
   private alerts = new Map<string, CareAlert>(seedCareAlerts.map((x) => [x.id, structuredClone(x)]));
+  private tasks = new Map<string, CareTask>();
+  private carePrefs = new Map<string, CareNotificationPrefs>();
 
   constructor(seed = { cats: seedCats, pages: seedPages, posts: seedPosts, redirects: seedRedirects, settings: seedSeoSettings, partners: seedPartners }) {
     seed.partners.forEach((p) => this.partners.set(p.id, clone(p)));
@@ -111,4 +113,11 @@ export class InMemoryContentRepository implements ContentRepository {
       .map(clone);
   }
   async saveCareAlert(a: CareAlert) { this.alerts.set(a.id, clone(a)); return clone(a); }
+  async listCareTasks(filter: { status?: CareTask["status"][] } = {}) {
+    return [...this.tasks.values()].filter((t) => !filter.status || filter.status.includes(t.status)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(clone);
+  }
+  async getCareTask(id: string) { const x = this.tasks.get(id); return x && clone(x); }
+  async saveCareTask(t: CareTask) { this.tasks.set(t.id, clone(t)); return clone(t); }
+  async getCarePrefs(accountId: string) { const x = this.carePrefs.get(accountId); return x && clone(x); }
+  async saveCarePrefs(accountId: string, prefs: CareNotificationPrefs) { this.carePrefs.set(accountId, clone(prefs)); return clone(prefs); }
 }

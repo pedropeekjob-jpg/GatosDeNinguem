@@ -10,7 +10,9 @@ import { EngagementController } from "./content/engagement.controller";
 import { PagesController } from "./content/pages.controller";
 import { PartnersController } from "./content/partners.controller";
 import { PostsController } from "./content/posts.controller";
+import { CareService } from "./cuidados/care.service";
 import { CuidadosController } from "./cuidados/cuidados.controller";
+import { VoluntarioCuidadosController } from "./cuidados/voluntario.controller";
 import { EscalasController } from "./escalas/escalas.controller";
 import { ContaController } from "./patinhas/conta.controller";
 import { PatinhasController } from "./patinhas/patinhas.controller";
@@ -28,12 +30,14 @@ class HealthController {
 @Module({})
 class AppModule {
   static register(options: ApiOptions): DynamicModule {
+    const accounts = options.patinhas ?? new InMemoryPatinhasRepository();
     return {
       module: AppModule,
-      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController],
+      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
-        { provide: PatinhasService, useValue: new PatinhasService(options, options.patinhas ?? new InMemoryPatinhasRepository()) },
+        { provide: PatinhasService, useValue: new PatinhasService(options, accounts) },
+        { provide: CareService, useValue: new CareService(options, accounts) },
         AdminGuard,
       ],
     };

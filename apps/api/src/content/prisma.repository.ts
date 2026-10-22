@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { careNotificationPrefsSchema, careTaskSchema, type CareNotificationPrefs, type CareTask } from "@gn/domain";
 import { appointmentSchema, careAlertSchema, catCareSchema, doseSchema, medicationSchema, visitNoteSchema, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { fosterPlacementSchema, shiftSchema, sponsorshipSchema, type FosterPlacement, type Shift, type Sponsorship } from "@gn/domain";
 import { adoptionInterestSchema, catSchema, impactSchema, pageSchema, partnerApplicationSchema, partnerSchema, postSchema, seoSettingsSchema, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
@@ -174,5 +175,24 @@ export class PrismaContentRepository implements ContentRepository {
   async saveCareAlert(a: CareAlert) {
     await this.db.careAlert.create({ data: { id: a.id, catId: a.catId, createdAt: new Date(a.createdAt), data: a as object } });
     return a;
+  }
+  async listCareTasks(filter: { status?: CareTask["status"][] } = {}) {
+    const rows = await this.db.careTask.findMany({ where: filter.status ? { status: { in: filter.status } } : {}, orderBy: { createdAt: "desc" } });
+    return rows.map((r) => careTaskSchema.parse(r.data));
+  }
+  async getCareTask(id: string) { const r = await this.db.careTask.findUnique({ where: { id } }); return r ? careTaskSchema.parse(r.data) : undefined; }
+  async saveCareTask(t: CareTask) {
+    const data = { status: t.status, createdAt: new Date(t.createdAt), data: t as object };
+    await this.db.careTask.upsert({ where: { id: t.id }, create: { id: t.id, ...data }, update: data });
+    return t;
+  }
+  async getCarePrefs(accountId: string) {
+    const r = await this.db.setting.findUnique({ where: { key: `cuidados:${accountId}` } });
+    return r ? careNotificationPrefsSchema.parse(r.value) : undefined;
+  }
+  async saveCarePrefs(accountId: string, prefs: CareNotificationPrefs) {
+    const key = `cuidados:${accountId}`;
+    await this.db.setting.upsert({ where: { key }, create: { key, value: prefs as object }, update: { value: prefs as object } });
+    return prefs;
   }
 }
