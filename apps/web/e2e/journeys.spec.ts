@@ -308,6 +308,23 @@ test.describe("no gatil: the volunteer's shift", () => {
     await expect(page.locator(".gatil__grupo", { hasText: "Tobias" }).getByText(/Resolvido: João Costa vai dar Semintra/)).toBeVisible();
   });
 
+  test("after signing in, everyone finds the gatil card first, with how to get there", async ({ page }) => {
+    await page.goto("/conta");
+    await page.getByLabel("Email ou telemóvel").fill("rita@exemplo.pt");
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await page.getByLabel("O seu nome").fill("Rita Sousa");
+    await page.getByText("Aceito que a associação guarde").click();
+    await page.getByRole("button", { name: "Enviar o código" }).click();
+    const code = (await page.getByText(/Demonstração: o código é/).textContent())!.match(/\d{6}/)![0];
+    await page.getByLabel("Código").fill(code);
+    await page.getByRole("button", { name: "Criar a minha conta" }).click();
+    const card = page.getByRole("region", { name: "No gatil", exact: true });
+    await expect(card).toBeInViewport();
+    await expect(card.getByText(/que gatos medicar, onde está cada um/)).toBeVisible();
+    await expect(card.getByRole("link", { name: "Ver turnos no gatil" })).toBeVisible();
+    await expect(card.getByText("912 000 001")).toBeVisible();
+  });
+
   test("notifications can be silenced, for oneself only", async ({ page }) => {
     await signIn(page, "912 000 001");
     await page.goto("/conta/gatil");
