@@ -12,7 +12,8 @@ describe("ShareBar", () => {
     expect(screen.getByRole("link", { name: "WhatsApp" }).getAttribute("href")).toContain("wa.me/?text=Conhe%C3%A7a%20a%20Mia");
     await userEvent.click(screen.getByRole("button", { name: "Copiar endereço" }));
     expect(writeText).toHaveBeenCalledWith("https://gatosdeninguem.pt/adotar/mia");
-    expect(screen.getByRole("button", { name: "Copiado ✓" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copiado" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Facebook" })).not.toHaveTextContent("Facebook");
     expect(await axeViolations(container)).toEqual([]);
   });
 });

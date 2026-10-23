@@ -280,7 +280,12 @@ a:hover { text-decoration-thickness: 2.5px; }
 /* Engagement */
 .gn-share { display: grid; gap: 0.6rem; }
 .gn-share__label { font-weight: 700; }
-.gn-share__buttons { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.gn-share__buttons { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+/* Share as round logos, like the footer's social links; each has a name for screen readers and a tooltip. */
+.gn-share__icon { display: grid; place-items: center; width: var(--gn-target); height: var(--gn-target); padding: 0; border: 0; border-radius: 50%; background: var(--gn-ink); color: #fff; cursor: pointer; transition: transform 0.12s; }
+.gn-share__icon svg { width: 1.5rem; height: 1.5rem; }
+.gn-share__icon:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 2px; }
+@media (hover: hover) { .gn-share__icon:hover { transform: scale(1.06); } }
 .gn-toggle[aria-pressed="true"] { background: var(--gn-accent-soft); border-color: var(--gn-ink); color: var(--gn-ink); }
 .gn-nextstep { background: var(--gn-sand); border-radius: var(--gn-radius); padding: var(--gn-space-l) var(--gn-space-m); display: grid; gap: 0.8rem; }
 .gn-nextstep__title { font-family: var(--gn-font-display); font-size: var(--gn-h3); font-weight: 650; letter-spacing: -0.01em; }
