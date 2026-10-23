@@ -54,9 +54,8 @@ export function NoGatil() {
   if (!care.volunteer) {
     return (
       <Notice tone="info" title="Ainda não está num turno do gatil">
-        {care.phoneMissing
-          ? <p>Para ligarmos a sua conta aos turnos, entre com o mesmo telemóvel com que se inscreve nos turnos.</p>
-          : <p>Quando se inscrever num turno com este telemóvel, aparece aqui o que fazer a cada gato. <a href="/ajudar#turnos">Ver turnos</a></p>}
+        <HowToJoin phoneMissing={care.phoneMissing} />
+        <p><a href="/ajudar/turnos">Ver turnos no gatil</a></p>
       </Notice>
     );
   }
@@ -113,7 +112,7 @@ function ShiftHeader({ care }: { care: VolunteerCare }) {
     return (
       <section className="gatil__turno" aria-labelledby="gatil-turno">
         <h2 id="gatil-turno">Sem turno no gatil nas próximas duas semanas</h2>
-        <p>Continua a receber os pedidos de ajuda. <a href="/ajudar#turnos">Inscrever-me num turno</a></p>
+        <p>Continua a receber os pedidos de ajuda. <a href="/ajudar/turnos">Inscrever-me num turno</a></p>
       </section>
     );
   }
@@ -341,14 +340,40 @@ function MutePrefs({ care, act }: { care: VolunteerCare; act: Act }) {
   );
 }
 
-/** The card at the top of "O meu painel": what is waiting in the gatil, with the way in. */
+const DEMO = process.env.NEXT_PUBLIC_CONTAS_DEMO === "1";
+
+/** How someone who is not on a gatil shift yet gets their account linked to one. */
+function HowToJoin({ phoneMissing }: { phoneMissing: boolean }) {
+  return (
+    <>
+      <p>
+        Quem vai tratar dos gatos ao gatil vê aqui que gatos medicar, onde está cada um e como tratar dele.
+        {phoneMissing
+          ? " Para isso, entre com o mesmo telemóvel com que se inscreve nos turnos."
+          : " Aparece assim que se inscrever num turno de limpeza com o telemóvel desta conta."}
+      </p>
+      {DEMO ? <p className="small">Para experimentar: saia e entre com o telemóvel <strong>912 000 001</strong> (a Ana, que tem turno hoje).</p> : null}
+    </>
+  );
+}
+
+/** The card at the top of "A minha conta": what is waiting in the gatil, with the way in. Always shown, so it is easy to find. */
 export function GatilResumo() {
   const [care, setCare] = useState<VolunteerCare | null>(null);
   useEffect(() => { cuidadosClient().overview().then(setCare).catch(() => setCare(null)); }, []);
-  if (!care?.volunteer) return null;
+  if (!care) return null;
+  if (!care.volunteer) {
+    return (
+      <section className="gatil__resumo" aria-labelledby="painel-gatil">
+        <h2 id="painel-gatil">No gatil</h2>
+        <HowToJoin phoneMissing={care.phoneMissing} />
+        <a className="gn-btn gn-btn--secondary" href="/ajudar/turnos"><span>Ver turnos no gatil</span></a>
+      </section>
+    );
+  }
   const pending = care.isToday ? care.during.filter((r) => !r.given).length : 0;
   const facts = [
-    care.shift ? `${care.isToday ? "Turno hoje" : "Próximo turno"}: ${dayLong.format(new Date(care.shift.startsAt))}, ${hour.format(new Date(care.shift.startsAt))}` : null,
+    care.shift ? `${care.isToday ? "Turno hoje" : "Próximo turno"}: ${dayLong.format(new Date(care.shift.startsAt))}, ${hour.format(new Date(care.shift.startsAt))}` : "Sem turno nas próximas duas semanas",
     pending > 0 ? (pending === 1 ? "1 dose para dar" : `${pending} doses para dar`) : null,
     care.tasks.open.length > 0 ? (care.tasks.open.length === 1 ? "1 pedido de ajuda" : `${care.tasks.open.length} pedidos de ajuda`) : null,
     care.unread > 0 ? (care.unread === 1 ? "1 notificação nova" : `${care.unread} notificações novas`) : null,
@@ -356,7 +381,7 @@ export function GatilResumo() {
   return (
     <section className="gatil__resumo" aria-labelledby="painel-gatil">
       <h2 id="painel-gatil">No gatil</h2>
-      {facts.length ? <ul className="painel__factos">{facts.map((f) => <li key={f}>{f}</li>)}</ul> : <p>Tudo em dia.</p>}
+      <ul className="painel__factos">{facts.map((f) => <li key={f}>{f}</li>)}</ul>
       <a className="gn-btn gn-btn--primary" href="/conta/gatil"><span>Ver o meu turno e os gatos</span></a>
     </section>
   );

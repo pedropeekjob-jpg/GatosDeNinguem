@@ -20,6 +20,8 @@ export function ContaApp() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+  // After signing in, start the account page from the top: the gatil card and the greeting come first.
+  useEffect(() => { if (state.kind === "painel") window.scrollTo(0, 0); }, [state.kind]);
 
   if (state.kind === "a-carregar") return <p role="status">A abrir a sua conta…</p>;
   if (state.kind === "erro") {
