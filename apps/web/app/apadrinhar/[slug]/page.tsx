@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Container } from "@gn/ui";
+import { FormModal } from "@/components/client/FormModal";
 import { SponsorForm } from "@/components/forms/SponsorForm";
 import { PageHero } from "@/components/PageHero";
 import { getCat, listCats } from "@/lib/content";
@@ -27,7 +28,7 @@ export default async function SponsorCatPage({ params }: Props) {
     <>
       <PageHero
         heading={`Apadrinhar ${pronoun} ${cat.name}`}
-        intro={`Ajude todos os meses com a comida e o veterinário d${pronoun} ${cat.name} e receba notícias. Deixe os seus dados e entramos em contacto para combinar.`}
+        intro={`Ajude todos os meses com a comida e o veterinário d${pronoun} ${cat.name} e receba notícias. Leva dois minutos.`}
         crumbs={[{ href: "/", label: "Início" }, { href: "/apadrinhar", label: "Apadrinhar" }, { label: cat.name }]}
       />
       <Container narrow>
@@ -39,7 +40,11 @@ export default async function SponsorCatPage({ params }: Props) {
             <p><a href={`/adotar/${cat.slug}`}>Conhecer a história d{pronoun} {cat.name}</a></p>
           </div>
         </div>
-        <SponsorForm catSlug={cat.slug} catName={cat.name} pronoun={pronoun} />
+        <div className="action-row">
+          <FormModal label={`Quero apadrinhar ${pronoun} ${cat.name}`} title={`Apadrinhar ${pronoun} ${cat.name}`} intro="Deixe os seus dados e entramos em contacto para combinar.">
+            <SponsorForm catSlug={cat.slug} catName={cat.name} pronoun={pronoun} />
+          </FormModal>
+        </div>
       </Container>
     </>
   );

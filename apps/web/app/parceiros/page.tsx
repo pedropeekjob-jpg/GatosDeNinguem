@@ -1,5 +1,6 @@
 import { partnerCategoryLabel, type Perk } from "@gn/domain";
 import { Badge, Card, Container, Grid, Section } from "@gn/ui";
+import { FormModal } from "@/components/client/FormModal";
 import { PartnerApplicationForm } from "@/components/forms/PartnerApplicationForm";
 import { PageHero } from "@/components/PageHero";
 import { getPage, listPartners } from "@/lib/content";
@@ -49,7 +50,11 @@ export default async function PartnersPage() {
               <li>Um autocolante “Parceiro Gatos de Ninguém” para a montra</li>
               <li>Um resumo anual do que ajudou a conseguir</li>
             </ul>
-            <PartnerApplicationForm />
+            <div className="action-row">
+              <FormModal label="Quero ser parceiro" title="Seja parceiro" intro="Leva dois minutos. Entramos em contacto para combinar a vantagem.">
+                <PartnerApplicationForm />
+              </FormModal>
+            </div>
           </div>
         </Container>
       </section>

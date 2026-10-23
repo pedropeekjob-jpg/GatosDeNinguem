@@ -1,6 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { Button, Checkbox, Notice, NextStep, TextField } from "@gn/ui";
+import { Button, Checkbox, Modal, Notice, NextStep, TextField } from "@gn/ui";
+import { useModalHistory } from "@/components/client/FormModal";
 import { signUpForShift } from "@/lib/submit";
 
 type ShiftSummary = { id: string; title: string; startsAt: string; endsAt: string; location: string; when: string };
@@ -30,9 +31,9 @@ function calendarFile(shift: ShiftSummary) {
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
 }
 
-/** One button per shift; the short form only opens when the person chooses that shift. */
+/** One button per shift; the short form opens in a window only when the person chooses that shift. */
 export function ShiftSignUp({ shift }: { shift: ShiftSummary }) {
-  const [open, setOpen] = useState(false);
+  const modal = useModalHistory();
   const [form, setForm] = useState({ name: "", phone: "", website_url: "" });
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,7 +46,10 @@ export function ShiftSignUp({ shift }: { shift: ShiftSummary }) {
     e.preventDefault();
     setState("sending");
     const result = await signUpForShift(shift.id, { ...form, consent: consent || undefined });
-    if (result.ok) return setState("done");
+    if (result.ok) {
+      modal.hide();
+      return setState("done");
+    }
     setErrors(result.fieldErrors);
     setSummary(result.message);
     setState("idle");
@@ -67,37 +71,35 @@ export function ShiftSignUp({ shift }: { shift: ShiftSummary }) {
     );
   }
 
-  if (!open) {
-    return (
-      <Button onClick={() => setOpen(true)} aria-expanded={false} aria-controls={formId} block>
+  return (
+    <>
+      <Button onClick={modal.show} aria-haspopup="dialog" block>
         Quero ajudar neste turno
       </Button>
-    );
-  }
-
-  return (
-    <form id={formId} onSubmit={onSubmit} className="gn-stack gn-stack--m" noValidate aria-label={`Inscrição: ${shift.title}`}>
-      {summary ? <Notice tone="error" title="Não foi possível inscrever">{summary}</Notice> : null}
-      <TextField id={`${formId}-nome`} label="O seu nome" autoComplete="name" value={form.name} onChange={set("name")} error={errors.name} />
-      <TextField
-        id={`${formId}-telefone`}
-        label="Telemóvel"
-        hint="Só para combinarmos consigo, se for preciso."
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel"
-        value={form.phone}
-        onChange={set("phone")}
-        error={errors.phone}
-      />
-      <div className="honeypot" aria-hidden="true">
-        <label htmlFor={`${formId}-website_url`}>Não preencher</label>
-        <input id={`${formId}-website_url`} tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
-      </div>
-      <Checkbox id={`${formId}-consentimento`} label="Aceito que a associação me contacte sobre este turno" checked={consent} onChange={setConsent} />
-      {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
-      <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Confirmar inscrição"}</Button>
-      <Button type="button" variant="quiet" onClick={() => setOpen(false)}>Afinal não</Button>
-    </form>
+      <Modal open={modal.open} onClose={modal.hide} title={shift.title} intro={<p>{shift.when}, em {shift.location}.</p>}>
+        <form id={formId} onSubmit={onSubmit} className="gn-stack gn-stack--m" noValidate aria-label={`Inscrição: ${shift.title}`}>
+          {summary ? <Notice tone="error" title="Não foi possível inscrever">{summary}</Notice> : null}
+          <TextField id={`${formId}-nome`} label="O seu nome" autoComplete="name" value={form.name} onChange={set("name")} error={errors.name} />
+          <TextField
+            id={`${formId}-telefone`}
+            label="Telemóvel"
+            hint="Só para combinarmos consigo, se for preciso."
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={set("phone")}
+            error={errors.phone}
+          />
+          <div className="honeypot" aria-hidden="true">
+            <label htmlFor={`${formId}-website_url`}>Não preencher</label>
+            <input id={`${formId}-website_url`} tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
+          </div>
+          <Checkbox id={`${formId}-consentimento`} label="Aceito que a associação me contacte sobre este turno" checked={consent} onChange={setConsent} />
+          {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
+          <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Confirmar inscrição"}</Button>
+        </form>
+      </Modal>
+    </>
   );
 }

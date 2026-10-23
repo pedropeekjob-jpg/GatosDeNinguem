@@ -67,7 +67,7 @@ export function FosterForm() {
       </div>
       <Checkbox id="consentimento" label="Aceito que a associação me contacte sobre ser família temporária" hint="Usamos os seus dados apenas para isto." checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
-      <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Quero ser família temporária"}</Button>
+      <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Enviar pedido"}</Button>
     </form>
   );
 }
