@@ -1,5 +1,5 @@
 import type { Appointment, CareAlert, CareNotificationPrefs, CareTask, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
-import type { FosterPlacement, Shift, Sponsorship } from "@gn/domain";
+import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } from "@gn/domain";
 import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Redirect, SeoSettings } from "@gn/domain";
 
 export type StoredAdoptionInterest = AdoptionInterest & { id: string; receivedAt: string };
@@ -41,6 +41,9 @@ export interface ContentRepository {
   deleteShift(id: string): Promise<void>;
   listFosterPlacements(): Promise<FosterPlacement[]>;
   saveFosterPlacement(p: FosterPlacement): Promise<FosterPlacement>;
+  /** "Quero ser família temporária" requests. Newest first. */
+  listFosterApplications(): Promise<StoredFosterApplication[]>;
+  saveFosterApplication(a: StoredFosterApplication): Promise<StoredFosterApplication>;
   listSponsorships(): Promise<Sponsorship[]>;
   saveSponsorship(s: Sponsorship): Promise<Sponsorship>;
 

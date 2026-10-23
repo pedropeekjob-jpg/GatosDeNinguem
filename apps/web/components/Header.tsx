@@ -6,6 +6,7 @@ import { IconHand, IconHeart, IconHome, IconNews, IconPaw, SiteHeader } from "@g
 const items = [
   { href: "/", label: "Início", icon: <IconHome /> },
   { href: "/adotar", label: "Adotar", icon: <IconHeart /> },
+  { href: "/finais-felizes", label: "Finais felizes", wideOnly: true },
   { href: "/ajudar", label: "Ajudar", icon: <IconHand /> },
   { href: "/noticias", label: "Notícias", icon: <IconNews /> },
   { href: "/sobre", label: "Sobre nós", icon: <IconPaw /> },

@@ -346,3 +346,39 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .home-top:not(.home-top--plain) .gn-btn--primary { background: #fff; border-color: #fff; color: var(--gn-ink); }
   .home-top:not(.home-top--plain) .gn-btn--secondary { background: transparent; border-color: #fff; color: #fff; }
 }
+
+/* ---------- Finais felizes, família temporária, redes sociais ---------- */
+
+/* Home: newest happy endings, on a soft band so they read as their own chapter. */
+.happy-home { background: var(--gn-sand); padding-block: var(--gn-space-l) var(--gn-space-xl); }
+.happy-home__count { margin: 0.2rem 0 0; color: var(--gn-ink-soft); }
+.happy-card .gn-card__media { aspect-ratio: 5 / 4; }
+.happy-card__quote { margin: 0; font-style: italic; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Adotar: a one-line nudge to the happy endings, with the adopted cats' faces. */
+.happy-link { display: inline-flex; align-items: center; gap: 0.75rem; justify-self: start; padding: 0.5rem 1rem 0.5rem 0.5rem; border-radius: 999px; background: var(--gn-sand); color: var(--gn-ink); text-decoration: none; }
+.happy-link span:last-child { text-decoration: underline; text-underline-offset: 0.2em; text-decoration-color: var(--gn-line-strong); }
+.happy-link strong { font-weight: 650; }
+.happy-link__faces { display: flex; flex: none; }
+.happy-link__faces img { width: 2.25rem; height: 2.25rem; border-radius: 50%; object-fit: cover; border: 2px solid var(--gn-bg); }
+.happy-link__faces img + img { margin-left: -0.75rem; }
+.happy-link:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 2px; }
+
+/* Família temporária. */
+.steps { counter-reset: step; list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; max-width: 44rem; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 2.25rem 1fr; gap: 0.75rem; align-items: start; }
+.steps li::before { content: counter(step); display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--gn-ink); color: #fff; font-weight: 700; }
+.foster-split { display: grid; gap: var(--gn-space-m); margin-top: var(--gn-space-m); }
+@media (min-width: 40rem) { .foster-split { grid-template-columns: 1fr 1fr; max-width: 44rem; } }
+.foster-split__box { padding: var(--gn-space-m); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); }
+.foster-split__box h3 { margin: 0 0 0.5rem; }
+.foster-split__box ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+.foster-need { flex-direction: column; gap: 0.5rem; }
+@media (min-width: 60rem) { .foster-need { max-width: 22rem; } }
+.foster-need__note { margin: 0; padding: 0.6rem 0.8rem; border-left: 3px solid var(--gn-accent); background: var(--gn-surface); border-radius: var(--gn-radius-s); font-size: var(--gn-text-s); }
+
+/* Footer: social networks as logos, named for screen readers. */
+.social-links { list-style: none; margin: 0; padding: 0; display: flex; gap: 0.75rem; }
+.social-links a { display: grid; place-items: center; width: var(--gn-target); height: var(--gn-target); border-radius: 50%; background: var(--gn-ink); color: #fff; transition: transform 0.12s; }
+.social-links a:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 2px; }
+@media (hover: hover) { .social-links a:hover { transform: scale(1.06); } }

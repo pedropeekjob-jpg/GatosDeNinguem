@@ -242,6 +242,7 @@ a:hover { text-decoration-thickness: 2.5px; }
   }
   .gn-header--tabbar .gn-nav__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); width: auto; max-width: 40rem; margin-inline: auto; padding: 0; gap: 0; }
   .gn-header--tabbar .gn-nav__icon { display: inline-flex; }
+  .gn-header--tabbar .gn-nav__item--wide { display: none; }
   .gn-header--tabbar .gn-nav__link {
     position: relative; flex-direction: column; gap: 0.2rem; min-height: 4.25rem; padding: 0.55rem 0.15rem 0.5rem;
     font-size: 0.8125rem; line-height: 1.15; white-space: normal; overflow-wrap: anywhere;

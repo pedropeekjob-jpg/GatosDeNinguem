@@ -153,6 +153,18 @@ export async function listOpenShifts(): Promise<PublicShift[]> {
 
 const withoutSignups = ({ signups: _private, ...shift }: Shift) => shift;
 
+/** Cats waiting for a foster home right now, with the team's note on what they need. */
+export async function listCatsNeedingFoster(): Promise<{ catSlug: string; notes?: string }[]> {
+  if (API_URL) {
+    const res = await fetch(`${API_URL}/escalas/vagas`, { next: { revalidate: 60 } });
+    if (!res.ok) throw new Error(`API /escalas/vagas respondeu ${res.status}`);
+    const needs = (await res.json()) as { kind: string; catSlug?: string; notes?: string }[];
+    return needs.flatMap((n) => (n.kind === "familia-temporaria" && n.catSlug ? [{ catSlug: n.catSlug, notes: n.notes }] : []));
+  }
+  const now = new Date(process.env.DEMO_NOW ?? "2026-11-01T09:00:00.000Z");
+  return openNeeds(seedShifts, seedFosterPlacements, now, 30).flatMap((n) => (n.kind === "familia-temporaria" ? [{ catSlug: n.placement.catSlug, notes: n.placement.notes }] : []));
+}
+
 /** The public Patinhas page: ways to earn, levels, badges, this month's challenge and the opt-in thanks wall. */
 export type PatinhasSummary = {
   levels: Level[];

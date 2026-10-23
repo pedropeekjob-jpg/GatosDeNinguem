@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());
@@ -46,6 +46,15 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     expect((await repo.getShift("shift-1"))?.signups).toHaveLength(1);
     expect(await repo.listFosterPlacements()).toHaveLength(2);
     expect(await repo.listSponsorships()).toHaveLength(2);
+  });
+
+  it("stores foster family requests and their follow-up", async () => {
+    const base = { name: "Joana", phone: "913333333", town: "Darque", canHost: "bebes" as const, howLong: "semanas" as const, consent: true as const };
+    await repo.saveFosterApplication({ ...base, id: "f1", receivedAt: "2026-10-01T10:00:00.000Z", status: "nova" });
+    await repo.saveFosterApplication({ ...base, id: "f2", receivedAt: "2026-10-02T10:00:00.000Z", status: "nova" });
+    await repo.saveFosterApplication({ ...base, id: "f1", receivedAt: "2026-10-01T10:00:00.000Z", status: "contactada" });
+    const list = await repo.listFosterApplications();
+    expect(list.map((a) => [a.id, a.status])).toEqual([["f2", "nova"], ["f1", "contactada"]]);
   });
 
   it("stores and lists partner applications", async () => {

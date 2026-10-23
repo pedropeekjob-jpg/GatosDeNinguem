@@ -18,7 +18,7 @@ export const helpActions: Record<HelpAction["id"], HelpAction> = {
   amigo: { id: "amigo", title: "Ser Amigo da associação", description: "24 euros por ano e descontos nos nossos parceiros.", href: "/ajudar#amigo" },
   voluntariado: { id: "voluntariado", title: "Fazer um turno no gatil", description: "Duas horas a limpar, alimentar e dar mimos. Não precisa de experiência.", href: "/ajudar#voluntariado" },
   transporte: { id: "transporte", title: "Levar gatos ao veterinário", description: "Se tem carro, ajude a levar gatos às consultas.", href: "/ajudar#voluntariado" },
-  fat: { id: "fat", title: "Ser família temporária", description: "Acolha um gato em casa por umas semanas. Nós pagamos a comida e o veterinário.", href: "/ajudar#familia-temporaria" },
+  fat: { id: "fat", title: "Ser família temporária", description: "Acolha um gato em casa por umas semanas. Nós pagamos a comida e o veterinário.", href: "/ajudar/familia-temporaria" },
   adotar: { id: "adotar", title: "Adotar um gato", description: "Dê uma casa para sempre a um dos nossos gatos.", href: "/adotar/descobrir" },
 };
 

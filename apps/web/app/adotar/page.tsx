@@ -4,7 +4,7 @@ import { CatCard } from "@/components/CatCard";
 import { CatFilter } from "@/components/client/CatFilter";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { PageHero } from "@/components/PageHero";
-import { getPage, listCats, type PublicCat } from "@/lib/content";
+import { getPage, listCats, listHappyEndings, type PublicCat } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -16,7 +16,7 @@ export async function generateMetadata() {
 const tags = (cat: PublicCat) => [cat.sex, isSenior(cat) && "senior", cat.specialNeeds && "cuidados"].filter(Boolean).join(" ");
 
 export default async function AdoptPage() {
-  const [page, available, recovering] = await Promise.all([getPage("/adotar"), listCats("para-adocao"), listCats("a-recuperar")]);
+  const [page, available, recovering, happy] = await Promise.all([getPage("/adotar"), listCats("para-adocao"), listCats("a-recuperar"), listHappyEndings()]);
   return (
     <>
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Adotar" }]}>
@@ -24,6 +24,14 @@ export default async function AdoptPage() {
           <Button href="/adotar/descobrir">Ajude-me a escolher</Button>
         </div>
         <FavoritesStrip cats={available} />
+        {happy.length > 0 ? (
+          <a className="happy-link" href="/finais-felizes">
+            <span className="happy-link__faces" aria-hidden="true">
+              {happy.slice(0, 3).map(({ cat, happyEnding }) => { const p = happyEnding?.photo ?? cat.photos[0]!; return <img key={cat.id} src={p.url} alt="" width={40} height={40} />; })}
+            </span>
+            <span><strong>{happy.length} {happy.length === 1 ? "gato já encontrou" : "gatos já encontraram"} família.</strong> Ver os finais felizes</span>
+          </a>
+        ) : null}
       </PageHero>
       <Section heading={`${available.length} gatos procuram família`}>
         <CatFilter

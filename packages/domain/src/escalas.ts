@@ -94,6 +94,36 @@ export const fosterPlacementSchema = z.object({
 });
 export type FosterPlacement = z.infer<typeof fosterPlacementSchema>;
 
+/** "Quero ser família temporária" form on the site. The team calls back, visits if needed, then places a cat. */
+export const fosterApplicationSchema = z.object({
+  name: z.string({ required_error: "Indique o seu nome" }).min(2, "Indique o seu nome"),
+  phone: z.string({ required_error: "Indique um telefone com pelo menos 9 números" }).min(9, "Indique um telefone com pelo menos 9 números"),
+  email: z.string().email("Indique um email válido").optional().or(z.literal("")),
+  town: z.string({ required_error: "Indique onde vive" }).min(2, "Indique onde vive"),
+  canHost: z.enum(["bebes", "recuperar", "qualquer"]).default("qualquer"),
+  howLong: z.enum(["semanas", "meses", "necessario"]).default("necessario"),
+  otherAnimals: z.string().max(300).optional(),
+  message: z.string().max(1000).optional(),
+  consent: z.literal(true, { errorMap: () => ({ message: "Precisa de aceitar para o contactarmos" }) }),
+});
+export type FosterApplication = z.infer<typeof fosterApplicationSchema>;
+
+export const fosterApplicationStatus = ["nova", "contactada", "aprovada", "arquivada"] as const;
+export type FosterApplicationStatus = (typeof fosterApplicationStatus)[number];
+export type StoredFosterApplication = FosterApplication & { id: string; receivedAt: string; status: FosterApplicationStatus };
+export const fosterApplicationStatusLabel: Record<FosterApplicationStatus, string> = { nova: "Nova", contactada: "Contactada", aprovada: "Aprovada", arquivada: "Arquivada" };
+
+export const fosterCanHostLabel: Record<FosterApplication["canHost"], string> = {
+  bebes: "Gatinhos bebés",
+  recuperar: "Um gato a recuperar",
+  qualquer: "O que for preciso",
+};
+export const fosterHowLongLabel: Record<FosterApplication["howLong"], string> = {
+  semanas: "Algumas semanas",
+  meses: "Um ou dois meses",
+  necessario: "O tempo que for preciso",
+};
+
 export const sponsorshipSchema = z.object({
   id: z.string(),
   catSlug: z.string(),

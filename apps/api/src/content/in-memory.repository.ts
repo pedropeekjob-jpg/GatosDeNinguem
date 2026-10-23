@@ -1,5 +1,5 @@
 import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CareNotificationPrefs, type CareTask, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
-import { seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship } from "@gn/domain";
+import { seedFosterApplications, seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
 import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
@@ -17,6 +17,7 @@ export class InMemoryContentRepository implements ContentRepository {
   private settings: SeoSettings;
   private shifts = new Map<string, Shift>(seedShifts.map((x) => [x.id, structuredClone(x)]));
   private placements = new Map<string, FosterPlacement>(seedFosterPlacements.map((x) => [x.id, structuredClone(x)]));
+  private fosterApplications = new Map<string, StoredFosterApplication>(seedFosterApplications.map((x) => [x.id, structuredClone(x)]));
   private sponsorships = new Map<string, Sponsorship>(seedSponsorships.map((x) => [x.id, structuredClone(x)]));
   private impact: Impact = clone(seedImpact);
   private newsletter = new Map<string, NewsletterSignup & { subscribedAt: string }>();
@@ -77,6 +78,8 @@ export class InMemoryContentRepository implements ContentRepository {
   async deleteShift(id: string) { this.shifts.delete(id); }
   async listFosterPlacements() { return [...this.placements.values()].map(clone); }
   async saveFosterPlacement(p: FosterPlacement) { this.placements.set(p.id, clone(p)); return clone(p); }
+  async listFosterApplications() { return [...this.fosterApplications.values()].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt)).map(clone); }
+  async saveFosterApplication(x: StoredFosterApplication) { this.fosterApplications.set(x.id, clone(x)); return clone(x); }
   async listSponsorships() { return [...this.sponsorships.values()].map(clone); }
   async saveSponsorship(x: Sponsorship) { this.sponsorships.set(x.id, clone(x)); return clone(x); }
 

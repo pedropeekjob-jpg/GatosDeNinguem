@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -392,4 +392,41 @@ test("a cat's page: on phones 'Quero conhecer' stays on screen while reading", a
   await page.goto("/adotar/tobias");
   await page.getByRole("heading", { name: "Partilhar o Tobias" }).or(page.getByText("Partilhar o Tobias")).first().scrollIntoViewIfNeeded();
   await expect(page.getByRole("link", { name: "Quero conhecer o Tobias" })).toBeInViewport();
+});
+
+test("família temporária: from Ajudar to a sent request, with the cats that need one now", async ({ page }) => {
+  await page.goto("/ajudar");
+  await page.locator("#familia-temporaria").getByRole("link", { name: "Quero ser família temporária" }).click();
+  await expect(page).toHaveURL(/\/ajudar\/familia-temporaria\/?$/);
+  await expect(page.getByRole("heading", { name: /precisa(m)? de família temporária agora/ })).toBeVisible();
+  await page.getByRole("button", { name: "Quero ser família temporária" }).click();
+  await expect(page.getByText("Indique o seu nome")).toBeVisible();
+  await page.getByLabel("O seu nome").fill("Joana Reis");
+  await page.getByLabel("Telefone").fill("913 333 333");
+  await page.getByLabel("Onde vive?").fill("Darque");
+  await page.getByText("Gatinhos bebés").click();
+  await page.getByLabel(/Aceito que a associação me contacte/).check();
+  await page.getByRole("button", { name: "Quero ser família temporária" }).click();
+  await expect(page.getByText("Obrigado! Vamos ligar-lhe.")).toBeVisible();
+});
+
+test("finais felizes: on the home page, on Adotar and, on wide screens, in the menu", async ({ page }, info) => {
+  await page.goto("/");
+  const happy = page.getByRole("region", { name: "Finais felizes" });
+  await expect(happy.getByText(/gatos? já encontr/)).toBeVisible();
+  await expect(happy.getByRole("heading", { level: 3 }).first()).toBeVisible();
+  const menuLink = page.getByRole("navigation", { name: /principal|menu/i }).getByRole("link", { name: "Finais felizes" });
+  if (info.project.name.startsWith("telemovel")) await expect(menuLink).toBeHidden();
+  else await expect(menuLink).toBeVisible();
+  await page.goto("/adotar");
+  await page.getByRole("link", { name: /já encontr.* família\. Ver os finais felizes/ }).click();
+  await expect(page).toHaveURL(/\/finais-felizes\/?$/);
+});
+
+test("footer: social networks are logos with their names for screen readers", async ({ page }) => {
+  await page.goto("/");
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByRole("link", { name: "Facebook" })).toBeVisible();
+  await expect(footer.getByRole("link", { name: "Instagram" })).toBeVisible();
+  await expect(footer.getByText("Facebook", { exact: true })).toHaveCount(0);
 });

@@ -1,5 +1,5 @@
 import type { Appointment, CareAlert, CatCare, Dose, Medication, VisitNote } from "./cuidados";
-import type { FosterPlacement, Shift, Sponsorship } from "./escalas";
+import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } from "./escalas";
 import type { z } from "zod";
 import { pageSchema } from "./content";
 import type { Cat, Impact, Page, Partner, Post, Redirect, SeoSettings } from "./index";
@@ -408,6 +408,11 @@ export const seedShifts: Shift[] = [
 export const seedFosterPlacements: FosterPlacement[] = [
   { id: "fat-1", catSlug: "pimenta", status: "ativa", startDate: "2026-10-10", expectedEndDate: "2026-11-20", familyName: "Família Lopes", notes: "Recuperação da pata." },
   { id: "fat-2", catSlug: "estrela", status: "procura-familia", startDate: "2026-11-01", notes: "Precisa de alguém que dê insulina 2x por dia." },
+];
+
+/** Example "Quero ser família temporária" request, so the back office demo shows one. */
+export const seedFosterApplications: StoredFosterApplication[] = [
+  { id: "fat-pedido-1", name: "Sofia Martins", phone: "912000009", town: "Meadela", canHost: "bebes", howLong: "meses", otherAnimals: "Um cão calmo", consent: true, receivedAt: "2026-10-21T18:30:00.000Z", status: "nova" },
 ];
 
 export const seedSponsorships: Sponsorship[] = [

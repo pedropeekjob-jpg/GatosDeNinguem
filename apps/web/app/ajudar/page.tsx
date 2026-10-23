@@ -24,7 +24,7 @@ export default async function HelpPage() {
           <Card title="Apadrinhar" href="#apadrinhar"><p>Ajude um gato todos os meses e receba notícias dele.</p></Card>
           <Card title="Fazer um donativo" href="#doar"><p>Qualquer valor ajuda. 35 euros pagam uma esterilização.</p></Card>
           <Card title="Ser voluntário" href="#voluntariado"><p>Limpeza, transporte ao veterinário e eventos.</p></Card>
-          <Card title="Família temporária" href="#familia-temporaria"><p>Acolha um gato por umas semanas.</p></Card>
+          <Card title="Família temporária" href="/ajudar/familia-temporaria"><p>Acolha um gato por umas semanas.</p></Card>
           <Card title="Ser Amigo" href="#amigo"><p>24 euros por ano, com descontos nos parceiros.</p></Card>
           <Card title="Ganhar Patinhas" href="/patinhas"><p>Cada ajuda dá Patinhas, que pode trocar por vantagens nos parceiros.</p></Card>
         </Grid>
@@ -76,6 +76,7 @@ export default async function HelpPage() {
           <div className="gn-stack gn-stack--m">
             <h2>Ser família temporária</h2>
             <p>Acolha em casa um gato que está a recuperar ou gatinhos sem mãe, até encontrarem família. A associação paga a comida, a areia e o veterinário.</p>
+            <div className="action-row"><Button href="/ajudar/familia-temporaria">Quero ser família temporária</Button></div>
           </div>
         </Container>
       </section>

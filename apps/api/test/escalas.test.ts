@@ -97,6 +97,27 @@ describe("back office", () => {
     expect((await req("POST", "/escalas/padrinhos/pedido", { catSlug: "tobias", name: "Ana", email: "ana@example.pt", monthlyAmount: 1, consent: true })).statusCode).toBe(400);
   });
 
+  it("takes foster family requests from the site, for the team to follow up", async () => {
+    const res = await req("POST", "/escalas/familias-temporarias/candidatura", { name: "Joana Reis", phone: "913 333 333", town: "Darque", canHost: "recuperar", howLong: "semanas", consent: true });
+    expect(res.statusCode).toBe(201);
+    expect((await req("GET", "/escalas/familias-temporarias/candidaturas")).statusCode).toBe(401);
+    const list = (await req("GET", "/escalas/familias-temporarias/candidaturas", undefined, true)).json();
+    const joana = list.find((a: { name: string }) => a.name === "Joana Reis");
+    expect(joana).toMatchObject({ town: "Darque", canHost: "recuperar", status: "nova", receivedAt: "2026-11-01T09:00:00.000Z" });
+    expect(list[0].id).toBe(joana.id);
+    const moved = await req("PATCH", `/escalas/familias-temporarias/candidaturas/${joana.id}`, { status: "contactada" }, true);
+    expect(moved.json()).toMatchObject({ id: joana.id, status: "contactada" });
+    expect((await req("PATCH", "/escalas/familias-temporarias/candidaturas/nao-existe", { status: "contactada" }, true)).statusCode).toBe(404);
+  });
+
+  it("refuses foster requests without a phone or consent, and quietly drops spam", async () => {
+    expect((await req("POST", "/escalas/familias-temporarias/candidatura", { name: "Ana", phone: "91", town: "Viana", consent: true })).statusCode).toBe(400);
+    expect((await req("POST", "/escalas/familias-temporarias/candidatura", { name: "Ana", phone: "913333333", town: "Viana" })).statusCode).toBe(400);
+    const before = (await req("GET", "/escalas/familias-temporarias/candidaturas", undefined, true)).json().length;
+    expect((await req("POST", "/escalas/familias-temporarias/candidatura", { website_url: "x", name: "Bot" })).statusCode).toBe(201);
+    expect((await req("GET", "/escalas/familias-temporarias/candidaturas", undefined, true)).json()).toHaveLength(before);
+  });
+
   it("records a foster family taking a cat", async () => {
     const res = await req("POST", "/escalas/familias-temporarias", { id: "fat-2", catSlug: "estrela", status: "ativa", startDate: "2026-11-02", familyName: "Família Pires" }, true);
     expect(res.statusCode).toBe(201);

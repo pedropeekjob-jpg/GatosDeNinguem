@@ -80,6 +80,15 @@ model FosterPlacement {
   data    Json
 }
 
+model FosterApplication {
+  id         String   @id
+  receivedAt DateTime
+  status     String
+  data       Json
+
+  @@index([status])
+}
+
 model Sponsorship {
   id      String  @id
   catSlug String
