@@ -52,6 +52,8 @@ describe("the volunteer's care page", () => {
     expect((await req("GET", "/conta/eu/cuidados")).statusCode).toBe(401);
     const notYet = (await req("GET", "/conta/eu/cuidados", undefined, joao)).json();
     expect(notYet).toMatchObject({ volunteer: false, shift: null, cats: [] });
+    // Someone not on a shift yet is offered the gatil shifts with room, to join from their own page.
+    expect(notYet.gatilShifts.map((s: { id: string }) => s.id)).toEqual(["shift-1", "shift-2"]);
   });
 
   it("shows today's shift, the doses to give during it, and how to look after each cat", async () => {
@@ -95,7 +97,9 @@ describe("when a dose cannot be given", () => {
 
   it("only volunteers can take it", async () => {
     expect((await req("POST", `/conta/eu/cuidados/tarefas/${taskId}/aceitar`, undefined, joao)).statusCode).toBe(403);
-    await req("POST", "/escalas/turnos/shift-2/inscricoes", { name: "João Costa", phone: "913 000 002" }, admin);
+    expect((await req("POST", "/conta/eu/cuidados/turnos/shift-4", undefined, joao)).statusCode).toBe(404);
+    expect((await req("POST", "/conta/eu/cuidados/turnos/shift-2", undefined, joao)).statusCode).toBe(201);
+    expect((await req("POST", "/conta/eu/cuidados/turnos/shift-2", undefined, joao)).statusCode).toBe(409);
     const page = (await req("GET", "/conta/eu/cuidados", undefined, joao)).json();
     expect(page.volunteer).toBe(true);
     expect(page.tasks.open.map((t: { id: string }) => t.id)).toEqual([taskId]);

@@ -308,21 +308,37 @@ test.describe("no gatil: the volunteer's shift", () => {
     await expect(page.locator(".gatil__grupo", { hasText: "Tobias" }).getByText(/Resolvido: João Costa vai dar Semintra/)).toBeVisible();
   });
 
-  test("after signing in, everyone finds the gatil card first, with how to get there", async ({ page }) => {
+  async function createAccount(page: Page, contact: string, name: string) {
     await page.goto("/conta");
-    await page.getByLabel("Email ou telemóvel").fill("rita@exemplo.pt");
+    await page.getByLabel("Email ou telemóvel").fill(contact);
     await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByLabel("O seu nome").fill("Rita Sousa");
+    await page.getByLabel("O seu nome").fill(name);
     await page.getByText("Aceito que a associação guarde").click();
     await page.getByRole("button", { name: "Enviar o código" }).click();
     const code = (await page.getByText(/Demonstração: o código é/).textContent())!.match(/\d{6}/)![0];
     await page.getByLabel("Código").fill(code);
     await page.getByRole("button", { name: "Criar a minha conta" }).click();
+  }
+
+  test("someone new finds the gatil card first, joins a shift and gets the cats and doses", async ({ page }) => {
+    await createAccount(page, "915 000 003", "Rita Sousa");
     const card = page.getByRole("region", { name: "No gatil", exact: true });
     await expect(card).toBeInViewport();
-    await expect(card.getByText(/que gatos medicar, onde está cada um/)).toBeVisible();
-    await expect(card.getByRole("link", { name: "Ver turnos no gatil" })).toBeVisible();
-    await expect(card.getByText("912 000 001")).toBeVisible();
+    await card.getByRole("link", { name: "Abrir o meu turno no gatil" }).click();
+    await expect(page).toHaveURL(/\/conta\/gatil/);
+    await page.getByRole("button", { name: /Inscrever-me neste turno/ }).first().click();
+    await expect(page.getByText("Está inscrito. Já pode ver os gatos e as doses desse turno.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Medicação (durante o seu turno|no dia do seu turno)/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Como tratar de cada gato" })).toBeVisible();
+  });
+
+  test("in the demo, an email account can try the volunteer page as Ana", async ({ page }) => {
+    await createAccount(page, "rita@exemplo.pt", "Rita Sousa");
+    await page.getByRole("link", { name: "Abrir o meu turno no gatil" }).click();
+    await expect(page.getByText(/entre com o seu telemóvel em vez do email/)).toBeVisible();
+    await page.getByRole("button", { name: "Experimentar como a Ana (com turno hoje)" }).click();
+    await expect(page.getByRole("heading", { name: "Medicação durante o seu turno" })).toBeVisible();
+    await expect(page.locator(".gatil__dose", { hasText: "08:00" }).getByRole("button", { name: "Já dei" })).toBeVisible();
   });
 
   test("notifications can be silenced, for oneself only", async ({ page }) => {
