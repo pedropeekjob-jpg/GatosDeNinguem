@@ -43,7 +43,7 @@ export function PartnerApplicationForm() {
       </div>
       <Checkbox id="p-consentimento" label="Aceito que a associação me contacte sobre esta parceria" checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
-      <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Quero ser parceiro"}</Button>
+      <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Enviar pedido"}</Button>
     </form>
   );
 }

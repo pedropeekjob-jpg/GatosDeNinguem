@@ -45,7 +45,9 @@ test("adopt: from the list to sending a request to meet a cat", async ({ page })
   await page.goto("/adotar");
   await page.getByRole("link", { name: "Tobias" }).click();
   await expect(page).toHaveURL(/\/adotar\/tobias$/);
-  await page.getByRole("link", { name: /Quero conhecer/ }).click();
+  await page.getByRole("button", { name: /Quero conhecer/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Quero conhecer o Tobias" });
+  await expect(dialog).toBeVisible();
   await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Indique o seu nome").first()).toBeVisible();
   await page.getByLabel("O seu nome").fill("Maria Silva");
@@ -55,7 +57,26 @@ test("adopt: from the list to sending a request to meet a cat", async ({ page })
   await page.getByText("Aceito que a associação me contacte").click();
   await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Obrigado! Recebemos o seu pedido.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Ver outros gatos" })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Ver outros gatos" })).toBeVisible();
+});
+
+test("forms open in a window that closes with Fechar, Esc or the Back button", async ({ page }) => {
+  await page.goto("/ajudar/familia-temporaria");
+  await expect(page.getByLabel("O seu nome")).toHaveCount(0);
+  const open = page.getByRole("button", { name: "Quero ser família temporária" }).first();
+  const dialog = page.getByRole("dialog", { name: "Quero ser família temporária" });
+  await open.click();
+  await expect(dialog.getByLabel("O seu nome")).toBeVisible();
+  await dialog.getByRole("button", { name: "Fechar" }).click();
+  await expect(dialog).toBeHidden();
+  await open.click();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await open.click();
+  await expect(dialog).toBeVisible();
+  await page.goBack();
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/ajudar\/familia-temporaria$/);
 });
 
 test("sponsor: Apadrinhar leads to sponsoring that cat, not to adopting it", async ({ page }) => {
@@ -71,16 +92,17 @@ test("sponsor: Apadrinhar leads to sponsoring that cat, not to adopting it", asy
   await page.getByRole("link", { name: "Tobias" }).click();
   await expect(page).toHaveURL(/\/apadrinhar\/tobias$/);
 
+  await page.getByRole("button", { name: "Quero apadrinhar o Tobias" }).click();
   await page.getByText("Outro valor").click();
   await page.getByLabel("Valor por mês, em euros").fill("2");
-  await page.getByRole("button", { name: "Quero apadrinhar o Tobias" }).click();
+  await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("O valor mínimo é 5 euros por mês")).toBeVisible();
   await expect(page.getByText("Indique o seu nome").first()).toBeVisible();
   await page.getByLabel("Valor por mês, em euros").fill("15");
   await page.getByLabel("O seu nome").fill("Ana Lima");
   await page.getByLabel("Email", { exact: true }).fill("ana@example.pt");
   await page.getByText("Aceito que a associação me contacte").click();
-  await page.getByRole("button", { name: "Quero apadrinhar o Tobias" }).click();
+  await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Obrigado! Tobias agradece.")).toBeVisible();
 });
 
@@ -140,12 +162,13 @@ test("SEO: cat pages carry structured data and Open Graph", async ({ page }) => 
 
 test("partner application form validates and thanks", async ({ page }) => {
   await page.goto("/parceiros");
+  await page.getByRole("button", { name: "Quero ser parceiro" }).click();
   await page.getByLabel("Nome do negócio").fill("Padaria Central");
   await page.getByLabel("O seu nome").fill("Ana Costa");
   await page.getByLabel("Email", { exact: true }).fill("ana@example.pt");
   await page.getByLabel("Localidade").fill("Viana do Castelo");
   await page.getByText("Aceito que a associação me contacte sobre esta parceria").click();
-  await page.getByRole("button", { name: "Quero ser parceiro" }).click();
+  await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Obrigado! Entraremos em contacto em breve.")).toBeVisible();
 });
 
@@ -407,7 +430,7 @@ test("a cat's page: on phones 'Quero conhecer' stays on screen while reading", a
   test.skip(!info.project.name.startsWith("telemovel"), "phones only");
   await page.goto("/adotar/tobias");
   await page.getByRole("heading", { name: "Partilhar o Tobias" }).or(page.getByText("Partilhar o Tobias")).first().scrollIntoViewIfNeeded();
-  await expect(page.getByRole("link", { name: "Quero conhecer o Tobias" })).toBeInViewport();
+  await expect(page.getByRole("button", { name: "Quero conhecer o Tobias" })).toBeInViewport();
 });
 
 test("família temporária: from Ajudar to a sent request, with the cats that need one now", async ({ page }) => {
@@ -415,14 +438,15 @@ test("família temporária: from Ajudar to a sent request, with the cats that ne
   await page.locator("#familia-temporaria").getByRole("link", { name: "Quero ser família temporária" }).click();
   await expect(page).toHaveURL(/\/ajudar\/familia-temporaria\/?$/);
   await expect(page.getByRole("heading", { name: /precisa(m)? de família temporária agora/ })).toBeVisible();
-  await page.getByRole("button", { name: "Quero ser família temporária" }).click();
+  await page.getByRole("button", { name: "Quero ser família temporária" }).first().click();
+  await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Indique o seu nome")).toBeVisible();
   await page.getByLabel("O seu nome").fill("Joana Reis");
   await page.getByLabel("Telefone").fill("913 333 333");
   await page.getByLabel("Onde vive?").fill("Darque");
   await page.getByText("Gatinhos bebés").click();
   await page.getByLabel(/Aceito que a associação me contacte/).check();
-  await page.getByRole("button", { name: "Quero ser família temporária" }).click();
+  await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Obrigado! Vamos ligar-lhe.")).toBeVisible();
 });
 

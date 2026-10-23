@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { axeViolations } from "../test/axe";
-import { NextStep, ShareBar, ToggleButton } from "./index";
+import { Modal, NextStep, ShareBar, ToggleButton } from "./index";
 
 describe("ShareBar", () => {
   it("builds share links for any url and copies it", async () => {
@@ -34,5 +34,19 @@ describe("NextStep", () => {
     render(<NextStep title="Obrigado!" actions={<a href="/ajudar">Outra forma de ajudar</a>} />);
     expect(screen.getByRole("status")).toHaveTextContent("Obrigado!");
     expect(screen.getByRole("link", { name: "Outra forma de ajudar" })).toBeInTheDocument();
+  });
+});
+
+describe("Modal", () => {
+  it("shows its content only while open and closes with a clear button", async () => {
+    const onClose = vi.fn();
+    const { rerender, container } = render(<Modal open={false} onClose={onClose} title="Seja parceiro"><p>Formulário</p></Modal>);
+    expect(screen.queryByText("Formulário")).toBeNull();
+    rerender(<Modal open onClose={onClose} title="Seja parceiro" intro="Leva dois minutos."><p>Formulário</p></Modal>);
+    expect(screen.getByRole("heading", { name: "Seja parceiro" })).toBeInTheDocument();
+    expect(screen.getByText("Leva dois minutos.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Fechar" }));
+    expect(onClose).toHaveBeenCalled();
+    expect(await axeViolations(container)).toEqual([]);
   });
 });

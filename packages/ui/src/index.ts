@@ -11,3 +11,4 @@ export { Carousel, type CarouselSlide } from "./components/Carousel";
 export { StepWizard } from "./components/StepWizard";
 export { SearchPreview } from "./components/SearchPreview";
 export { NextStep, ShareBar, ToggleButton } from "./components/Engagement";
+export { Modal } from "./components/Modal";

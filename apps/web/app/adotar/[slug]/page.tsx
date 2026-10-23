@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { ageLabel, statusLabel } from "@gn/domain";
 import { breadcrumbJsonLd } from "@gn/seo";
-import { Badge, Button, Container, Notice, ShareBar } from "@gn/ui";
+import { Badge, Container, Notice, ShareBar } from "@gn/ui";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
+import { FormModal } from "@/components/client/FormModal";
+import { AdoptionInterestForm } from "@/components/forms/AdoptionInterestForm";
+import { SponsorForm } from "@/components/forms/SponsorForm";
 import { JsonLd } from "@/components/JsonLd";
 import { PageHero } from "@/components/PageHero";
 import { getCat, getSeoSettings, listCats } from "@/lib/content";
@@ -48,7 +51,14 @@ export default async function CatPage({ params }: Props) {
             <p className="gn-lead">{cat.summary}</p>
             {cat.status === "para-adocao" ? (
               <div className="action-row cat-profile__cta">
-                <Button href={`/adotar/${cat.slug}/conhecer`}>Quero conhecer {pronoun} {cat.name}</Button>
+                <FormModal
+                  label={`Quero conhecer ${pronoun} ${cat.name}`}
+                  href={`/adotar/${cat.slug}/conhecer`}
+                  title={`Quero conhecer ${pronoun} ${cat.name}`}
+                  intro="Deixe o seu contacto. Ligamos-lhe para conversar e marcar uma visita. Não precisa de decidir nada agora."
+                >
+                  <AdoptionInterestForm catSlug={cat.slug} catName={cat.name} />
+                </FormModal>
                 <FavoriteButton slug={cat.slug} name={cat.name} compact />
               </div>
             ) : null}
@@ -75,7 +85,17 @@ export default async function CatPage({ params }: Props) {
             {cat.status !== "adotado" ? (
               <Notice tone="info" title={`Não pode adotar? Pode apadrinhar ${pronoun} ${cat.name}`}>
                 <p>A partir de 5 euros por mês ajuda a pagar a comida e o veterinário, e recebe notícias.</p>
-                <p><a href={`/apadrinhar/${cat.slug}`}>Apadrinhar {pronoun} {cat.name}</a></p>
+                <div className="action-row">
+                  <FormModal
+                    label={`Apadrinhar ${pronoun} ${cat.name}`}
+                    href={`/apadrinhar/${cat.slug}`}
+                    variant="secondary"
+                    title={`Apadrinhar ${pronoun} ${cat.name}`}
+                    intro="Deixe os seus dados e entramos em contacto para combinar."
+                  >
+                    <SponsorForm catSlug={cat.slug} catName={cat.name} pronoun={pronoun} />
+                  </FormModal>
+                </div>
               </Notice>
             ) : null}
             <ShareBar url={url} text={cat.status === "adotado" ? `${cat.name} encontrou família!` : `Conheça ${pronoun} ${cat.name}, procura família em Viana do Castelo`} label={`Partilhar ${pronoun} ${cat.name}`} />
