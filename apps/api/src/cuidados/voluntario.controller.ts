@@ -1,8 +1,11 @@
-import { Body, ConflictException, Controller, ForbiddenException, Get, Headers, HttpCode, Inject, Param, Post, Put } from "@nestjs/common";
+import { Body, ConflictException, Controller, ForbiddenException, NotFoundException, Get, Headers, HttpCode, Inject, Param, Post, Put } from "@nestjs/common";
 import {
   buildVolunteerCare,
   canHandleDose,
   cantGiveInputSchema,
+  isGatilShift,
+  signUp,
+  signUpErrorMessage,
   careNotificationPrefsSchema,
   defaultCarePrefs,
   lisbonNow,
@@ -15,6 +18,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { parseBody } from "../common/validation";
+import { volunteerIdFromPhone } from "../common/volunteer";
 import { PatinhasService } from "../patinhas/service";
 import { CareService } from "./care.service";
 
@@ -77,6 +81,20 @@ export class VoluntarioCuidadosController {
   async summary(@Headers("authorization") auth?: string) {
     const o = await this.overview(auth);
     return { volunteer: o.volunteer, unread: o.unread, openTasks: o.tasks.open.length };
+  }
+
+  /** Join a gatil shift straight from one's own page, with the account's name and mobile number. */
+  @Post("turnos/:id")
+  @HttpCode(201)
+  async joinShift(@Headers("authorization") auth: string | undefined, @Param("id") id: string) {
+    const { account } = await this.context(auth);
+    if (!account.phone) throw new ConflictException("Para se inscrever aqui, entre com o seu telemóvel.");
+    const shift = await this.repo.getShift(id);
+    if (!shift || !isGatilShift(shift)) throw new NotFoundException("Turno não encontrado.");
+    const result = signUp(shift, { volunteerId: volunteerIdFromPhone(account.phone), name: account.name, phone: account.phone }, this.care.now());
+    if (!result.ok) throw new ConflictException(signUpErrorMessage[result.error]);
+    await this.repo.saveShifts([result.shift]);
+    return { ok: true };
   }
 
   @Post("tomas")

@@ -277,7 +277,9 @@ export function lisbonNow(at: Date): { date: string; time: string } {
  * own shift in their account on the site. A shift links to an account by mobile number.
  */
 export const GATIL_SHIFT_TYPES = ["limpeza"] as const;
-const isGatilShift = (s: Pick<Shift, "type">) => (GATIL_SHIFT_TYPES as readonly string[]).includes(s.type);
+/** How far ahead the next gatil shift is shown, so its cats and doses can be read before the day. */
+export const NEXT_SHIFT_DAYS = 31;
+export const isGatilShift = (s: Pick<Shift, "type">) => (GATIL_SHIFT_TYPES as readonly string[]).includes(s.type);
 const digits = (phone: string) => {
   const d = phone.replace(/\D/g, "");
   return d.length === 12 && d.startsWith("351") ? d.slice(3) : d;
@@ -287,7 +289,7 @@ const signedUp = (s: Pick<Shift, "signups">, phone: string) => s.signups.some((x
 export type VolunteerDuty = {
   /** Has signed up for any shift in the last six months or ahead: counts as a volunteer. */
   isVolunteer: boolean;
-  /** The gatil shift whose care to show: today's, or the next one within two weeks. */
+  /** The gatil shift whose care to show: today's, or the next one within a month. */
   shift?: Shift;
   /** True when that shift is today, so doses can be marked as given. */
   isToday: boolean;
@@ -300,7 +302,7 @@ export function volunteerDuty(shifts: Shift[], phone: string | undefined, now: D
   const today = lisbonNow(now).date;
   const nowIso = now.toISOString();
   const since = new Date(now.getTime() - 180 * 86_400_000).toISOString();
-  const horizon = new Date(now.getTime() + 14 * 86_400_000).toISOString();
+  const horizon = new Date(now.getTime() + NEXT_SHIFT_DAYS * 86_400_000).toISOString();
   const mine = shifts.filter((s) => signedUp(s, phone)).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const gatil = mine.filter(isGatilShift);
   const todays = gatil.find((s) => lisbonNow(new Date(s.startsAt)).date === today);

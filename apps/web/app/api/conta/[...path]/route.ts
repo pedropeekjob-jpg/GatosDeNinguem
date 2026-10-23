@@ -10,7 +10,7 @@ const allowed = new Set([
   "codigo", "entrar", "sair", "eu", "eu/questionario", "eu/trocas",
   "eu/cuidados", "eu/cuidados/resumo", "eu/cuidados/tomas", "eu/cuidados/nao-consigo", "eu/cuidados/notas", "eu/cuidados/vistas", "eu/cuidados/preferencias",
 ]);
-const allowedPattern = /^eu\/cuidados\/tarefas\/[A-Za-z0-9-]{1,64}\/(aceitar|devolver)$/;
+const allowedPattern = /^eu\/cuidados\/(tarefas\/[A-Za-z0-9-]{1,64}\/(aceitar|devolver)|turnos\/[A-Za-z0-9-]{1,64})$/;
 
 async function forward(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const path = (await params).path.join("/");

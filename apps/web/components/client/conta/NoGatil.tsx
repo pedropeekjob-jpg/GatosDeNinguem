@@ -14,7 +14,7 @@ import {
   type VolunteerCare,
 } from "@gn/domain";
 import { Badge, Button, Checkbox, Notice, TextArea } from "@gn/ui";
-import { CUIDADOS_EVENT, cuidadosClient, type DoseRef } from "@/lib/cuidados";
+import { CUIDADOS_EVENT, cuidadosClient, tryAsDemoVolunteer, type DoseRef } from "@/lib/cuidados";
 
 const dayLong = new Intl.DateTimeFormat("pt-PT", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Lisbon" });
 const dayShort = new Intl.DateTimeFormat("pt-PT", { day: "numeric", month: "short", timeZone: "Europe/Lisbon" });
@@ -53,10 +53,13 @@ export function NoGatil() {
   if (care === null) return <Notice tone="info" title="Entre na sua conta"><p><a href="/conta">Entrar</a> para ver o seu turno no gatil.</p></Notice>;
   if (!care.volunteer) {
     return (
-      <Notice tone="info" title="Ainda não está num turno do gatil">
-        <HowToJoin phoneMissing={care.phoneMissing} />
-        <p><a href="/ajudar/turnos">Ver turnos no gatil</a></p>
-      </Notice>
+      <div className="gn-stack gn-stack--l gatil">
+        {flash ? <Notice tone={flash.tone} title={flash.text} /> : null}
+        <Notice tone="info" title="Ainda não está num turno do gatil">
+          <HowToJoin phoneMissing={care.phoneMissing} onTryDemo={() => { tryAsDemoVolunteer(); void load(); }} />
+        </Notice>
+        <JoinShift care={care} act={act} />
+      </div>
     );
   }
 
@@ -64,6 +67,7 @@ export function NoGatil() {
     <div className="gn-stack gn-stack--l gatil">
       {flash ? <Notice tone={flash.tone} title={flash.text} /> : null}
       <ShiftHeader care={care} />
+      {care.shift ? null : <JoinShift care={care} act={act} />}
       <HelpRequests care={care} act={act} />
       {care.shift ? (
         <section className="gn-stack gn-stack--m" aria-labelledby="gatil-doses">
@@ -111,8 +115,8 @@ function ShiftHeader({ care }: { care: VolunteerCare }) {
   if (!care.shift) {
     return (
       <section className="gatil__turno" aria-labelledby="gatil-turno">
-        <h2 id="gatil-turno">Sem turno no gatil nas próximas duas semanas</h2>
-        <p>Continua a receber os pedidos de ajuda. <a href="/ajudar/turnos">Inscrever-me num turno</a></p>
+        <h2 id="gatil-turno">Sem turno no gatil no próximo mês</h2>
+        <p>Continua a receber os pedidos de ajuda. Inscreva-se num turno em baixo para ver os gatos e as doses desse dia.</p>
       </section>
     );
   }
@@ -343,17 +347,49 @@ function MutePrefs({ care, act }: { care: VolunteerCare; act: Act }) {
 const DEMO = process.env.NEXT_PUBLIC_CONTAS_DEMO === "1";
 
 /** How someone who is not on a gatil shift yet gets their account linked to one. */
-function HowToJoin({ phoneMissing }: { phoneMissing: boolean }) {
+function HowToJoin({ phoneMissing, onTryDemo }: { phoneMissing: boolean; onTryDemo?: () => void }) {
   return (
     <>
       <p>
-        Quem vai tratar dos gatos ao gatil vê aqui que gatos medicar, onde está cada um e como tratar dele.
+        Quem vai tratar dos gatos ao gatil vê aqui que gatos medicar, onde está cada um e como tratar dele, e marca “Já dei” em cada dose.
         {phoneMissing
-          ? " Para isso, entre com o mesmo telemóvel com que se inscreve nos turnos."
-          : " Aparece assim que se inscrever num turno de limpeza com o telemóvel desta conta."}
+          ? " Para isso, entre com o seu telemóvel em vez do email: é por ele que ligamos a conta aos turnos."
+          : " Inscreva-se num turno em baixo e a página abre logo com os gatos desse dia."}
       </p>
-      {DEMO ? <p className="small">Para experimentar: saia e entre com o telemóvel <strong>912 000 001</strong> (a Ana, que tem turno hoje).</p> : null}
+      {DEMO && onTryDemo ? (
+        <div className="action-row">
+          <Button variant="secondary" onClick={onTryDemo}>Experimentar como a Ana (com turno hoje)</Button>
+        </div>
+      ) : DEMO ? (
+        <p className="small">Para experimentar: saia e entre com o telemóvel <strong>912 000 001</strong> (a Ana, que tem turno hoje).</p>
+      ) : null}
     </>
+  );
+}
+
+/** Gatil shifts with room, joined in one tap with the account's own name and mobile number. */
+function JoinShift({ care, act }: { care: VolunteerCare; act: Act }) {
+  const client = cuidadosClient();
+  if (care.phoneMissing) return null;
+  return (
+    <section className="gn-stack gn-stack--m" aria-labelledby="gatil-inscrever">
+      <h2 id="gatil-inscrever">Turnos no gatil com lugar</h2>
+      {care.gatilShifts.length === 0 ? (
+        <p>Não há turnos com lugar no próximo mês. <a href="/ajudar/turnos">Ver todos os turnos</a></p>
+      ) : (
+        <ul className="gatil__lista">
+          {care.gatilShifts.map((s) => (
+            <li key={s.id} className="gatil__pedido">
+              <p><strong>{dayLong.format(new Date(s.startsAt))}</strong>, {hour.format(new Date(s.startsAt))} a {hour.format(new Date(s.endsAt))}</p>
+              <p className="small">{s.title}. {s.free === 1 ? "1 lugar livre" : `${s.free} lugares livres`}</p>
+              <div className="action-row">
+                <Button onClick={() => act(() => client.joinShift(s.id), "Está inscrito. Já pode ver os gatos e as doses desse turno.")}>Inscrever-me neste turno<span className="gn-sr-only">: {dayLong.format(new Date(s.startsAt))}</span></Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -367,13 +403,13 @@ export function GatilResumo() {
       <section className="gatil__resumo" aria-labelledby="painel-gatil">
         <h2 id="painel-gatil">No gatil</h2>
         <HowToJoin phoneMissing={care.phoneMissing} />
-        <a className="gn-btn gn-btn--secondary" href="/ajudar/turnos"><span>Ver turnos no gatil</span></a>
+        <a className="gn-btn gn-btn--primary" href="/conta/gatil"><span>Abrir o meu turno no gatil</span></a>
       </section>
     );
   }
   const pending = care.isToday ? care.during.filter((r) => !r.given).length : 0;
   const facts = [
-    care.shift ? `${care.isToday ? "Turno hoje" : "Próximo turno"}: ${dayLong.format(new Date(care.shift.startsAt))}, ${hour.format(new Date(care.shift.startsAt))}` : "Sem turno nas próximas duas semanas",
+    care.shift ? `${care.isToday ? "Turno hoje" : "Próximo turno"}: ${dayLong.format(new Date(care.shift.startsAt))}, ${hour.format(new Date(care.shift.startsAt))}` : "Sem turno no próximo mês",
     pending > 0 ? (pending === 1 ? "1 dose para dar" : `${pending} doses para dar`) : null,
     care.tasks.open.length > 0 ? (care.tasks.open.length === 1 ? "1 pedido de ajuda" : `${care.tasks.open.length} pedidos de ajuda`) : null,
     care.unread > 0 ? (care.unread === 1 ? "1 notificação nova" : `${care.unread} notificações novas`) : null,

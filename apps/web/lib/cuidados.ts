@@ -25,7 +25,7 @@ import {
   type VisitNote,
   type VolunteerCare,
 } from "@gn/domain";
-import type { Failure, Result } from "./conta";
+import { rememberSignedIn, type Failure, type Result } from "./conta";
 
 /**
  * "No gatil" in the volunteer's own area: the cats of their shift, how to look after each one,
@@ -42,6 +42,8 @@ export interface CuidadosClient {
   giveDose(dose: DoseRef): Promise<Done>;
   cantGive(dose: DoseRef & { comment: string }): Promise<Done>;
   acceptTask(id: string): Promise<Done>;
+  /** Join a gatil shift with the account's own name and mobile number. */
+  joinShift(id: string): Promise<Done>;
   releaseTask(id: string): Promise<Done>;
   addNote(note: { catId: string; text: string; important: boolean }): Promise<Done>;
   markSeen(): Promise<void>;
@@ -89,6 +91,7 @@ function httpClient(): CuidadosClient {
     giveDose: (dose) => call("POST", "/tomas", dose),
     cantGive: (input) => call("POST", "/nao-consigo", input),
     acceptTask: (id) => call("POST", `/tarefas/${encodeURIComponent(id)}/aceitar`),
+    joinShift: (id) => call("POST", `/turnos/${encodeURIComponent(id)}`),
     releaseTask: (id) => call("POST", `/tarefas/${encodeURIComponent(id)}/devolver`),
     addNote: (note) => call("POST", "/notas", note),
     async markSeen() { await call("POST", "/vistas"); },
@@ -100,7 +103,10 @@ function httpClient(): CuidadosClient {
 
 const DEMO_KEY = "gn-cuidados-demo";
 const ACCOUNT_KEY = "gn-conta-demo";
-type DemoState = { doses: Dose[]; tasks: CareTask[]; notes: VisitNote[]; alerts: CareAlert[]; prefs: Record<string, CareNotificationPrefs> };
+type DemoState = {
+  doses: Dose[]; tasks: CareTask[]; notes: VisitNote[]; alerts: CareAlert[]; prefs: Record<string, CareNotificationPrefs>;
+  joined?: { shiftId: string; name: string; phone: string }[];
+};
 
 const newId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`);
 const rui: Author = { name: "Rui Sousa", accountId: "conta-rui" };
@@ -111,8 +117,11 @@ function shiftIso(iso: string, by: number) {
 }
 const delta = () => Math.max(0, Date.now() - Date.parse("2026-10-22T12:00:00.000Z"));
 
-/** Ana (912 000 001) and Rui are on today's gatil shift, João (913 000 002) on next week's. */
-function demoShifts(now: Date): Shift[] {
+/**
+ * Ana (912 000 001) and Rui are on this morning's gatil shift, João (913 000 002) on next week's.
+ * This evening's shift is free, so anyone trying the demo can join it and see the evening doses.
+ */
+function demoShifts(now: Date, joined: DemoState["joined"] = []): Shift[] {
   const today = lisbonNow(now).date;
   const inAWeek = lisbonNow(new Date(now.getTime() + 7 * 86_400_000)).date;
   const signedUpAt = shiftIso(now.toISOString(), -3 * 86_400_000);
@@ -123,8 +132,12 @@ function demoShifts(now: Date): Shift[] {
       { volunteerId: "vol-1", name: "Ana Ribeiro", phone: "912000001", signedUpAt },
       { volunteerId: "vol-2", name: "Rui Sousa", phone: "912000002", signedUpAt },
     ] },
+    { ...base, id: "demo-noite", startsAt: lisbonToUtc(today, "19:30"), endsAt: lisbonToUtc(today, "21:00"), signups: [] },
     { ...base, id: "demo-semana", startsAt: lisbonToUtc(inAWeek, "18:30"), endsAt: lisbonToUtc(inAWeek, "20:30"), signups: [{ volunteerId: "vol-3", name: "João Costa", phone: "913000002", signedUpAt }] },
-  ];
+  ].map((s) => ({
+    ...s,
+    signups: [...s.signups, ...joined.filter((j) => j.shiftId === s.id).map((j) => ({ volunteerId: `demo-${j.phone}`, name: j.name, phone: j.phone, signedUpAt }))],
+  }));
 }
 
 function freshDemo(now: Date): DemoState {
@@ -176,7 +189,7 @@ function demoClient(): CuidadosClient {
     const now = new Date();
     const account = signedIn();
     const state = load(now);
-    const shifts = demoShifts(now);
+    const shifts = demoShifts(now, state.joined);
     return { now, account, state, shifts };
   }
   function view(c: ReturnType<typeof context>) {
@@ -252,6 +265,16 @@ function demoClient(): CuidadosClient {
       save(c.state);
       return ok;
     },
+    async joinShift(id) {
+      const c = context();
+      if (!c.account?.phone) return fail("Para se inscrever aqui, entre com o seu telemóvel.");
+      const shift = c.shifts.find((s) => s.id === id);
+      if (!shift) return fail("Turno não encontrado.");
+      if (shift.signups.some((x) => x.phone === c.account!.phone)) return fail("Já está inscrito neste turno.");
+      c.state.joined = [...(c.state.joined ?? []), { shiftId: id, name: c.account.name, phone: c.account.phone }];
+      save(c.state);
+      return ok;
+    },
     async acceptTask(id) {
       const c = context();
       if (!c.account || !view(c).volunteer) return fail("Esta parte é para quem está inscrito nos turnos do gatil.");
@@ -306,6 +329,19 @@ function demoClient(): CuidadosClient {
 
 /** Lets the header count follow what the person does on the page. */
 export const CUIDADOS_EVENT = "gn-cuidados-change";
+
+/** Demo only: switch this browser's demo session to Ana, who is on this morning's gatil shift. */
+export function tryAsDemoVolunteer() {
+  try {
+    const raw = localStorage.getItem(ACCOUNT_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw) as { accounts: { id: string; name: string }[]; signedIn?: string };
+    const ana = s.accounts.find((a) => a.id === "conta-1");
+    if (!ana) return;
+    localStorage.setItem(ACCOUNT_KEY, JSON.stringify({ ...s, signedIn: ana.id }));
+    rememberSignedIn(ana);
+  } catch { /* storage unavailable */ }
+}
 
 let client: CuidadosClient | undefined;
 export function cuidadosClient(): CuidadosClient {

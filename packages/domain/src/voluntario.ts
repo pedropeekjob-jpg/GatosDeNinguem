@@ -1,7 +1,9 @@
 import type { Cat } from "./content";
 import type { Shift } from "./escalas";
+import { freeSpots } from "./escalas";
 import {
   defaultCarePrefs,
+  isGatilShift,
   groupAlertsByCat,
   isMedicationActive,
   isMuted,
@@ -74,7 +76,14 @@ export function buildVolunteerCare(input: VolunteerCareInput) {
   const { account, now } = input;
   const prefs = input.prefs ?? defaultCarePrefs;
   const duty = volunteerDuty(input.shifts, account.phone, now);
-  const base = { volunteer: duty.isVolunteer, phoneMissing: !account.phone, prefs, today: lisbonNow(now).date };
+  // Gatil shifts with room, so someone who is not on one yet can join from their own page.
+  const isMine = (sh: Shift) => !!account.phone && sh.signups.some((x) => x.phone.replace(/\D/g, "").endsWith(account.phone!.replace(/\D/g, "").slice(-9)));
+  const gatilShifts = input.shifts
+    .filter((sh) => isGatilShift(sh) && sh.endsAt > now.toISOString() && freeSpots(sh) > 0 && !isMine(sh))
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+    .slice(0, 5)
+    .map((sh) => ({ id: sh.id, title: sh.title, startsAt: sh.startsAt, endsAt: sh.endsAt, location: sh.location, free: freeSpots(sh) }));
+  const base = { volunteer: duty.isVolunteer, phoneMissing: !account.phone, prefs, today: lisbonNow(now).date, gatilShifts };
   if (!duty.isVolunteer) {
     return { ...base, shift: null, isToday: false, during: [] as CareRoundItem[], rest: [] as CareRoundItem[], cats: [] as CatGuide[], transports: [] as Transport[], tasks: { open: [] as CareTask[], mine: [] as CareTask[] }, notifications: [] as NotificationGroup[], unread: 0 };
   }

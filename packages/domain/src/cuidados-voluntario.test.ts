@@ -16,7 +16,7 @@ describe("volunteerDuty", () => {
     expect(d.shift?.id).toBe("hoje");
   });
 
-  it("shows the next shift ahead of time, but only within two weeks", () => {
+  it("shows the next shift ahead of time, but only within a month", () => {
     const soon = shift({ id: "sabado", startsAt: "2026-11-14T10:00:00.000Z", endsAt: "2026-11-14T12:00:00.000Z", signups: [ana] });
     const far = shift({ id: "dezembro", startsAt: "2026-12-12T10:00:00.000Z", endsAt: "2026-12-12T12:00:00.000Z", signups: [ana] });
     expect(volunteerDuty([soon], "912000001", now)).toMatchObject({ isToday: false, shift: { id: "sabado" } });
