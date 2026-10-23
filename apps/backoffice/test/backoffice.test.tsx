@@ -109,6 +109,17 @@ describe("Escalas", () => {
     await user.click(await screen.findByRole("tab", { name: "Padrinhos" }));
     expect(await screen.findByText(/1 padrinho espera notícias/)).toBeInTheDocument();
   });
+
+  it("lists people who asked to be a foster family, and the team marks the call", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/escalas");
+    await user.click(await screen.findByRole("tab", { name: "Famílias temporárias" }));
+    expect(await screen.findByText("1 pessoa quer ser família temporária")).toBeInTheDocument();
+    expect(screen.getByText(/gatinhos bebés, durante um ou dois meses/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Já liguei a Sofia Martins" }));
+    await waitFor(async () => expect((await api.fosterApplications())[0]!.status).toBe("contactada"));
+    expect(await screen.findByText("Contactada")).toBeInTheDocument();
+  });
 });
 
 describe("Gatos", () => {

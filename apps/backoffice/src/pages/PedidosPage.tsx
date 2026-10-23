@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { fosterApplicationStatusLabel, fosterCanHostLabel, fosterHowLongLabel } from "@gn/domain";
 import { Notice } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
 
@@ -8,6 +9,7 @@ export function PedidosPage() {
   const api = useApi();
   const adoptions = useQuery({ queryKey: ["interests"], queryFn: () => api.adoptionInterests() });
   const sponsors = useQuery({ queryKey: ["sponsors"], queryFn: () => api.sponsorships() });
+  const fosters = useQuery({ queryKey: ["foster-applications"], queryFn: () => api.fosterApplications() });
   const partners = useQuery({ queryKey: ["partner-applications"], queryFn: () => api.partnerApplications() });
   return (
     <div className="gn-stack gn-stack--l">
@@ -35,6 +37,20 @@ export function PedidosPage() {
             <tbody>
               {sponsors.data?.filter((s) => s.pending).map((s) => (
                 <tr key={s.id}><td>{s.startDate}</td><td><strong>{s.sponsorName}</strong><br />{s.email}{s.phone ? <><br />{s.phone}</> : null}</td><td>{s.catSlug}</td><td>{s.monthlyAmount.toLocaleString("pt-PT", { style: "currency", currency: "EUR" })}</td><td>{s.message ?? "—"}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section className="gn-stack gn-stack--s">
+        <h2>Querem ser família temporária</h2>
+        <p className="small muted">Marque como correu em <a href="/escalas">Escalas</a>, separador Famílias temporárias.</p>
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th scope="col">Quando</th><th scope="col">Pessoa</th><th scope="col">Pode acolher</th><th scope="col">Estado</th></tr></thead>
+            <tbody>
+              {fosters.data?.filter((f) => f.status !== "arquivada").map((f) => (
+                <tr key={f.id}><td>{when(f.receivedAt)}</td><td><strong>{f.name}</strong><br />{f.phone}<br /><span className="small muted">{f.town}</span></td><td>{fosterCanHostLabel[f.canHost]}<br /><span className="small muted">{fosterHowLongLabel[f.howLong]}</span></td><td>{fosterApplicationStatusLabel[f.status]}</td></tr>
               ))}
             </tbody>
           </table>

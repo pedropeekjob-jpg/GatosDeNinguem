@@ -57,7 +57,7 @@ export function Discover({ cats }: { cats: MatchableCat[] }) {
         actions={
           <>
             {ranked.length > 0 ? <Button onClick={() => setIndex(0)}>Ver outra vez</Button> : null}
-            <Button href="/ajudar#familia-temporaria" variant="secondary">Ser família temporária</Button>
+            <Button href="/ajudar/familia-temporaria" variant="secondary">Ser família temporária</Button>
             <Button variant="quiet" onClick={() => { setStep(0); setIndex(0); }}>Mudar respostas</Button>
           </>
         }

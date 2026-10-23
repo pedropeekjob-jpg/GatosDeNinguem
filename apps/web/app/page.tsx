@@ -1,9 +1,10 @@
 import { AnimatedLogo, Button, Carousel, Container } from "@gn/ui";
 import { CatRail } from "@/components/CatRail";
 import { FeaturedCat } from "@/components/FeaturedCat";
+import { HappyEndings } from "@/components/HappyEndings";
 import { PatinhasTeaser } from "@/components/PatinhasTeaser";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
-import { getPage, listCats } from "@/lib/content";
+import { getPage, listCats, listHappyEndings } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -13,7 +14,7 @@ export async function generateMetadata() {
 
 export default async function HomePage() {
   // Kept short on purpose: a welcome with the three main paths, and one cat to meet. Everything else has its own page.
-  const [page, cats] = await Promise.all([getPage("/"), listCats("para-adocao")]);
+  const [page, cats, happy] = await Promise.all([getPage("/"), listCats("para-adocao"), listHappyEndings()]);
   // Gato da semana: rotates weekly, favouring cats that wait longest for attention (seniors first).
   const week = Math.floor(Date.now() / (7 * 24 * 3600 * 1000));
   const ordered = [...cats].sort((a, b) => b.ageYears - a.ageYears);
@@ -59,6 +60,9 @@ export default async function HomePage() {
 
       {/* Every cat looking for a home, one swipe away; the cat of the week has its own section below. */}
       <CatRail cats={ordered.filter((c) => c !== featured)} total={cats.length} />
+
+      {/* Proof that it works: the newest adoptions, right after the cats still waiting. */}
+      <HappyEndings items={happy} />
 
       {featured ? <FeaturedCat cat={featured} /> : null}
     </>

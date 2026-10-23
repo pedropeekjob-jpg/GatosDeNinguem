@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { Button } from "./Button";
 
 /** count: a small number next to the label, e.g. unread news. */
-export type NavItem = { href: string; label: string; icon?: ReactNode; count?: number; countLabel?: string };
+/** wideOnly: shown in the top menu on wide screens but left out of the phone tab bar, which holds five items at most. */
+export type NavItem = { href: string; label: string; icon?: ReactNode; count?: number; countLabel?: string; wideOnly?: boolean };
 
 function isCurrent(itemHref: string, currentPath: string) {
   if (itemHref === "/") return currentPath === "/";
@@ -31,7 +32,7 @@ export function SiteHeader({ brand, homeHref, items, currentPath, urgent, tools,
         <nav className="gn-nav" aria-label="Menu principal">
           <ul className="gn-nav__list">
           {items.map((item) => (
-            <li key={item.href}>
+            <li key={item.href} className={item.wideOnly ? "gn-nav__item--wide" : undefined}>
               <a href={item.href} className="gn-nav__link" aria-current={isCurrent(item.href, currentPath) ? "page" : undefined}>
                 {item.icon ? <span aria-hidden="true" className="gn-nav__icon">{item.icon}</span> : null}
                 <span className="gn-nav__label">{item.label}</span>

@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { cuidadosHttp, type CuidadosApi } from "./cuidadosApi";
 import { patinhasHttp, type PatinhasApi } from "./patinhasApi";
-import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, WeeklyRule } from "./types";
+import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, StoredFosterApplication, WeeklyRule } from "./types";
 
 export type AuditItem = { id: string; kind: "pagina" | "gato" | "noticia"; label: string; path: string; title: string; description: string; noindex: boolean };
 export type SeoTarget = { kind: AuditItem["kind"]; id: string };
@@ -17,6 +17,8 @@ export interface Api extends PatinhasApi, CuidadosApi {
   markPresent(shiftId: string, volunteerId: string): Promise<Shift>;
   fosterPlacements(): Promise<FosterPlacement[]>;
   saveFosterPlacement(p: Partial<FosterPlacement> & Omit<FosterPlacement, "id">): Promise<FosterPlacement>;
+  fosterApplications(): Promise<StoredFosterApplication[]>;
+  setFosterApplicationStatus(id: string, status: StoredFosterApplication["status"]): Promise<StoredFosterApplication>;
   sponsorships(): Promise<(Sponsorship & { needsUpdate: boolean })[]>;
   saveSponsorship(s: Partial<Sponsorship> & Omit<Sponsorship, "id">): Promise<Sponsorship>;
 
@@ -74,6 +76,8 @@ export function httpApi(baseUrl: string, token: string): Api {
     markPresent: (id, vid) => call("POST", `/escalas/turnos/${id}/inscricoes/${vid}/presenca`),
     fosterPlacements: () => call("GET", "/escalas/familias-temporarias"),
     saveFosterPlacement: (p) => call("POST", "/escalas/familias-temporarias", p),
+    fosterApplications: () => call("GET", "/escalas/familias-temporarias/candidaturas"),
+    setFosterApplicationStatus: (id, status) => call("PATCH", `/escalas/familias-temporarias/candidaturas/${id}`, { status }),
     sponsorships: () => call("GET", "/escalas/padrinhos"),
     saveSponsorship: (s) => call("POST", "/escalas/padrinhos", s),
     cats: () => call("GET", "/cats"),

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { freeSpots, shiftTypeLabel, type ShiftType } from "@gn/domain";
+import { fosterApplicationStatusLabel, fosterCanHostLabel, fosterHowLongLabel, freeSpots, shiftTypeLabel, type ShiftType } from "@gn/domain";
 import { AnimatedLogo, Badge, Button, Checkbox, ChoiceList, Notice, TextField } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
 import { addDays, dayLabel, lisbonDate, lisbonToUtc, timeLabel, weekRange, weekStart } from "../lib/dates";
-import type { Shift, Sponsorship } from "../lib/types";
+import type { Shift, Sponsorship, StoredFosterApplication } from "../lib/types";
 
 type Tab = "calendario" | "novo" | "familias" | "padrinhos";
 
@@ -203,6 +203,8 @@ function Fosters() {
 
   return (
     <div className="gn-stack gn-stack--m">
+      <FosterApplications />
+      <h2>Gatos em família temporária</h2>
       {list.data?.map((p) => (
         <article key={p.id} className="shift">
           <div className="shift__head">
@@ -223,6 +225,45 @@ function Fosters() {
         <div><Button type="submit" disabled={!catSlug || !startDate}>Publicar pedido</Button></div>
       </form>
     </div>
+  );
+}
+
+
+/** People who asked on the site to be a foster family. The team calls, then marks how it went. */
+function FosterApplications() {
+  const api = useApi();
+  const qc = useQueryClient();
+  const list = useQuery({ queryKey: ["foster-applications"], queryFn: () => api.fosterApplications() });
+  const move = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: StoredFosterApplication["status"] }) => api.setFosterApplicationStatus(id, status),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["foster-applications"] }),
+  });
+  const open = (list.data ?? []).filter((a) => a.status !== "arquivada");
+  return (
+    <section className="gn-stack gn-stack--s" aria-labelledby="pedidos-fat">
+      <h2 id="pedidos-fat">{open.length === 1 ? "1 pessoa quer ser família temporária" : `${open.length} pessoas querem ser família temporária`}</h2>
+      <p className="small muted">Pedidos feitos no site. Ligue à pessoa, combine uma visita se for preciso e marque como correu.</p>
+      {list.isError ? <Notice tone="error" title="Erro">{errorMessage(list.error)}</Notice> : null}
+      <ul className="gn-stack gn-stack--s">
+        {open.map((a) => (
+          <li key={a.id} className="gn-card"><div className="gn-card__body gn-stack gn-stack--s">
+            <div className="shift__head">
+              <p><strong>{a.name}</strong>, {a.town}</p>
+              <Badge tone={a.status === "nova" ? "warning" : a.status === "aprovada" ? "success" : "info"}>{fosterApplicationStatusLabel[a.status]}</Badge>
+            </div>
+            <p className="small">{[a.phone, a.email].filter(Boolean).join(" · ")} · pedido a {lisbonDate(a.receivedAt)}</p>
+            <p className="small">Pode acolher: {fosterCanHostLabel[a.canHost].toLowerCase()}, durante {fosterHowLongLabel[a.howLong].toLowerCase()}.{a.otherAnimals ? ` Outros animais: ${a.otherAnimals}.` : ""}</p>
+            {a.message ? <p className="small">“{a.message}”</p> : null}
+            <div className="action-row">
+              {a.status === "nova" ? <Button onClick={() => move.mutate({ id: a.id, status: "contactada" })}>Já liguei<span className="gn-sr-only"> a {a.name}</span></Button> : null}
+              {a.status !== "aprovada" ? <Button variant="secondary" onClick={() => move.mutate({ id: a.id, status: "aprovada" })}>Aprovar<span className="gn-sr-only"> {a.name}</span></Button> : null}
+              <Button variant="secondary" onClick={() => move.mutate({ id: a.id, status: "arquivada" })}>Arquivar<span className="gn-sr-only"> {a.name}</span></Button>
+            </div>
+          </div></li>
+        ))}
+      </ul>
+      {move.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(move.error)}</Notice> : null}
+    </section>
   );
 }
 

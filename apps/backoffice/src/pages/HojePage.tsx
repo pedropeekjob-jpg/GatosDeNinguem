@@ -13,6 +13,7 @@ export function HojePage({ today = new Date() }: { today?: Date }) {
   const interests = useQuery({ queryKey: ["interests"], queryFn: () => api.adoptionInterests() });
   const sponsors = useQuery({ queryKey: ["sponsors"], queryFn: () => api.sponsorships() });
   const fosters = useQuery({ queryKey: ["fosters"], queryFn: () => api.fosterPlacements() });
+  const fosterAsks = useQuery({ queryKey: ["foster-applications"], queryFn: () => api.fosterApplications() });
   const now = lisbonNow(today);
   const round = useQuery({ queryKey: ["round", now.date], queryFn: () => api.round(now.date) });
   const { unread } = useUnreadAlerts();
@@ -36,6 +37,7 @@ export function HojePage({ today = new Date() }: { today?: Date }) {
         <StatTile value={open.reduce((n, s) => n + freeSpots(s), 0)} label="vagas por preencher nos próximos 7 dias" />
         <StatTile value={interests.data?.length ?? "…"} label="pedidos para conhecer gatos" />
         <StatTile value={needFamily.length} label="gatos à espera de família temporária" />
+        <StatTile value={fosterAsks.data?.filter((a) => a.status === "nova").length ?? "…"} label="pessoas que querem ser família temporária" />
         <StatTile value={sponsors.data?.filter((s) => s.pending).length ?? "…"} label="pedidos para apadrinhar gatos" />
         <StatTile value={sponsors.data?.filter((s) => s.needsUpdate).length ?? "…"} label="padrinhos à espera de notícias" />
       </div>

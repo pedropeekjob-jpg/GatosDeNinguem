@@ -1,7 +1,7 @@
-import { Button, Card, Grid, Section } from "@gn/ui";
+import { Button, Grid, Section } from "@gn/ui";
+import { HappyEndingCard } from "@/components/HappyEndingCard";
 import { PageHero } from "@/components/PageHero";
 import { getPage, listHappyEndings } from "@/lib/content";
-import { formatDate } from "@/lib/format";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -18,16 +18,7 @@ export default async function HappyEndingsPage() {
       </PageHero>
       <Section>
         <Grid>
-          {items.map(({ cat, happyEnding }) => {
-            const photo = happyEnding?.photo ?? cat.photos[0]!;
-            const who = happyEnding?.adopterName ? `${happyEnding.adopterName}${happyEnding.adopterTown ? `, ${happyEnding.adopterTown}` : ""}` : undefined;
-            return (
-              <Card key={cat.id} titleAs="h2" title={cat.name} href={`/adotar/${cat.slug}`} media={{ src: photo.url, alt: photo.alt }} eyebrow={cat.adoptedAt ? `Adotad${cat.sex === "femea" ? "a" : "o"} em ${formatDate(cat.adoptedAt)}` : undefined}>
-                <p>“{happyEnding?.text ?? cat.summary}”</p>
-                {who ? <p className="small muted">{who}</p> : null}
-              </Card>
-            );
-          })}
+          {items.map((item) => <HappyEndingCard key={item.cat.id} item={item} titleAs="h2" />)}
         </Grid>
       </Section>
       <Section tone="soft" heading="Adotou um dos nossos gatos?" intro="Envie-nos uma fotografia e umas palavras. Os outros gatos agradecem: as histórias felizes ajudam-nos a encontrar mais famílias.">

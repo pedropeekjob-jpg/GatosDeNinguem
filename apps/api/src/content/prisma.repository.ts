@@ -1,7 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
 import { careNotificationPrefsSchema, careTaskSchema, type CareNotificationPrefs, type CareTask } from "@gn/domain";
 import { appointmentSchema, careAlertSchema, catCareSchema, doseSchema, medicationSchema, visitNoteSchema, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
-import { fosterPlacementSchema, shiftSchema, sponsorshipSchema, type FosterPlacement, type Shift, type Sponsorship } from "@gn/domain";
+import { fosterApplicationSchema, fosterApplicationStatus, fosterPlacementSchema, shiftSchema, sponsorshipSchema, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
+import { z } from "zod";
 import { adoptionInterestSchema, catSchema, impactSchema, pageSchema, partnerApplicationSchema, partnerSchema, postSchema, seoSettingsSchema, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
@@ -99,6 +100,15 @@ export class PrismaContentRepository implements ContentRepository {
     const data = { status: p.status, catSlug: p.catSlug, data: p as object };
     await this.db.fosterPlacement.upsert({ where: { id: p.id }, create: { id: p.id, ...data }, update: data });
     return p;
+  }
+  async listFosterApplications() {
+    const rows = await this.db.fosterApplication.findMany({ orderBy: { receivedAt: "desc" } });
+    return rows.map((r) => ({ ...fosterApplicationSchema.parse(r.data), id: r.id, receivedAt: r.receivedAt.toISOString(), status: z.enum(fosterApplicationStatus).parse(r.status) }));
+  }
+  async saveFosterApplication(a: StoredFosterApplication) {
+    const data = { receivedAt: new Date(a.receivedAt), status: a.status, data: a as object };
+    await this.db.fosterApplication.upsert({ where: { id: a.id }, create: { id: a.id, ...data }, update: data });
+    return a;
   }
   async listSponsorships() { return (await this.db.sponsorship.findMany()).map((r) => sponsorshipSchema.parse(r.data)); }
   async saveSponsorship(x: Sponsorship) {

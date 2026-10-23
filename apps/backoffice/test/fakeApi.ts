@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import {
-  checkIn, expandWeeklyRule, seedCats, seedFosterPlacements, seedImpact, seedPages, seedPosts, seedRedirects, seedSeoSettings, seedShifts, seedSponsorships, signUp,
+  checkIn, expandWeeklyRule, seedCats, seedFosterApplications, seedFosterPlacements, seedImpact, seedPages, seedPosts, seedRedirects, seedSeoSettings, seedShifts, seedSponsorships, signUp,
   type Shift,
 } from "@gn/domain";
 import {
@@ -17,6 +17,7 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
   let cats = structuredClone(seedCats);
   let pages = structuredClone(seedPages);
   let redirects = structuredClone(seedRedirects);
+  const fosterApplications = structuredClone(seedFosterApplications);
   let n = 0;
   const id = () => `novo-${++n}`;
 
@@ -69,6 +70,12 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
     markPresent: async (sid, vid) => { shifts = shifts.map((x) => (x.id === sid ? checkIn(x, vid, now) : x)); return shifts.find((x) => x.id === sid)!; },
     fosterPlacements: async () => seedFosterPlacements,
     saveFosterPlacement: async (p) => ({ ...p, id: p.id ?? id() }),
+    fosterApplications: async () => fosterApplications,
+    setFosterApplicationStatus: async (aid, status) => {
+      const a = fosterApplications.find((x) => x.id === aid)!;
+      a.status = status;
+      return a;
+    },
     sponsorships: async () => seedSponsorships.map((s) => ({ ...s, needsUpdate: s.id === "sp-1" })),
     saveSponsorship: async (s) => ({ ...s, id: s.id ?? id() }),
     cats: async () => cats,

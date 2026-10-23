@@ -3,6 +3,8 @@ import {
   cancelSignUp,
   checkIn,
   expandWeeklyRule,
+  fosterApplicationSchema,
+  fosterApplicationStatus,
   fosterPlacementSchema,
   freeSpots,
   openNeeds,
@@ -18,6 +20,7 @@ import {
   type Shift,
 } from "@gn/domain";
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
@@ -161,6 +164,32 @@ export class EscalasController {
   async savePlacement(@Body() body: unknown) {
     const input = parseBody(fosterPlacementSchema.extend({ id: fosterPlacementSchema.shape.id.optional() }), body);
     return this.repo.saveFosterPlacement({ ...input, id: input.id ?? randomUUID() });
+  }
+
+  /** "Quero ser família temporária" form. Public; the team calls back. A hidden "website_url" field catches spam bots. */
+  @Post("familias-temporarias/candidatura")
+  @HttpCode(201)
+  async applyToFoster(@Body() body: unknown) {
+    if (body && typeof body === "object" && (body as Record<string, unknown>).website_url) return { ok: true };
+    const input = parseBody(fosterApplicationSchema, body);
+    await this.repo.saveFosterApplication({ ...input, id: randomUUID(), receivedAt: this.now().toISOString(), status: "nova" });
+    return { ok: true };
+  }
+
+  @Get("familias-temporarias/candidaturas")
+  @UseGuards(AdminGuard)
+  fosterApplications() {
+    return this.repo.listFosterApplications();
+  }
+
+  /** The team moves a request along: contactada, aprovada or arquivada. */
+  @Patch("familias-temporarias/candidaturas/:id")
+  @UseGuards(AdminGuard)
+  async updateFosterApplication(@Param("id") id: string, @Body() body: unknown) {
+    const { status } = parseBody(z.object({ status: z.enum(fosterApplicationStatus) }), body);
+    const current = (await this.repo.listFosterApplications()).find((a) => a.id === id);
+    if (!current) throw new NotFoundException("Pedido não encontrado.");
+    return this.repo.saveFosterApplication({ ...current, status });
   }
 
   /** "Quero apadrinhar" form. Public; saved as a pending sponsorship the team confirms. A hidden "website_url" field catches spam bots. */
