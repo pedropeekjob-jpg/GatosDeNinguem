@@ -3,9 +3,10 @@ import { InMemoryContentRepository } from "./content/in-memory.repository";
 import type { ContentRepository } from "./content/repository";
 import type { PhotoStore } from "./media/photo-store";
 import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/repository";
+import { stripeSepaDebit } from "./padrinhos/debit";
 import { metaPublishers, resendNewsletterPublisher, tiktokPublisher } from "./promocao/publishers";
 import { PromotionService } from "./promocao/promotion.service";
-import { lisbonNow, lisbonToUtc, type Account, type CareAlert, type Contact } from "@gn/domain";
+import { formatFeatures, lisbonNow, lisbonToUtc, parseFeatures, type Account, type CareAlert, type Contact } from "@gn/domain";
 
 async function repositories(): Promise<{ repository: ContentRepository; patinhas: PatinhasRepository; photoStore?: PhotoStore }> {
   if (!process.env.DATABASE_URL) {
@@ -80,6 +81,29 @@ async function notifyVolunteers(to: Account[], alert: CareAlert) {
   }
 }
 
+/** News about a godparent's cat, by email through Resend (the same key as sign-in codes). */
+async function sendSponsorEmail(to: { email: string; name: string }, message: { subject: string; text: string }) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    console.warn(`[padrinhos] ${message.subject} (to ${to.email}, no email provider configured)`);
+    return;
+  }
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+    body: JSON.stringify({ from: process.env.SPONSOR_EMAIL_FROM ?? process.env.LOGIN_EMAIL_FROM ?? "Gatos de Ninguém <padrinhos@gatosdeninguem.pt>", to: [to.email], subject: message.subject, text: message.text }),
+  });
+  if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
+}
+
+/** Monthly automatic debit for godparents: SEPA Direct Debit through Stripe once both keys are set (see docs/debito-direto.md). */
+function sponsorDebit() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secretKey || !webhookSecret) return undefined;
+  return stripeSepaDebit({ secretKey, webhookSecret });
+}
+
 async function revalidateSite(what: { type: string; path?: string }) {
   const url = process.env.WEB_REVALIDATE_URL;
   if (!url) return;
@@ -112,14 +136,21 @@ function promotionPublishers() {
 const adminToken = process.env.ADMIN_TOKEN;
 if (!adminToken || adminToken.length < 16) throw new Error("Set ADMIN_TOKEN (16+ characters) before starting the API.");
 
+// Optional parts, all off unless named, e.g. FEATURES=patinhas,trocas,amigo (see docs/funcionalidades.md).
+const features = parseFeatures(process.env.FEATURES);
+console.log(`Features switched on: ${formatFeatures(features) || "none"}`);
+
 const options = {
   ...(await repositories()),
+  features,
   sendLoginCode,
   // Demo without a database: the code is shown on screen so anyone can try signing in.
   exposeLoginCodes: !process.env.DATABASE_URL,
   adminToken,
   onContentChanged: revalidateSite,
   notifyVolunteers,
+  sendSponsorEmail,
+  sponsorDebit: sponsorDebit(),
   corsOrigins: process.env.CORS_ORIGINS?.split(",").map((s) => s.trim()),
   uploadDir: process.env.UPLOAD_DIR,
   // Render sets RENDER_EXTERNAL_URL to the service's public https address.

@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { firstName, monthLabel, type EarnAction } from "@gn/domain";
 import { Badge, Button, Checkbox, Notice, ProgressMeter, TextField } from "@gn/ui";
 import { contaClient, type MeuPainel } from "@/lib/conta";
+import { AfilhadosResumo } from "./Afilhados";
 import { GatilResumo } from "./NoGatil";
 
 const n = new Intl.NumberFormat("pt-PT");
@@ -12,28 +13,55 @@ const statusTone = { ativa: "success", usada: "neutral", cancelada: "neutral" } 
 
 type Perk = MeuPainel["perks"][number];
 
-/** "O meu painel": Patinhas, level, perks to take, badges, the month's challenge and how to earn more. */
+/**
+ * "O meu painel": Patinhas, level, perks to take, badges, the month's challenge and how to earn more.
+ * While Patinhas are switched off it is just the gatil card, a greeting and the account settings.
+ */
 export function Painel({ painel, welcome, onChange, onSignedOut }: { painel: MeuPainel; welcome?: boolean; onChange: () => void; onSignedOut: () => void }) {
+  const { account, features } = painel;
+
+  if (!features?.patinhas) {
+    return (
+      <div className="gn-stack gn-stack--l painel">
+        {welcome ? <Notice tone="success" title={`Bem-vindo, ${firstName(account.name)}!`}>A sua conta está criada.</Notice> : null}
+        <GatilResumo />
+        <section className="painel__resumo" aria-labelledby="painel-ola">
+          <h2 id="painel-ola">Olá, {firstName(account.name)}!</h2>
+          <p>Obrigado por ajudar os gatos.</p>
+          <div className="action-row">
+            <Button href="/ajudar/turnos">Ver turnos com vagas</Button>
+            <Button href="/ajudar" variant="secondary">Outras formas de ajudar</Button>
+          </div>
+        </section>
+        <Settings painel={painel} onSaved={onChange} onSignedOut={onSignedOut} />
+      </div>
+    );
+  }
+  return <PainelPatinhas painel={painel} welcome={welcome} onChange={onChange} onSignedOut={onSignedOut} />;
+}
+
+function PainelPatinhas({ painel, welcome, onChange, onSignedOut }: { painel: MeuPainel; welcome?: boolean; onChange: () => void; onSignedOut: () => void }) {
   const client = contaClient();
-  const { account, level, next } = painel;
+  const { account, level, next, features } = painel;
   const earnedBadges = painel.badges.filter((b) => b.earned).length;
 
   return (
     <div className="gn-stack gn-stack--l painel">
       {welcome ? (
         <Notice tone="success" title={`Bem-vindo, ${firstName(account.name)}! Já tem ${painel.earned} Patinhas.`}>
-          Ganhou-as por criar a conta. Veja abaixo como ganhar mais e o que pode trocar.
+          Ganhou-as por criar a conta. Veja abaixo como ganhar mais{features.trocas ? " e o que pode trocar" : ""}.
         </Notice>
       ) : null}
 
       <GatilResumo />
+      <AfilhadosResumo />
 
       <section className="painel__resumo" aria-labelledby="painel-ola">
         <h2 id="painel-ola">Olá, {firstName(account.name)}!</h2>
         <div className="painel__numeros">
           <p className="painel__saldo">
             <span className="painel__saldo-valor">{n.format(painel.balance)}</span>
-            <span>Patinhas para trocar</span>
+            <span>{features.trocas ? "Patinhas para trocar" : "Patinhas"}</span>
           </p>
           <p className="painel__nivel">
             <span className="painel__nivel-num">Nível {level.level}</span>
@@ -58,17 +86,19 @@ export function Painel({ painel, welcome, onChange, onSignedOut }: { painel: Meu
         <p className="small muted">Ao nível {level.level}: {level.reward}.</p>
       </section>
 
-      <section className="gn-stack gn-stack--m" aria-labelledby="painel-trocar">
-        <h2 id="painel-trocar">Trocar Patinhas nos parceiros</h2>
-        {painel.perks.length === 0 ? <p>Ainda não há vantagens para trocar. Volte em breve.</p> : (
-          <ul className="painel__lista">
-            {painel.perks.map((p) => <PerkRow key={`${p.partnerId}-${p.perk.id}`} item={p} balance={painel.balance} onDone={onChange} />)}
-          </ul>
-        )}
-        <p className="small muted"><a href="/parceiros">Conheça todos os parceiros</a></p>
-      </section>
+      {features.trocas ? (
+        <section className="gn-stack gn-stack--m" aria-labelledby="painel-trocar">
+          <h2 id="painel-trocar">Trocar Patinhas nos parceiros</h2>
+          {painel.perks.length === 0 ? <p>Ainda não há vantagens para trocar. Volte em breve.</p> : (
+            <ul className="painel__lista">
+              {painel.perks.map((p) => <PerkRow key={`${p.partnerId}-${p.perk.id}`} item={p} balance={painel.balance} onDone={onChange} />)}
+            </ul>
+          )}
+          <p className="small muted"><a href="/parceiros">Conheça todos os parceiros</a></p>
+        </section>
+      ) : null}
 
-      {painel.redemptions.length > 0 ? (
+      {features.trocas && painel.redemptions.length > 0 ? (
         <section className="gn-stack gn-stack--m" aria-labelledby="painel-trocas">
           <h2 id="painel-trocas">As suas trocas</h2>
           <ul className="painel__lista">
@@ -76,7 +106,7 @@ export function Painel({ painel, welcome, onChange, onSignedOut }: { painel: Meu
               <li key={r.id} className="painel__linha">
                 <div>
                   <p><strong>{r.partnerName}</strong>: {r.perkDescription}</p>
-                  <p className="small muted">{day.format(new Date(r.createdAt))} · {r.cost} Patinhas</p>
+                  <p className="small muted"><time dateTime={r.createdAt}>{day.format(new Date(r.createdAt))}</time> · {r.cost} Patinhas</p>
                 </div>
                 <div className="painel__linha-fim">
                   {r.status === "ativa" ? <span className="codigo" aria-label={`Código ${r.code.split("").join(" ")}`}>{r.code}</span> : null}
@@ -137,7 +167,7 @@ export function Painel({ painel, welcome, onChange, onSignedOut }: { painel: Meu
             <li key={e.id} className="painel__linha">
               <div>
                 <p>{e.label}{e.action === "turno-hora" && e.quantity > 1 ? ` (${n.format(e.quantity)} horas)` : ""}</p>
-                <p className="small muted">{day.format(new Date(e.at))}</p>
+                <p className="small muted"><time dateTime={e.at}>{day.format(new Date(e.at))}</time></p>
               </div>
               <strong className={e.points < 0 ? "painel__pontos painel__pontos--menos" : "painel__pontos"}>{e.points > 0 ? "+" : ""}{n.format(e.points)}</strong>
             </li>
@@ -244,14 +274,16 @@ function Settings({ painel, onSaved, onSignedOut }: { painel: MeuPainel; onSaved
       <p className="muted">{[account.email, account.phone].filter(Boolean).join(" · ")}</p>
       <form className="gn-stack gn-stack--m conta-form" onSubmit={save} noValidate>
         <TextField id="conta-editar-nome" label="O seu nome" autoComplete="name" value={name} onChange={(e) => { setName(e.target.value); setSaved(false); }} error={errors.name} />
-        <Checkbox
-          id="conta-mural"
-          label="Mostrar o meu nome no mural de agradecimentos"
-          hint="A partir do nível 2. Só aparece o primeiro nome, ou a alcunha que escolher."
-          checked={showOnWall}
-          onChange={(v) => { setShowOnWall(v); setSaved(false); }}
-        />
-        {showOnWall ? (
+        {painel.features?.patinhas ? (
+          <Checkbox
+            id="conta-mural"
+            label="Mostrar o meu nome no mural de agradecimentos"
+            hint="A partir do nível 2. Só aparece o primeiro nome, ou a alcunha que escolher."
+            checked={showOnWall}
+            onChange={(v) => { setShowOnWall(v); setSaved(false); }}
+          />
+        ) : null}
+        {painel.features?.patinhas && showOnWall ? (
           <TextField id="conta-alcunha" label="Alcunha no mural (opcional)" hint="Por exemplo: Ana dos Gatos" value={nickname} onChange={(e) => { setNickname(e.target.value); setSaved(false); }} error={errors.nickname} />
         ) : null}
         <div className="action-row">
@@ -265,7 +297,7 @@ function Settings({ painel, onSaved, onSignedOut }: { painel: MeuPainel; onSaved
       </div>
       {confirmDelete ? (
         <Notice tone="warning" title="Quer mesmo apagar a sua conta?">
-          <p>Apagamos o seu nome, contacto e Patinhas. Não dá para desfazer.</p>
+          <p>{painel.features?.patinhas ? "Apagamos o seu nome, contacto e Patinhas." : "Apagamos o seu nome e contacto."} Não dá para desfazer.</p>
           <div className="action-row">
             <Button variant="urgent" onClick={async () => { await client.deleteAccount(); onSignedOut(); }}>Sim, apagar</Button>
             <Button variant="quiet" onClick={() => setConfirmDelete(false)}>Não, manter</Button>

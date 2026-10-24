@@ -1,7 +1,10 @@
 import { createContext, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { noFeatures, type FeatureFlags } from "@gn/domain";
 import { cuidadosHttp, type CuidadosApi } from "./cuidadosApi";
 import { lojaHttp, type LojaApi } from "./lojaApi";
 import { patinhasHttp, type PatinhasApi } from "./patinhasApi";
+import type { Author, SponsorLetter, SponsorLetterInput } from "@gn/domain";
 import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Promotion, PromotionChannel, PromotionEdit, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, StoredFosterApplication, WeeklyRule } from "./types";
 
 export type AuditItem = { id: string; kind: "pagina" | "gato" | "noticia"; label: string; path: string; title: string; description: string; noindex: boolean };
@@ -12,6 +15,8 @@ export type PromotionChannelInfo = { channel: PromotionChannel; label: string; r
 
 /** Everything the back office can ask the API. Tests pass a fake implementation. */
 export interface Api extends PatinhasApi, CuidadosApi, LojaApi {
+  /** Optional parts switched on in the API (FEATURES setting). */
+  features(): Promise<FeatureFlags>;
   shifts(range: { from: string; to: string }): Promise<Shift[]>;
   createShift(input: ShiftInput): Promise<Shift>;
   createWeekly(rule: WeeklyRule): Promise<{ created: number }>;
@@ -25,6 +30,9 @@ export interface Api extends PatinhasApi, CuidadosApi, LojaApi {
   setFosterApplicationStatus(id: string, status: StoredFosterApplication["status"]): Promise<StoredFosterApplication>;
   sponsorships(): Promise<(Sponsorship & { needsUpdate: boolean })[]>;
   saveSponsorship(s: Partial<Sponsorship> & Omit<Sponsorship, "id">): Promise<Sponsorship>;
+  sponsorLetters(catSlug?: string): Promise<SponsorLetter[]>;
+  /** Goes to every godparent of the cat: on their page on the site, and by email. */
+  sendSponsorLetter(input: SponsorLetterInput & { by: Author }): Promise<{ letter: SponsorLetter; sponsors: number; emailed: number }>;
 
   cats(): Promise<Cat[]>;
   createCat(input: CatInput): Promise<Cat>;
@@ -88,6 +96,8 @@ export function httpApi(baseUrl: string, token: string): Api {
     setFosterApplicationStatus: (id, status) => call("PATCH", `/escalas/familias-temporarias/candidaturas/${id}`, { status }),
     sponsorships: () => call("GET", "/escalas/padrinhos"),
     saveSponsorship: (s) => call("POST", "/escalas/padrinhos", s),
+    sponsorLetters: (catSlug) => call("GET", `/escalas/padrinhos/novidades${catSlug ? `?gato=${encodeURIComponent(catSlug)}` : ""}`),
+    sendSponsorLetter: (input) => call("POST", "/escalas/padrinhos/novidades", input),
     cats: () => call("GET", "/cats"),
     createCat: (input) => call("POST", "/cats", input),
     updateCat: (id, changes) => call("PATCH", `/cats/${id}`, changes),
@@ -113,6 +123,7 @@ export function httpApi(baseUrl: string, token: string): Api {
     redirects: () => call("GET", "/seo/redirects"),
     addRedirect: (r) => call("POST", "/seo/redirects", r),
     deleteRedirect: (id) => call("DELETE", `/seo/redirects/${id}`),
+    features: () => call("GET", "/features"),
     ...patinhasHttp(call),
     ...cuidadosHttp(call),
     ...lojaHttp(call),
@@ -131,4 +142,11 @@ export function errorMessage(err: unknown): string {
   // fetch reports a lost connection as a TypeError; other errors carry a message written for people.
   if (err instanceof Error && !(err instanceof TypeError)) return err.message;
   return "Não foi possível falar com o servidor. Verifique a ligação.";
+}
+
+/** What is switched on. Everything counts as off until the API answers, so nothing appears and then vanishes. */
+export function useFeatures(): { features: FeatureFlags; loaded: boolean } {
+  const api = useApi();
+  const q = useQuery({ queryKey: ["features"], queryFn: () => api.features(), staleTime: Infinity });
+  return { features: q.data ?? noFeatures, loaded: q.isSuccess };
 }

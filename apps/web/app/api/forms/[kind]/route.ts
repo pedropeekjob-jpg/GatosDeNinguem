@@ -30,5 +30,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ kin
   if (!api) return Response.json({ ok: true, demo: true }, { status: 201 });
   const res = await fetch(`${api}${form.path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(parsed.data) });
   if (!res.ok) return Response.json({ message: "Não foi possível enviar agora. Tente daqui a pouco." }, { status: 502 });
-  return Response.json({ ok: true }, { status: 201 });
+  // Sponsoring with automatic debit: the next step is the provider's secure page.
+  const answer = (await res.json().catch(() => ({}))) as { checkoutUrl?: unknown };
+  const checkoutUrl = typeof answer.checkoutUrl === "string" && answer.checkoutUrl.startsWith("https://") ? answer.checkoutUrl : undefined;
+  return Response.json({ ok: true, ...(checkoutUrl ? { checkoutUrl } : {}) }, { status: 201 });
 }

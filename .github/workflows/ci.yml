@@ -61,3 +61,29 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report
           retention-days: 7
+
+  e2e-features-on:
+    # The same journeys with every optional part switched on (FEATURES=todas): Patinhas, swaps and Ser Amigo.
+    name: Mobile-first journeys, optional parts on (Playwright)
+    runs-on: ubuntu-24.04
+    env:
+      FEATURES: todas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @gn/web build
+      - run: pnpm --filter @gn/web exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-features-on
+          path: apps/web/playwright-report
+          retention-days: 7

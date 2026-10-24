@@ -3,6 +3,7 @@ import { badgeSchema, challengeProgress, challengeSchema, earnActionSchema, poin
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { AdminGuard } from "../common/admin.guard";
+import { FeatureGuard } from "../common/feature.guard";
 import { parseBody } from "../common/validation";
 import { PatinhasService } from "./service";
 
@@ -13,7 +14,9 @@ const teamAwardSchema = z.object({
   note: z.string().max(200).optional(),
 });
 
+/** Everything here waits for the Patinhas to be switched on; the swaps also wait for "trocas". */
 @Controller("patinhas")
+@UseGuards(FeatureGuard("patinhas"))
 export class PatinhasController {
   constructor(@Inject(PatinhasService) private readonly patinhas: PatinhasService) {}
   private get repo() { return this.patinhas.repo; }
@@ -104,7 +107,7 @@ export class PatinhasController {
   }
 
   @Get("trocas")
-  @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard, FeatureGuard("trocas"))
   async redemptions() {
     const [redemptions, accounts] = await Promise.all([this.repo.listRedemptions(), this.repo.listAccounts()]);
     const names = new Map(accounts.map((a) => [a.id, a.name]));
@@ -113,14 +116,14 @@ export class PatinhasController {
 
   @Post("trocas/:id/usada")
   @HttpCode(200)
-  @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard, FeatureGuard("trocas"))
   used(@Param("id") id: string) {
     return this.patinhas.markRedemptionUsed(id);
   }
 
   @Post("trocas/:id/cancelar")
   @HttpCode(200)
-  @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard, FeatureGuard("trocas"))
   cancel(@Param("id") id: string) {
     return this.patinhas.cancelRedemption(id);
   }

@@ -214,6 +214,8 @@ a:hover { text-decoration-thickness: 2.5px; }
   border-radius: var(--gn-radius-s); transition: color 0.18s, background-color 0.18s;
 }
 .gn-nav__link[aria-current="page"] { color: var(--gn-ink); font-weight: 700; }
+/* The site's main paths (adopt, donate) read in full black and bold, the others in soft grey. */
+.gn-nav__link--key { color: var(--gn-ink); font-weight: 700; }
 /* A thin bar under the menu item: drawn from the centre on hover, always there for the current page. */
 .gn-nav__link::after {
   content: ""; position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0.35rem; height: 2px; border-radius: 2px; background: currentColor;

@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
 import { monthLabel } from "@gn/domain";
 import { Button, Container, ProgressMeter, Section } from "@gn/ui";
 import { PageHero } from "@/components/PageHero";
 import { getPage, getPatinhasSummary, listPartners } from "@/lib/content";
+import { features, switchedOffRedirect } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -12,8 +14,11 @@ export async function generateMetadata() {
 const n = new Intl.NumberFormat("pt-PT");
 
 export default async function PatinhasPage() {
+  // Switched off (FEATURES without "patinhas"): the middleware already redirects; this covers the static demo.
+  const off = switchedOffRedirect("/patinhas");
+  if (off) redirect(off);
   const [page, summary, partners] = await Promise.all([getPage("/patinhas"), getPatinhasSummary(), listPartners()]);
-  const perks = partners.flatMap((p) => p.perks.filter((perk) => perk.patinhasCost).map((perk) => ({ partner: p, perk })));
+  const perks = !features.trocas ? [] : partners.flatMap((p) => p.perks.filter((perk) => perk.patinhasCost).map((perk) => ({ partner: p, perk })));
   return (
     <>
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { href: "/ajudar", label: "Ajudar" }, { label: "Patinhas" }]}>
@@ -48,7 +53,7 @@ export default async function PatinhasPage() {
         <p>Adotar não dá Patinhas: queremos que cada gato seja adotado por amor. As fotos que nos manda depois já dão.</p>
       </Section>
 
-      <Section heading="Níveis" intro="Os níveis contam tudo o que já ganhou. Trocar Patinhas nos parceiros nunca o faz descer de nível.">
+      <Section heading="Níveis" intro={features.trocas ? "Os níveis contam tudo o que já ganhou. Trocar Patinhas nos parceiros nunca o faz descer de nível." : "Os níveis contam tudo o que já ganhou."}>
         <ol className="niveis">
           {summary.levels.map((l) => (
             <li key={l.level} className="nivel">

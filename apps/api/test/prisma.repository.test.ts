@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.promotion.deleteMany(), db.product.deleteMany(), db.shopOrder.deleteMany(), db.shopSpending.deleteMany(), db.itemDonation.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.sponsorLetter.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.promotion.deleteMany(), db.product.deleteMany(), db.shopOrder.deleteMany(), db.shopSpending.deleteMany(), db.itemDonation.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());
@@ -25,6 +25,14 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     expect((await repo.listPosts())[0]?.slug).toBe("precisamos-de-areia-e-racao");
     expect((await repo.listPartners()).length).toBe(3);
     expect((await repo.getSeoSettings()).siteName).toBe("Gatos de Ninguém");
+  });
+
+  it("keeps godparents' debits and the team's letters", async () => {
+    const ana = (await repo.listSponsorships()).find((s) => s.id === "sp-3")!;
+    expect(ana.debit).toMatchObject({ provider: "stripe", status: "ativo", paidCents: 2000 });
+    await repo.saveSponsorLetter({ id: "carta-2", catSlug: "estrela", catName: "Estrela", text: "A Estrela já sai da jaula.", by: { name: "Rui" }, createdAt: "2026-10-24T10:00:00.000Z" });
+    expect((await repo.listSponsorLetters("tobias")).map((l) => l.id)).toEqual(["carta-1"]);
+    expect((await repo.listSponsorLetters()).map((l) => l.id)).toEqual(["carta-2", "carta-1"]);
   });
 
   it("updates SEO on an existing cat", async () => {
@@ -45,7 +53,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     expect(nov.map((s) => s.id)).toEqual(["shift-2", "shift-4", "shift-5"]);
     expect((await repo.getShift("shift-1"))?.signups).toHaveLength(1);
     expect(await repo.listFosterPlacements()).toHaveLength(2);
-    expect(await repo.listSponsorships()).toHaveLength(2);
+    expect(await repo.listSponsorships()).toHaveLength(3);
   });
 
   it("stores foster family requests and their follow-up", async () => {

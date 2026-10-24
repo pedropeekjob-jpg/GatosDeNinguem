@@ -15,6 +15,10 @@ export const IconHeart = () => <Icon><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0
 export const IconHand = () => (
   <Icon><path d="M7 11V6.5a1.5 1.5 0 0 1 3 0V11" /><path d="M10 10.5V5a1.5 1.5 0 0 1 3 0v5.5" /><path d="M13 10.5V6.5a1.5 1.5 0 0 1 3 0V13" /><path d="M16 9.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-.6a6.4 6.4 0 0 1-5-2.4L3.6 15a1.6 1.6 0 0 1 2.4-2.1L7 14" /></Icon>
 );
+/** A heart held in an open hand: giving. */
+export const IconGift = () => (
+  <Icon><path d="M12 11.5s-3.6-2.2-3.6-4.9a2 2 0 0 1 3.6-1.2 2 2 0 0 1 3.6 1.2c0 2.7-3.6 4.9-3.6 4.9Z" /><path d="M3.5 14.5h2.8l3.2 1.6h3.3a1.4 1.4 0 0 1 0 2.8H9.5" /><path d="M12.8 18.9l4.6-2.6a1.5 1.5 0 0 1 1.9 2.2L15 21H7.5L3.5 19" /></Icon>
+);
 export const IconNews = () => <Icon><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M7.5 9h9M7.5 12.5h9M7.5 16h5" /></Icon>;
 export const IconPaw = () => (
   <Icon><ellipse cx="12" cy="16" rx="4.2" ry="3.5" /><circle cx="6" cy="11" r="1.7" /><circle cx="9.3" cy="6.8" r="1.7" /><circle cx="14.7" cy="6.8" r="1.7" /><circle cx="18" cy="11" r="1.7" /></Icon>

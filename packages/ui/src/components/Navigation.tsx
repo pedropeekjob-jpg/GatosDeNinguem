@@ -4,7 +4,8 @@ import { Button } from "./Button";
 
 /** count: a small number next to the label, e.g. unread news. */
 /** wideOnly: shown in the top menu on wide screens but left out of the phone tab bar, which holds five items at most. */
-export type NavItem = { href: string; label: string; icon?: ReactNode; count?: number; countLabel?: string; wideOnly?: boolean };
+/** key: one of the site's main paths, drawn bolder in the top menu so it stands out among the others. */
+export type NavItem = { href: string; label: string; icon?: ReactNode; count?: number; countLabel?: string; wideOnly?: boolean; key?: boolean };
 
 function isCurrent(itemHref: string, currentPath: string) {
   if (itemHref === "/") return currentPath === "/";
@@ -33,7 +34,7 @@ export function SiteHeader({ brand, homeHref, items, currentPath, urgent, tools,
           <ul className="gn-nav__list">
           {items.map((item) => (
             <li key={item.href} className={item.wideOnly ? "gn-nav__item--wide" : undefined}>
-              <a href={item.href} className="gn-nav__link" aria-current={isCurrent(item.href, currentPath) ? "page" : undefined}>
+              <a href={item.href} className={item.key ? "gn-nav__link gn-nav__link--key" : "gn-nav__link"} aria-current={isCurrent(item.href, currentPath) ? "page" : undefined}>
                 {item.icon ? <span aria-hidden="true" className="gn-nav__icon">{item.icon}</span> : null}
                 <span className="gn-nav__label">{item.label}</span>
                 {item.count ? <span className="gn-nav__count">{item.count}<span className="gn-sr-only"> {item.countLabel ?? "novidades"}</span></span> : null}

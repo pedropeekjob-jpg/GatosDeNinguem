@@ -8,9 +8,10 @@ const COOKIE = "gn-sessao";
 const MAX_AGE = 180 * 24 * 60 * 60;
 const allowed = new Set([
   "codigo", "entrar", "sair", "eu", "eu/questionario", "eu/trocas",
+  "eu/apadrinhamentos",
   "eu/cuidados", "eu/cuidados/resumo", "eu/cuidados/tomas", "eu/cuidados/nao-consigo", "eu/cuidados/notas", "eu/cuidados/vistas", "eu/cuidados/preferencias",
 ]);
-const allowedPattern = /^eu\/cuidados\/(tarefas\/[A-Za-z0-9-]{1,64}\/(aceitar|devolver)|turnos\/[A-Za-z0-9-]{1,64})$/;
+const allowedPattern = /^eu\/(cuidados\/(tarefas\/[A-Za-z0-9-]{1,64}\/(aceitar|devolver)|turnos\/[A-Za-z0-9-]{1,64})|apadrinhamentos\/[A-Za-z0-9-]{1,64}\/(debito|cancelar|preferencias))$/;
 
 async function forward(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const path = (await params).path.join("/");

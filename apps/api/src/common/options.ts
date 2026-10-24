@@ -1,10 +1,13 @@
-import type { Account, CareAlert, Contact, PromotionChannel } from "@gn/domain";
+import type { Account, CareAlert, Contact, FeatureFlags, PromotionChannel } from "@gn/domain";
 import type { ContentRepository } from "../content/repository";
 import type { PhotoStore } from "../media/photo-store";
+import type { SponsorDebitProvider } from "../padrinhos/debit";
 import type { PatinhasRepository } from "../patinhas/repository";
 
 export type ApiOptions = {
   repository: ContentRepository;
+  /** Parts switched on (FEATURES setting). Default: all off. */
+  features?: FeatureFlags;
   /** Helper accounts and Patinhas. Defaults to in-memory example data. */
   patinhas?: PatinhasRepository;
   /** Delivers a sign-in code by email or SMS. */
@@ -13,6 +16,10 @@ export type ApiOptions = {
   notifyVolunteers?: (to: Account[], alert: CareAlert) => Promise<void>;
   /** Publishes event promotions, one function per channel that is set up (Meta Graph API, Resend…). */
   promotionPublishers?: Partial<Record<PromotionChannel, PromotionPublisher>>;
+  /** Monthly automatic debit for godparents (Stripe SEPA today). Without it, the team arranges payment with each person. */
+  sponsorDebit?: SponsorDebitProvider;
+  /** Emails a godparent news about their cat (Resend). Without it, the news is only in their area on the site. */
+  sendSponsorEmail?: (to: { email: string; name: string }, message: { subject: string; text: string }) => Promise<void>;
   /** Public address of the site, used in links in promotions and emails (default: https://gatosdeninguem.pt). */
   siteUrl?: string;
   /** Signs newsletter unsubscribe links (default: the admin token). */

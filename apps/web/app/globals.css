@@ -53,14 +53,30 @@ main { display: block; }
 .event-facts dd { margin: 0; font-weight: 650; }
 .event-facts dd::first-letter { text-transform: uppercase; }
 .help-list { display: grid; gap: var(--gn-space-m); }
-.site-footer { background: var(--gn-sand); color: var(--gn-ink); padding-block: var(--gn-space-xl) var(--gn-space-l); margin-top: var(--gn-space-xl); }
-.site-footer__brand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gn-space-m) var(--gn-space-l); padding-bottom: var(--gn-space-l); margin-bottom: var(--gn-space-l); border-bottom: 1px solid var(--gn-line); }
-.site-footer__logo { width: 7rem; --gn-alogo-bg: var(--gn-sand); }
-.site-footer__brand p { font-size: var(--gn-text-l); color: var(--gn-ink-soft); max-width: 30rem; }
-.site-footer__grid { display: grid; gap: var(--gn-space-l); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+.site-footer { background: var(--gn-sand); color: var(--gn-ink); padding-block: var(--gn-space-l) var(--gn-space-m); margin-top: var(--gn-space-xl); font-size: var(--gn-text-s); }
+.site-footer__grid { display: grid; gap: var(--gn-space-m) var(--gn-space-l); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
 .site-footer__title { font-size: var(--gn-text); }
-.site-footer__links { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
+.site-footer__links { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.site-footer__links--two { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gn-space-m); }
 .site-footer__small { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.site-footer__address { font-style: normal; display: grid; gap: 0.3rem; }
+.site-footer__inline { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+.site-footer .social-links a { width: 2.5rem; height: 2.5rem; }
+.site-footer .social-links svg { width: 20px; height: 20px; }
+/* Newsletter on one line: email and button side by side, consent underneath. */
+.site-footer form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; align-items: end; }
+.site-footer form > .gn-field { grid-column: 1; grid-row: 1; }
+.site-footer form > button { grid-column: 2; grid-row: 1; }
+.site-footer form > :not(.gn-field):not(button) { grid-column: 1 / -1; }
+.site-footer__bottom { display: flex; align-items: center; gap: var(--gn-space-m); margin-top: var(--gn-space-m); padding-top: var(--gn-space-m); border-top: 1px solid var(--gn-line); color: var(--gn-ink-soft); }
+.site-footer__logo { flex: none; width: 3rem; --gn-alogo-bg: var(--gn-sand); }
+.site-footer__legal { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+.site-footer__bottom a { color: inherit; }
+@media (max-width: 39.99rem) { .site-footer__logo { display: none; } }
+.legal-text h2 { margin-top: var(--gn-space-m); }
+.legal-table { overflow-x: auto; }
+.legal-table table { width: 100%; border-collapse: collapse; font-size: var(--gn-text-s); }
+.legal-table th, .legal-table td { text-align: left; vertical-align: top; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--gn-line); }
 .discover-card { display: grid; gap: var(--gn-space-m); }
 .match-pill { display: inline-flex; gap: 0.4rem; align-items: center; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 6px; background: var(--gn-sand); color: var(--gn-ink); }
 .match-pill--super { background: var(--gn-accent); color: var(--gn-ink); }
@@ -209,6 +225,21 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .gatil__silenciar legend { font-weight: 650; margin-bottom: 0.4rem; }
 .gatil__resumo { display: grid; gap: 0.75rem; justify-items: start; padding: var(--gn-space-m); border-radius: var(--gn-radius); border: 2px solid var(--gn-ink); background: var(--gn-accent-soft); }
 .gatil__resumo h2 { margin: 0; }
+/* Godparents: their cat, the monthly debit and the news. */
+.afilhado { padding: var(--gn-space-m); border-radius: var(--gn-radius); border: 1px solid var(--gn-line); background: var(--gn-surface); }
+.afilhado h2, .afilhado h3, .afilhado p { margin: 0; }
+.afilhado__topo { display: flex; gap: var(--gn-space-m); align-items: flex-start; }
+.afilhado__topo img { width: 6.5rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius-s); flex: none; }
+.afilhado__pagamento { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.afilhado__novidades { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.novidade { display: grid; gap: 0.3rem; padding-left: 0.85rem; border-left: 3px solid var(--gn-line); }
+.novidade--carta { padding: 0.75rem 0.85rem; border-left-color: var(--gn-accent); border-radius: 0 var(--gn-radius-s) var(--gn-radius-s) 0; background: var(--gn-sand); }
+.novidade__quando { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.novidade__tipo { font-weight: 700; color: var(--gn-ink); margin-right: 0.35rem; }
+.novidade__foto { width: 100%; max-width: 22rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius-s); }
+.afilhado__definicoes { border-top: 1px solid var(--gn-line); padding-top: 0.75rem; }
+.afilhado__definicoes summary { cursor: pointer; font-weight: 650; padding-block: 0.25rem; margin-bottom: 0.5rem; }
+.afilhado__definicoes fieldset { border: 0; margin: 0; padding: 0; }
 .loc { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 6px; font-size: var(--gn-text-s); font-weight: 650; background: var(--gn-sand); }
 .loc--cage { background: var(--gn-accent-soft); box-shadow: inset 0 0 0 1.5px var(--gn-accent-strong); }
 .loc--unknown { color: var(--gn-warning); }
@@ -253,8 +284,6 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .patinhas-teaser__link-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .featured__story { display: none; }
   .featured .gn-lead { font-size: var(--gn-text); }
-  .site-footer__logo { width: 4.5rem; }
-  .site-footer__brand p { font-size: var(--gn-text); }
 }
 @media (min-width: 60rem) {
   .home-hero__more { display: inline; }
@@ -289,6 +318,8 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 .cat-card .gn-card__media { aspect-ratio: 5 / 4; }
 .cat-card .gn-card__body { gap: 0.5rem; }
 .cat-card .gn-card__text p { margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cat-card .gn-card__text p.cat-card__when { font-size: var(--gn-text-s); color: var(--gn-ink-soft); margin-bottom: 0.25rem; }
+.gn-card__text p.news-when { margin-bottom: 0.5rem; }
 
 /* Home: "Procuram família". */
 .cat-rail { padding-block: var(--gn-space-m) var(--gn-space-xl); }
@@ -327,7 +358,14 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 .cat-filter__list[data-filtro="femea"] [data-f]:not([data-f~="femea"]),
 .cat-filter__list[data-filtro="macho"] [data-f]:not([data-f~="macho"]),
 .cat-filter__list[data-filtro="senior"] [data-f]:not([data-f~="senior"]),
-.cat-filter__list[data-filtro="cuidados"] [data-f]:not([data-f~="cuidados"]) { display: none; }
+.cat-filter__list[data-filtro="cuidados"] [data-f]:not([data-f~="cuidados"]),
+.cat-filter__list[data-filtro="jovem"] [data-f]:not([data-f~="jovem"]),
+.cat-filter__list[data-filtro="criancas"] [data-f]:not([data-f~="criancas"]),
+.cat-filter__list[data-filtro="gatos"] [data-f]:not([data-f~="gatos"]),
+.cat-filter__list[data-filtro="caes"] [data-f]:not([data-f~="caes"]),
+.cat-filter__list[data-filtro="calmo"] [data-f]:not([data-f~="calmo"]) { display: none; }
+/* The cat list has many filters: they wrap onto rows on every screen, so none hides behind a sideways swipe. */
+.cat-filter--wrap .cat-filter__chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; }
 .cat-filter__list .gn-grid > [data-f] { display: flex; }
 .cat-filter__list .gn-grid > [data-f] > .gn-card { width: 100%; }
 
@@ -343,7 +381,34 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 }
 /* Beside a button the heart takes the button's size and an outline, so it reads as a button too. */
 .cat-profile__cta .gn-fav { flex: none; width: var(--gn-target); height: var(--gn-target); border-radius: var(--gn-radius-s); border: 1.5px solid var(--gn-ink); box-shadow: none; background: var(--gn-surface); }
-@media (min-width: 52rem) { .cat-profile__photo { position: sticky; top: var(--gn-space-l); } }
+@media (min-width: 52rem) { :is(.cat-profile__photo, .cat-profile__gallery) { position: sticky; top: var(--gn-space-l); } }
+/* A cat's photos: the shelter carousel, sized to the column, with the arrows inside the photo. */
+.cat-profile__gallery { min-width: 0; }
+.cat-profile__gallery .gn-carousel { border-radius: var(--gn-radius-hand); overflow: hidden; background: var(--gn-sand); }
+.cat-profile__gallery .gn-carousel__slide { aspect-ratio: 4 / 3; max-height: none; }
+.cat-profile__gallery .gn-carousel__controls { right: var(--gn-space-s); bottom: var(--gn-space-s); }
+/* What the cat goes home with: a short checklist. */
+.goes-home { display: grid; gap: 0.6rem; padding: var(--gn-space-m); border-radius: var(--gn-radius); background: var(--gn-sand); }
+.goes-home h2 { font-size: var(--gn-text-l); margin: 0; }
+.goes-home__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.goes-home__list li { display: flex; gap: 0.6rem; align-items: baseline; }
+.goes-home__mark { flex: none; display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: var(--gn-ink); color: #fff; font-size: 0.85rem; font-weight: 700; transform: translateY(0.2rem); }
+.goes-home__list .is-missing .goes-home__mark { background: var(--gn-line); color: var(--gn-ink); }
+.goes-home__note { color: var(--gn-ink-soft); }
+/* The adoption steps: big numbers, a title and one sentence each. */
+.adoption-steps { list-style: none; counter-reset: passo; margin: 0; padding: 0; display: grid; gap: var(--gn-space-m); grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+.adoption-steps li { counter-increment: passo; display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); column-gap: 0.75rem; row-gap: 0.15rem; align-content: start; }
+.adoption-steps li::before { content: counter(passo); grid-row: span 2; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-weight: 800; }
+.adoption-steps span { color: var(--gn-ink-soft); }
+/* Questions about adopting: native details, so they open with a tap and work without JavaScript. */
+.faq { display: grid; max-width: 44rem; border-top: 1px solid var(--gn-line); }
+.faq details { border-bottom: 1px solid var(--gn-line); }
+.faq summary { display: flex; justify-content: space-between; gap: 1rem; align-items: center; min-height: var(--gn-target); padding: 0.9rem 0; font-weight: 700; cursor: pointer; list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; border: 1.5px solid var(--gn-ink); font-size: 1.2rem; line-height: 1; }
+.faq details[open] summary::after { content: "−"; background: var(--gn-ink); color: #fff; }
+.faq summary:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 2px; }
+.faq details p { margin: 0 0 1rem; max-width: 40rem; }
 
 /* Desktop home photo: on the dark gradient the main button turns white, the second one a white outline. */
 @media (min-width: 60rem) {
@@ -431,4 +496,31 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .shop-grid .gn-card__body { padding: 0.75rem; gap: 0.25rem; }
   .shop-grid .gn-card__title { font-size: var(--gn-text); }
   .shop-grid .gn-card__text { font-size: var(--gn-text-s); }
+}
+
+/* ---------- Adotar e doar primeiro ---------- */
+
+/* Under the two main buttons, a quiet way to every other kind of help. */
+.home-more { margin: 0; font-size: var(--gn-text-s); }
+.home-more a { color: inherit; font-weight: 600; text-underline-offset: 0.2em; }
+@media (min-width: 60rem) {
+  .home-top:not(.home-top--plain) .home-more a { color: #fff; }
+}
+/* Saved cats: only takes room when there are some. */
+.home-favorites:has(.gn-notice) { padding-top: var(--gn-space-m); }
+/* Home "Doar": one white card with a soft shadow, the way in for those who can't adopt. */
+.donate-band { padding-block: var(--gn-space-s) var(--gn-space-xl); }
+.donate-band__inner {
+  display: grid; gap: var(--gn-space-m); padding: var(--gn-space-m); border-radius: var(--gn-radius);
+  background: #fff; box-shadow: 0 10px 32px rgb(28 26 27 / .10), 0 1px 3px rgb(28 26 27 / .06);
+}
+.donate-band__inner h2 { margin: 0; }
+.donate-band__inner p { margin: 0; color: var(--gn-ink-soft); }
+.donate-band__actions { display: grid; gap: 0.6rem; grid-template-columns: 1fr 1fr; }
+.donate-band__actions .gn-btn { white-space: nowrap; }
+@media (max-width: 26rem) { .donate-band__actions { grid-template-columns: 1fr; } }
+@media (min-width: 60rem) {
+  .donate-band__inner { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; padding: var(--gn-space-l); column-gap: var(--gn-space-xl); }
+  .donate-band__inner > :first-child { grid-row: span 2; }
+  .donate-band__actions { grid-template-columns: repeat(2, auto); justify-content: start; }
 }

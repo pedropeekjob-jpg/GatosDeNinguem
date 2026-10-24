@@ -1,11 +1,11 @@
 import { vi } from "vitest";
 import {
-  channelProblem, checkIn, draftPromotion, editPromotion, expandWeeklyRule, promotionChannelLabel, promotionChannels, type Promotion, seedCats, seedFosterApplications, seedFosterPlacements, seedImpact, seedPages, seedPosts, seedRedirects, seedSeoSettings, seedShifts, seedSponsorships, signUp,
-  type Shift,
+  channelProblem, checkIn, draftPromotion, editPromotion, expandWeeklyRule, promotionChannelLabel, promotionChannels, type Promotion, seedCats, seedFosterApplications, seedFosterPlacements, seedImpact, seedPages, seedPosts, seedRedirects, seedSeoSettings, seedShifts, seedSponsorLetters, seedSponsorships, signUp,
+  type Shift, type SponsorLetter,
 } from "@gn/domain";
 import {
-  award, balance, defaultPointsRules, earnedTotal, levelFor, seedAccounts, seedBadges, seedChallenges, seedEntries, seedPartners, seedRedemptions,
-  type Badge, type Challenge, type PatinhasEntry, type PointsRule, type Redemption,
+  allFeatures, award, balance, defaultPointsRules, earnedTotal, levelFor, seedAccounts, seedBadges, seedChallenges, seedEntries, seedPartners, seedRedemptions,
+  type Badge, type Challenge, type FeatureFlags, type PatinhasEntry, type PointsRule, type Redemption,
 } from "@gn/domain";
 import { auditSeo, resolveSeo } from "@gn/seo";
 import type { Api } from "../src/lib/api";
@@ -13,9 +13,10 @@ import { fakeCuidados } from "./fakeCuidados";
 import { fakeLoja } from "./fakeLoja";
 
 /** In-memory Api for component tests, built on the same demo data and rules as the server. */
-export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
+export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z"), features: FeatureFlags = allFeatures) {
   let shifts: Shift[] = structuredClone(seedShifts);
   let cats = structuredClone(seedCats);
+  let letters: SponsorLetter[] = structuredClone(seedSponsorLetters);
   let pages = structuredClone(seedPages);
   let redirects = structuredClone(seedRedirects);
   const fosterApplications = structuredClone(seedFosterApplications);
@@ -40,6 +41,7 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
   const api: Api = {
     ...fakeCuidados(now, () => cats),
     ...fakeLoja(now),
+    features: async () => features,
     people: async () => seedAccounts.map((a) => ({ ...a, ...person(a.id) })),
     person: async () => { throw new Error("not used"); },
     givePatinhas: vi.fn(async (accountId, input) => {
@@ -84,6 +86,12 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
     },
     sponsorships: async () => seedSponsorships.map((s) => ({ ...s, needsUpdate: s.id === "sp-1" })),
     saveSponsorship: async (s) => ({ ...s, id: s.id ?? id() }),
+    sponsorLetters: async (slug) => letters.filter((l) => !slug || l.catSlug === slug),
+    sendSponsorLetter: vi.fn(async ({ by, ...input }) => {
+      const letter = { ...input, id: id(), catName: cats.find((c) => c.slug === input.catSlug)?.name ?? input.catSlug, by, createdAt: now.toISOString() };
+      letters = [letter, ...letters];
+      return { letter, sponsors: seedSponsorships.filter((s) => s.catSlug === input.catSlug && s.active).length, emailed: 1 };
+    }),
     cats: async () => cats,
     createCat: async (input) => { const c = { ...input, id: id(), updatedAt: now.toISOString() }; cats = [...cats, c]; return c; },
     updateCat: async (cid, changes) => { cats = cats.map((c) => (c.id === cid ? { ...c, ...changes } : c)); return cats.find((c) => c.id === cid)!; },

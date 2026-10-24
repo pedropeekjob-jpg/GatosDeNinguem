@@ -25,6 +25,7 @@ import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
 import { volunteerIdFromPhone } from "../common/volunteer";
+import { SponsorService } from "../padrinhos/sponsor.service";
 import { PatinhasService } from "../patinhas/service";
 
 /** Public view of a shift: volunteers see how many places are left, never other people's details. */
@@ -33,7 +34,11 @@ const toPublic = ({ signups, ...shift }: Shift) => ({ ...shift, taken: signups.l
 
 @Controller("escalas")
 export class EscalasController {
-  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions, @Inject(PatinhasService) private readonly patinhas: PatinhasService) {}
+  constructor(
+    @Inject(API_OPTIONS) private readonly options: ApiOptions,
+    @Inject(PatinhasService) private readonly patinhas: PatinhasService,
+    @Inject(SponsorService) private readonly sponsors: SponsorService,
+  ) {}
   private get repo() { return this.options.repository; }
   private now() { return this.options.now?.() ?? new Date(); }
 
@@ -192,7 +197,11 @@ export class EscalasController {
     return this.repo.saveFosterApplication({ ...current, status });
   }
 
-  /** "Quero apadrinhar" form. Public; saved as a pending sponsorship the team confirms. A hidden "website_url" field catches spam bots. */
+  /**
+   * "Quero apadrinhar" form. Public; saved as a pending sponsorship. With automatic debit, the answer carries the address of
+   * the provider's secure page, and the sponsorship starts by itself once the mandate is signed; otherwise the team confirms it.
+   * A hidden "website_url" field catches spam bots.
+   */
   @Post("padrinhos/pedido")
   @HttpCode(201)
   async requestSponsorship(@Body() body: unknown) {
@@ -200,8 +209,15 @@ export class EscalasController {
     const input = parseBody(sponsorshipRequestSchema, body);
     const cat = await this.repo.getCatBySlug(input.catSlug);
     if (!cat || cat.status === "adotado") throw new NotFoundException("Este gato já não precisa de padrinho. Escolha outro, por favor.");
-    await this.repo.saveSponsorship(sponsorshipFromRequest(input, randomUUID(), this.now().toISOString().slice(0, 10)));
-    return { ok: true };
+    const sponsorship = await this.repo.saveSponsorship(sponsorshipFromRequest(input, randomUUID(), this.now().toISOString().slice(0, 10)));
+    if (input.payment !== "debito" || !this.sponsors.debitReady) return { ok: true };
+    try {
+      return { ok: true, ...(await this.sponsors.startDebit(sponsorship)) };
+    } catch (err) {
+      // The request is saved: the team still sees it and gets in touch.
+      console.error("Could not open the debit page", err);
+      return { ok: true };
+    }
   }
 
   @Get("padrinhos")
