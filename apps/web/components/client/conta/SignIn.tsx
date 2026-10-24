@@ -2,6 +2,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Button, Checkbox, Notice, TextField } from "@gn/ui";
 import { contaClient } from "@/lib/conta";
+import { PrivacyHint } from "@/components/forms/PrivacyHint";
 
 type Step = { name: "contacto" } | { name: "nome" } | { name: "codigo"; sentTo: "email" | "telemovel"; newAccount: boolean; demoCode?: string };
 
@@ -88,8 +89,8 @@ export function SignIn({ onSignedIn }: { onSignedIn: (newAccount: boolean) => vo
         <TextField id="conta-nome" label="O seu nome" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} />
         <Checkbox
           id="conta-consentimento"
-          label="Aceito que a associação guarde o meu nome e contacto para as Patinhas"
-          hint="Pode apagar a conta quando quiser. Nunca partilhamos os seus dados."
+          label="Tenho 13 anos ou mais e aceito que a associação guarde o meu nome e contacto para as Patinhas"
+          hint={<PrivacyHint>Pode apagar a conta quando quiser. Nunca partilhamos os seus dados.</PrivacyHint>}
           checked={consent}
           onChange={setConsent}
         />

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/privacidade", "/cookies"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/doar", "/ajudar/voluntariado", "/ajudar/amigo", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -28,7 +28,9 @@ test("main navigation is always visible (no hidden menu)", async ({ page }) => {
   for (const name of ["Início", "Adotar", "Ajudar", "Notícias", "Sobre nós"]) {
     await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name })).toBeVisible();
   }
-  await expect(page.getByRole("link", { name: "Encontrei um gato" }).first()).toBeVisible();
+  // "Encontrei um gato" left the header but is still one tap away in the footer.
+  await expect(page.getByRole("banner").getByRole("link", { name: "Encontrei um gato" })).toHaveCount(0);
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Encontrei um gato" })).toBeVisible();
   // The association's own logo leads home.
   await expect(page.getByRole("link", { name: "Gatos de Ninguém, página inicial" })).toBeVisible();
 });
@@ -85,9 +87,9 @@ test("sponsor: Apadrinhar leads to sponsoring that cat, not to adopting it", asy
   await expect(page).toHaveURL(/\/apadrinhar\/[a-z0-9-]+$/);
   await expect(page.getByRole("heading", { level: 1, name: /^Apadrinhar/ })).toBeVisible();
 
-  // From Ajudar, the sponsoring section lists cats to sponsor and each one opens its own form.
+  // From Ajudar, the Apadrinhar button opens the list of cats to sponsor and each one opens its own form.
   await page.goto("/ajudar");
-  await page.getByRole("link", { name: "Escolher um gato para apadrinhar" }).click();
+  await page.getByRole("link", { name: "Apadrinhar", exact: true }).click();
   await expect(page).toHaveURL(/\/apadrinhar$/);
   await page.getByRole("link", { name: "Tobias" }).click();
   await expect(page).toHaveURL(/\/apadrinhar\/tobias$/);
@@ -120,6 +122,24 @@ test("descobrir: answer questions, see a match with reasons, save a cat", async 
   await page.goto("/adotar");
   await expect(page.getByText(/Tem 1 gato guardado/)).toBeVisible();
   await expect(page.getByRole("status").getByRole("link", { name: name! })).toBeVisible();
+});
+
+test("Ajudar: each button opens its own page, and old #links still land there", async ({ page }) => {
+  const buttons = [
+    ["Apadrinhar", /\/apadrinhar$/, /^Apadrinhar um gato$/],
+    ["Fazer um donativo", /\/ajudar\/doar$/, /^Fazer um donativo$/],
+    ["Ser voluntário", /\/ajudar\/voluntariado$/, /^Ser voluntário$/],
+    ["Ser Amigo", /\/ajudar\/amigo$/, /^Ser Amigo da associação$/],
+  ] as const;
+  for (const [name, url, heading] of buttons) {
+    await page.goto("/ajudar");
+    await page.getByRole("main").getByRole("link", { name, exact: true }).click();
+    await expect(page).toHaveURL(url);
+    await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+  }
+  await page.goto("/ajudar#doar");
+  await expect(page).toHaveURL(/\/ajudar\/doar$/);
+  await expect(page.getByText("PT50 0045 1436 4033 0203 2321 6")).toBeVisible();
 });
 
 test("help quiz always ends with a concrete action", async ({ page }) => {
@@ -174,7 +194,9 @@ test("partner application form validates and thanks", async ({ page }) => {
 
 test("volunteer finds a free shift from Ajudar and signs up", async ({ page }) => {
   await page.goto("/ajudar");
-  await page.getByRole("link", { name: "Ver turnos livres e inscrever-me" }).click();
+  await page.getByRole("link", { name: "Ser voluntário", exact: true }).click();
+  await expect(page).toHaveURL(/\/ajudar\/voluntariado$/);
+  await page.getByRole("link", { name: "Ver turnos livres e inscrever-me" }).first().click();
   await expect(page).toHaveURL(/\/ajudar\/turnos$/);
   // Days are headings, so screen readers can jump from day to day.
   await expect(page.getByRole("heading", { level: 2, name: "Quinta-feira, 5 de novembro" })).toBeVisible();
@@ -435,7 +457,7 @@ test("a cat's page: on phones 'Quero conhecer' stays on screen while reading", a
 
 test("família temporária: from Ajudar to a sent request, with the cats that need one now", async ({ page }) => {
   await page.goto("/ajudar");
-  await page.locator("#familia-temporaria").getByRole("link", { name: "Quero ser família temporária" }).click();
+  await page.getByRole("link", { name: "Família temporária", exact: true }).click();
   await expect(page).toHaveURL(/\/ajudar\/familia-temporaria\/?$/);
   await expect(page.getByRole("heading", { name: /precisa(m)? de família temporária agora/ })).toBeVisible();
   await page.getByRole("button", { name: "Quero ser família temporária" }).first().click();
@@ -445,7 +467,7 @@ test("família temporária: from Ajudar to a sent request, with the cats that ne
   await page.getByLabel("Telefone").fill("913 333 333");
   await page.getByLabel("Onde vive?").fill("Darque");
   await page.getByText("Gatinhos bebés").click();
-  await page.getByLabel(/Aceito que a associação me contacte/).check();
+  await page.getByLabel(/aceito que a associação me contacte/i).check();
   await page.getByRole("button", { name: "Enviar pedido" }).click();
   await expect(page.getByText("Obrigado! Vamos ligar-lhe.")).toBeVisible();
 });
@@ -503,14 +525,17 @@ test("shop: choose a size, put it in the basket, order and see how to pay", asyn
   await dialog.getByText("Receber pelo correio").click();
   // By post there is no "pay when you pick up".
   await expect(dialog.getByText("Pagar quando levantar")).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Enviar pedido" }).click();
+  await dialog.getByRole("button", { name: "Encomendar com obrigação de pagar" }).click();
   await expect(dialog.getByText("Indique a morada completa, com código postal")).toBeVisible();
   await dialog.getByLabel("Morada completa, com código postal").fill("Rua das Flores 12, 4900-000 Viana do Castelo");
   await dialog.getByText("Transferência bancária").click();
   await dialog.getByLabel("O seu nome").fill("Maria Silva");
   await dialog.getByLabel("Telemóvel").fill("912345678");
   await dialog.getByText("Aceito que a associação me contacte").click();
-  await dialog.getByRole("button", { name: "Enviar pedido" }).click();
+  // The law asks for a button that says ordering means paying, and the 14 days to change one's mind.
+  await expect(dialog.getByText("Pode desistir até 14 dias depois de receber os artigos.", { exact: false })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Condições da loja" })).toHaveAttribute("href", "/loja/condicoes");
+  await dialog.getByRole("button", { name: "Encomendar com obrigação de pagar" }).click();
 
   await expect(page.getByText("Obrigado! O seu pedido foi enviado.")).toBeVisible();
   await expect(page.getByText(/^L-[2-9A-Z]{4}$/).first()).toBeVisible();
@@ -518,6 +543,18 @@ test("shop: choose a size, put it in the basket, order and see how to pay", asyn
   // The basket is empty again.
   await page.goto("/loja/cesto");
   await expect(page.getByText("O cesto está vazio.")).toBeVisible();
+});
+
+test("shop: the conditions say who sells, how to give up in 14 days and where to complain", async ({ page }) => {
+  await page.goto("/loja");
+  await page.getByRole("main").getByRole("link", { name: "condições da loja" }).click();
+  await expect(page).toHaveURL(/\/loja\/condicoes\/?$/);
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { name: "Pode desistir em 14 dias" })).toBeVisible();
+  await expect(main.getByText(/NIF \d{9}/)).toBeVisible();
+  await expect(main.getByRole("link", { name: "Livro de Reclamações Eletrónico" })).toHaveAttribute("href", "https://www.livroreclamacoes.pt");
+  await expect(main.getByRole("link", { name: /CIAB/ })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Informação legal" }).getByRole("link", { name: "Condições da loja" })).toBeVisible();
 });
 
 test("shop: sold-out articles cannot be added, and the page shows where the money goes", async ({ page }) => {
@@ -542,4 +579,18 @@ test("shop: offer articles to sell", async ({ page }) => {
   await dialog.getByRole("button", { name: "Enviar oferta" }).click();
   await expect(dialog.getByText("Obrigado pela sua oferta!")).toBeVisible();
   await expect(dialog.getByText(/quando podemos ir buscar/)).toBeVisible();
+});
+
+test("dates: cats show how long they have waited, news and happy endings show when", async ({ page }) => {
+  await page.goto("/adotar");
+  await expect(page.locator(".cat-card", { hasText: "Tobias" }).getByText(/^No gatil há \d+ anos?$/)).toBeVisible();
+  await page.goto("/adotar/tobias");
+  await expect(page.locator("dl.facts")).toContainText("No gatil desde");
+  await expect(page.locator("dl.facts div", { hasText: "No gatil desde" }).locator("dd")).toHaveText(/^abril de 2023 \(há \d+ anos?\)$/);
+  await expect(page.locator("dl.facts div", { hasText: "Para adoção desde" }).locator("dd")).toHaveText("2 de junho de 2023");
+  await page.goto("/noticias");
+  await expect(page.locator("time[datetime]").first()).toHaveText(/^\d{1,2} de [a-zç]+ de \d{4}$/);
+  await expect(page.getByText(/^Quando: .*novembro/)).toBeVisible();
+  await page.goto("/finais-felizes");
+  await expect(page.getByText(/Adotada a 14 de setembro de 2026, depois de \d+ anos? no gatil/)).toBeVisible();
 });

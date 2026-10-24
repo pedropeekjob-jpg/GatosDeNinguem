@@ -21,7 +21,7 @@ export function Footer() {
               <li><a href="/loja">Loja solidária</a></li>
               <li><a href="/parceiros">Parceiros</a></li>
               <li><a href="/sos">Encontrei um gato</a></li>
-              <li><a href="/ajudar#doar">Fazer um donativo</a></li>
+              <li><a href="/ajudar/doar">Fazer um donativo</a></li>
             </ul>
           </nav>
           <div className="gn-stack gn-stack--s">
@@ -55,6 +55,7 @@ export function Footer() {
               <span>© {association.name} · NIF {association.nif}</span>
               <a href="/privacidade">Política de privacidade</a>
               <a href="/cookies">Política de cookies</a>
+              <a href="/loja/condicoes">Condições da loja</a>
               <a href="https://www.livroreclamacoes.pt" rel="noopener">Livro de reclamações</a>
             </nav>
             <p className="site-footer__small">

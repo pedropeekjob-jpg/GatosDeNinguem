@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { euros, productCategoryLabel } from "@gn/domain";
+import { euros, productCategoryLabel, WITHDRAWAL_DAYS } from "@gn/domain";
 import { Breadcrumbs, Container, ShareBar } from "@gn/ui";
 import { JsonLd } from "@/components/JsonLd";
 import { AddToCart } from "@/components/loja/AddToCart";
 import { CartBar } from "@/components/loja/CartBar";
 import { PriceBreakdown } from "@/components/loja/PriceBreakdown";
-import { getProduct, getSeoSettings, listProducts } from "@/lib/content";
+import { getProduct, getSeoSettings, getShopSummary, listProducts } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function ProductPage({ params }: Props) {
   const product = await getProduct((await params).slug);
   if (!product) notFound();
-  const settings = await getSeoSettings();
+  const [settings, shop] = await Promise.all([getSeoSettings(), getShopSummary()]);
   const photo = product.photos[0]!;
   const url = `${settings.siteUrl}/loja/${product.slug}`;
   return (
@@ -43,10 +43,11 @@ export default async function ProductPage({ params }: Props) {
         <div className="gn-stack gn-stack--m">
           <p className="gn-eyebrow">{productCategoryLabel[product.category]}</p>
           <h1>{product.name}</h1>
-          <p className="product__price">{euros(product.priceCents)}</p>
+          <p className="product__price">{euros(product.priceCents)}{shop.settings.vatNote ? <span className="small muted"> {shop.settings.vatNote}</span> : null}</p>
           <PriceBreakdown product={product} />
           {product.description ? <p>{product.description}</p> : null}
           <AddToCart product={product} />
+          <p className="small muted">Pode desistir até {WITHDRAWAL_DAYS} dias depois de receber. <a href="/loja/condicoes">Condições da loja</a></p>
           <ShareBar url={url} text={`${product.name}: cada compra ajuda os gatos da Gatos de Ninguém`} />
         </div>
       </div>
