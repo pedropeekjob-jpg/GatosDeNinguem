@@ -28,7 +28,9 @@ test("main navigation is always visible (no hidden menu)", async ({ page }) => {
   for (const name of ["Início", "Adotar", "Ajudar", "Notícias", "Sobre nós"]) {
     await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name })).toBeVisible();
   }
-  await expect(page.getByRole("link", { name: "Encontrei um gato" }).first()).toBeVisible();
+  // "Encontrei um gato" left the header but is still one tap away in the footer.
+  await expect(page.getByRole("banner").getByRole("link", { name: "Encontrei um gato" })).toHaveCount(0);
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Encontrei um gato" })).toBeVisible();
   // The association's own logo leads home.
   await expect(page.getByRole("link", { name: "Gatos de Ninguém, página inicial" })).toBeVisible();
 });
