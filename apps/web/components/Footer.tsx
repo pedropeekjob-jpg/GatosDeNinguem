@@ -60,6 +60,7 @@ export function Footer() {
           <span>© {association.name} · NIF {association.nif}</span>
           <a href="/privacidade">Política de privacidade</a>
           <a href="/cookies">Política de cookies</a>
+          <a href="/loja/condicoes">Condições da loja</a>
           <a href="https://www.livroreclamacoes.pt" rel="noopener">Livro de reclamações</a>
         </nav>
         <p className="site-footer__small site-footer__ral">

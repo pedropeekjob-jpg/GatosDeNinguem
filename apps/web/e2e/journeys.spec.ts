@@ -547,12 +547,14 @@ test("shop: choose a size, put it in the basket, order and see how to pay", asyn
 
 test("shop: the conditions say who sells, how to give up in 14 days and where to complain", async ({ page }) => {
   await page.goto("/loja");
-  await page.getByRole("link", { name: "condições da loja" }).click();
+  await page.getByRole("main").getByRole("link", { name: "condições da loja" }).click();
   await expect(page).toHaveURL(/\/loja\/condicoes\/?$/);
-  await expect(page.getByRole("heading", { name: "Pode desistir em 14 dias" })).toBeVisible();
-  await expect(page.getByText(/NIF \d{9}/)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Livro de Reclamações Eletrónico" })).toHaveAttribute("href", "https://www.livroreclamacoes.pt");
-  await expect(page.getByRole("link", { name: /CIAB/ })).toBeVisible();
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { name: "Pode desistir em 14 dias" })).toBeVisible();
+  await expect(main.getByText(/NIF \d{9}/)).toBeVisible();
+  await expect(main.getByRole("link", { name: "Livro de Reclamações Eletrónico" })).toHaveAttribute("href", "https://www.livroreclamacoes.pt");
+  await expect(main.getByRole("link", { name: /CIAB/ })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Informação legal" }).getByRole("link", { name: "Condições da loja" })).toBeVisible();
 });
 
 test("shop: sold-out articles cannot be added, and the page shows where the money goes", async ({ page }) => {

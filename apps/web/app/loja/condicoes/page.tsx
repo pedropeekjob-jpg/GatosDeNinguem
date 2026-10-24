@@ -1,5 +1,6 @@
 import { COMPLAINTS_BOOK_URL, disputeBodies, REFUND_DAYS, WITHDRAWAL_DAYS } from "@gn/domain";
 import { Container, Notice } from "@gn/ui";
+import { LegalDraftNotice } from "@/components/LegalDraftNotice";
 import { PageHero } from "@/components/PageHero";
 import { association } from "@/lib/association";
 import { getShopSummary } from "@/lib/content";
@@ -27,7 +28,8 @@ export default async function ShopConditionsPage() {
         crumbs={[{ href: "/", label: "Início" }, { href: "/loja", label: "Loja solidária" }, { label: "Condições" }]}
       />
       <Container narrow>
-        <div className="gn-stack gn-stack--m">
+        <div className="gn-stack gn-stack--m legal-text">
+          <LegalDraftNotice />
           <h2 id="quem-vende">Quem vende</h2>
           <p>
             {association.name}, NIF {association.nif}, associação sem fins lucrativos de Viana do Castelo.
