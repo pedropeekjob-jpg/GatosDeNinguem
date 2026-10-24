@@ -108,6 +108,7 @@ export function buildVolunteerCare(input: VolunteerCareInput) {
     return {
       cat: catSummary(cat),
       location: careById.get(cat.id)?.location ?? null,
+      locationSince: careById.get(cat.id)?.since ?? null,
       specialNeeds: cat.specialNeeds,
       medications: input.medications
         .filter((m) => m.catId === cat.id && isMedicationActive(m, shiftDate))
@@ -169,6 +170,8 @@ export function buildVolunteerCare(input: VolunteerCareInput) {
 export type CatGuide = {
   cat: CatSummary;
   location: CatCare["location"] | null;
+  /** When it was moved there. */
+  locationSince: string | null;
   specialNeeds?: string;
   medications: Pick<Medication, "id" | "name" | "dose" | "times" | "withFood" | "instructions">[];
   importantNotes: VisitNote[];

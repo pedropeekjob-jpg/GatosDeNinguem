@@ -3,7 +3,10 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   careAlertKindLabel,
   careAlertKindSchema,
+  formatDate,
+  formatHour,
   locationLabel,
+  timeAgo,
   timesLabel,
   type CareAlertKind,
   type CareRoundItem,
@@ -20,6 +23,11 @@ const dayLong = new Intl.DateTimeFormat("pt-PT", { weekday: "long", day: "numeri
 const dayShort = new Intl.DateTimeFormat("pt-PT", { day: "numeric", month: "short", timeZone: "Europe/Lisbon" });
 const hour = new Intl.DateTimeFormat("pt-PT", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon" });
 const when = (iso: string) => `${dayShort.format(new Date(iso))}, ${hour.format(new Date(iso))}`;
+/** "há 5 minutos", "ontem às 21:30"; the full date and time on hover. */
+const Ago = ({ iso }: { iso: string }) => <time dateTime={iso} title={`${formatDate(iso)}, ${formatHour(iso)}`}>{timeAgo(iso)}</time>;
+const At = ({ iso }: { iso: string }) => <time dateTime={iso}>{when(iso)}</time>;
+/** "Mudou para aqui há 3 dias", or "Aqui desde 2 de outubro" when it was longer ago. */
+const movedLabel = (iso: string) => { const ago = timeAgo(iso); return /^\d/.test(ago) ? `Aqui desde ${ago}` : `Mudou para aqui ${ago}`; };
 const kinds = careAlertKindSchema.options;
 
 type Flash = { tone: "success" | "error"; text: string } | null;
@@ -245,6 +253,7 @@ function CatGuideCard({ guide, canComment, act, nested }: { guide: CatGuide; can
         <div>
           <Heading id={`${id}-nome`}>{guide.cat.name}</Heading>
           <Where location={guide.location} />
+          {guide.location && guide.locationSince ? <p className="small muted"><time dateTime={guide.locationSince} title={`${formatDate(guide.locationSince)}, ${formatHour(guide.locationSince)}`}>{movedLabel(guide.locationSince)}</time></p> : null}
         </div>
       </header>
       {guide.location?.reason ? <p className="small">Porquê: {guide.location.reason}</p> : null}
@@ -254,14 +263,14 @@ function CatGuideCard({ guide, canComment, act, nested }: { guide: CatGuide; can
         {guide.medications.map((m) => (
           <p key={m.id}><strong>{m.name}</strong>, {m.dose}. {timesLabel(m)}.{m.instructions ? ` ${m.instructions}` : ""}</p>
         ))}
-        {guide.importantNotes.map((n) => <p key={n.id} className="gatil__importante">{n.text} <span className="small">({n.by.name}, {when(n.createdAt)})</span></p>)}
+        {guide.importantNotes.map((n) => <p key={n.id} className="gatil__importante">{n.text} <span className="small">({n.by.name}, <Ago iso={n.createdAt} />)</span></p>)}
         {!guide.specialNeeds && guide.medications.length === 0 && guide.importantNotes.length === 0 ? <p>Está na jaula: confirme água, comida e areia.</p> : null}
       </div>
-      {guide.nextAppointment ? <p className="small">Próxima consulta: {when(guide.nextAppointment.startsAt)}, {guide.nextAppointment.reason}.{guide.nextAppointment.notes ? ` ${guide.nextAppointment.notes}` : ""}</p> : null}
+      {guide.nextAppointment ? <p className="small">Próxima consulta: <At iso={guide.nextAppointment.startsAt} />, {guide.nextAppointment.reason}.{guide.nextAppointment.notes ? ` ${guide.nextAppointment.notes}` : ""}</p> : null}
       {guide.latestNotes.length > 0 ? (
         <details>
           <summary>Últimos comentários</summary>
-          <ul className="gatil__notas">{guide.latestNotes.map((n) => <li key={n.id}>{n.text} <span className="small muted">({n.by.name}, {when(n.createdAt)})</span></li>)}</ul>
+          <ul className="gatil__notas">{guide.latestNotes.map((n) => <li key={n.id}>{n.text} <span className="small muted">({n.by.name}, <Ago iso={n.createdAt} />)</span></li>)}</ul>
         </details>
       ) : null}
       {canComment ? (
@@ -295,7 +304,7 @@ function Notifications({ care, act }: { care: VolunteerCare; act: Act }) {
               <ul className="gatil__notas">
                 {g.alerts.filter((a) => !a.muted).map((a) => (
                   <li key={a.id} className={a.unread ? "gatil__nova" : undefined}>
-                    {a.unread ? <span className="gn-sr-only">Nova: </span> : null}{a.message} <span className="small muted">{when(a.createdAt)}</span>
+                    {a.unread ? <span className="gn-sr-only">Nova: </span> : null}{a.message} <span className="small muted"><Ago iso={a.createdAt} /></span>
                   </li>
                 ))}
               </ul>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ageLabel, statusLabel, type CatStatus } from "@gn/domain";
+import { ageLabel, formatDate, formatMonthYear, statusLabel, type CatStatus } from "@gn/domain";
 import { Badge, Button, Checkbox, ChoiceList, Notice, TextArea, TextField } from "@gn/ui";
 import { PhotoManager } from "../components/PhotoManager";
 import { errorMessage, useApi } from "../lib/api";
@@ -31,7 +31,7 @@ export function GatosPage() {
             <img src={c.photos[0] ? photoSrc(c.photos[0].url) : undefined} alt="" width={96} height={72} />
             <div className="gn-stack gn-stack--s">
               <p className="shift__title">{c.name}</p>
-              <p className="small muted">{ageLabel(c.ageYears)} · {c.sex === "femea" ? "Fêmea" : "Macho"}</p>
+              <p className="small muted">{ageLabel(c.ageYears)} · {c.sex === "femea" ? "Fêmea" : "Macho"}{c.arrivedAt ? <> · no gatil desde <time dateTime={c.arrivedAt}>{formatMonthYear(c.arrivedAt)}</time></> : null}</p>
               <div><Badge tone={c.status === "para-adocao" ? "success" : "neutral"}>{statusLabel[c.status]}</Badge></div>
             </div>
             <Button variant="secondary" onClick={() => setEditing(c)}>Editar<span className="gn-sr-only"> {c.name}</span></Button>
@@ -62,6 +62,8 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
     vaccinated: cat?.vaccinated ?? false,
     microchipped: cat?.microchipped ?? false,
     photos: cat?.photos ?? [],
+    // A new cat has usually just arrived.
+    arrivedAt: cat ? cat.arrivedAt ?? "" : new Date().toISOString().slice(0, 10),
   });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
@@ -88,6 +90,8 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
         microchipped: f.microchipped,
         photos: f.photos.map((p) => ({ url: p.url, alt: p.alt.trim() })),
         seo: cat?.seo ?? {},
+        arrivedAt: f.arrivedAt || undefined,
+        listedAt: cat?.listedAt,
         adoptedAt: cat?.adoptedAt,
         happyEnding: cat?.happyEnding,
       };
@@ -107,6 +111,14 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
       </section>
       <ChoiceList name="c-status" legend="Situação" value={f.status} onChange={(v) => set("status", v)} options={statusOptions} />
       <ChoiceList name="c-sex" legend="Sexo" value={f.sex} onChange={(v) => set("sex", v)} options={[{ value: "femea", label: "Fêmea" }, { value: "macho", label: "Macho" }]} />
+      <TextField
+        id="c-arrived"
+        label="Chegou ao gatil a"
+        hint={`Aparece no site como "No gatil desde…".${cat?.listedAt ? ` Para adoção desde ${formatDate(cat.listedAt)}.` : ""}${cat?.adoptedAt ? ` Adotad${cat.sex === "femea" ? "a" : "o"} a ${formatDate(cat.adoptedAt)}.` : ""}`}
+        type="date"
+        value={f.arrivedAt}
+        onChange={(e) => set("arrivedAt", e.target.value)}
+      />
       <TextField id="c-age" label="Idade (anos)" hint="Use 0 para bebés com menos de 1 ano." type="number" inputMode="numeric" value={f.ageYears} onChange={(e) => set("ageYears", e.target.value)} />
       <ChoiceList name="c-energy" legend="Feitio" value={f.energy} onChange={(v) => set("energy", v)} options={[{ value: "calmo", label: "Calmo" }, { value: "equilibrado", label: "Equilibrado" }, { value: "ativo", label: "Ativo e brincalhão" }]} />
       <TextArea id="c-summary" label="Resumo (uma frase)" hint="Aparece nos cartões e no Google." rows={2} value={f.summary} onChange={(e) => set("summary", e.target.value)} recommended={{ min: 50, max: 160 }} />

@@ -31,6 +31,10 @@ export const catSchema = z.object({
   vaccinated: z.boolean(),
   microchipped: z.boolean(),
   photos: z.array(photoSchema).min(1),
+  /** Day the cat came to the shelter, "AAAA-MM-DD". Shown as "No gatil desde março de 2024". */
+  arrivedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use uma data, por exemplo 2024-03-15").optional(),
+  /** Set the first time status becomes "para-adocao"; shown as "Para adoção desde…". */
+  listedAt: z.string().datetime().optional(),
   /** Set when status becomes "adotado"; powers the Finais Felizes section. */
   adoptedAt: z.string().datetime().optional(),
   happyEnding: z

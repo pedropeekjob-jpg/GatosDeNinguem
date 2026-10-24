@@ -1,10 +1,11 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { euros, stockOf, type Delivery, type Payment, type Product, type ShopSettings } from "@gn/domain";
+import { euros, ORDER_BUTTON_LABEL, stockOf, WITHDRAWAL_DAYS, type Delivery, type Payment, type Product, type ShopSettings } from "@gn/domain";
 import { Button, Checkbox, ChoiceList, Modal, Notice, NextStep, TextArea, TextField } from "@gn/ui";
 import { useCart, type CartLine } from "@/components/client/cart";
 import { useModalHistory } from "@/components/client/FormModal";
 import { placeShopOrder, type OrderPlaced } from "@/lib/submit";
+import { PrivacyHint } from "@/components/forms/PrivacyHint";
 import { PaymentSteps } from "./PaymentSteps";
 
 /** The basket: change quantities, see the total, then order in a window over the page. */
@@ -73,7 +74,7 @@ export function ShopCart({ products, settings }: { products: Product[]; settings
           );
         })}
       </ul>
-      <p className="cart-total">Total <strong>{euros(cart.totalCents)}</strong></p>
+      <p className="cart-total">Total <strong>{euros(cart.totalCents)}</strong>{settings.vatNote ? <span className="small muted"> {settings.vatNote}</span> : null}</p>
       {blocked ? <Notice tone="warning" title="Alguns artigos mudaram">Ajuste as quantidades marcadas a vermelho antes de fazer o pedido.</Notice> : null}
       <div className="action-row">
         <Button onClick={modal.show} disabled={blocked} aria-haspopup="dialog">Fazer o pedido</Button>
@@ -140,7 +141,7 @@ function OrderForm({ lines, totalCents, settings, onPlaced }: { lines: CartLine[
         onChange={(v) => { setDelivery(v); if (v === "correio" && payment === "ao-levantar") setPayment("mbway"); }}
         options={[
           { value: "levantar", label: "Levantar no gatil ou numa banca", hint: "Sem custos" },
-          { value: "correio", label: "Receber pelo correio", hint: "Os portes pagam-se à parte" },
+          { value: "correio", label: "Receber pelo correio", hint: "Os portes pagam-se à parte e dizemos-lhe o valor antes de pagar" },
         ]}
       />
       {delivery === "correio" ? (
@@ -156,9 +157,14 @@ function OrderForm({ lines, totalCents, settings, onPlaced }: { lines: CartLine[
         <label htmlFor="website_url">Não preencher</label>
         <input id="website_url" tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
       </div>
-      <Checkbox id="consentimento" label="Aceito que a associação me contacte sobre este pedido" hint="Usamos os seus dados apenas para isto." checked={consent} onChange={setConsent} />
+      <Checkbox id="consentimento" label="Tenho 18 anos ou mais e aceito que a associação me contacte sobre este pedido" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
-      <Button type="submit" disabled={sending} block>{sending ? "A enviar…" : "Enviar pedido"}</Button>
+      <p className="small">
+        Total a pagar: <strong>{euros(totalCents)}</strong>{delivery === "correio" ? " mais os portes" : ""}{settings.vatNote ? ` (${settings.vatNote})` : ""}.
+        Pode desistir até {WITHDRAWAL_DAYS} dias depois de receber os artigos.{" "}
+        <a href="/loja/condicoes" target="_blank" rel="noopener">Condições da loja</a>
+      </p>
+      <Button type="submit" disabled={sending} block>{sending ? "A enviar…" : ORDER_BUTTON_LABEL}</Button>
     </form>
   );
 }

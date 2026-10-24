@@ -11,7 +11,7 @@ main { display: block; }
 .home-hero__text { display: grid; gap: 0.75rem; }
 .home-hero__text h1 { font-size: clamp(1.625rem, 4.4vw, 2.75rem); }
 .home-actions { display: grid; gap: 0.6rem; grid-template-columns: 1fr 1fr; padding-top: 0.25rem; }
-/* Phones already have "Encontrei um gato" at the top of the screen; repeating it would push the welcome off the first screen. */
+/* Phones keep the welcome inside the first screen, so "Encontrei um gato" waits in the footer there. */
 .home-actions .gn-btn--urgent { display: none; }
 @media (min-width: 60rem) {
   .home-top:not(.home-top--plain) .home-top__over {
@@ -61,6 +61,15 @@ main { display: block; }
 .site-footer__title { font-size: var(--gn-text); }
 .site-footer__links { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
 .site-footer__small { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.site-footer__address { font-style: normal; display: grid; gap: 0.2rem; }
+.site-footer__legal { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-top: var(--gn-space-l); padding-top: var(--gn-space-m); border-top: 1px solid var(--gn-line); font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.site-footer__legal a { color: inherit; }
+.site-footer__ral { margin-top: 0.5rem; }
+.site-footer__ral a { color: inherit; }
+.legal-text h2 { margin-top: var(--gn-space-m); }
+.legal-table { overflow-x: auto; }
+.legal-table table { width: 100%; border-collapse: collapse; font-size: var(--gn-text-s); }
+.legal-table th, .legal-table td { text-align: left; vertical-align: top; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--gn-line); }
 .discover-card { display: grid; gap: var(--gn-space-m); }
 .match-pill { display: inline-flex; gap: 0.4rem; align-items: center; font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 6px; background: var(--gn-sand); color: var(--gn-ink); }
 .match-pill--super { background: var(--gn-accent); color: var(--gn-ink); }
@@ -304,6 +313,8 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 .cat-card .gn-card__media { aspect-ratio: 5 / 4; }
 .cat-card .gn-card__body { gap: 0.5rem; }
 .cat-card .gn-card__text p { margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cat-card .gn-card__text p.cat-card__when { font-size: var(--gn-text-s); color: var(--gn-ink-soft); margin-bottom: 0.25rem; }
+.gn-card__text p.news-when { margin-bottom: 0.5rem; }
 
 /* Home: "Procuram família". */
 .cat-rail { padding-block: var(--gn-space-m) var(--gn-space-xl); }

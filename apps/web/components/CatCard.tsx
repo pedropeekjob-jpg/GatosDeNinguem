@@ -2,8 +2,10 @@ import { ageLabel, isSenior, statusLabel } from "@gn/domain";
 import { Badge, Card } from "@gn/ui";
 import type { PublicCat } from "@/lib/content";
 import { FavoriteButton } from "./client/FavoriteButton";
+import { TimeAgo } from "./client/TimeAgo";
+import { When } from "./When";
 
-/** Photo-first: the picture, the name, "11 anos · Macho", and only the badges that tell something new.
+/** Photo-first: the picture, the name, "11 anos · Macho", how long it has waited, and only the badges that tell something new.
  *  sponsor: the card leads to sponsoring the cat instead of its adoption page. */
 export function CatCard({ cat, titleAs = "h3", sponsor }: { cat: PublicCat; titleAs?: "h2" | "h3"; sponsor?: boolean }) {
   const photo = cat.photos[0]!;
@@ -28,6 +30,11 @@ export function CatCard({ cat, titleAs = "h3", sponsor }: { cat: PublicCat; titl
         ) : undefined
       }
     >
+      {cat.status === "adotado" && cat.adoptedAt ? (
+        <p className="cat-card__when">Adotad{cat.sex === "femea" ? "a" : "o"} a <When iso={cat.adoptedAt} format="short" /></p>
+      ) : cat.arrivedAt ? (
+        <p className="cat-card__when">No gatil <TimeAgo iso={cat.arrivedAt} renderedAt={new Date().toISOString()} /></p>
+      ) : null}
       <p>{cat.summary}</p>
     </Card>
   );
