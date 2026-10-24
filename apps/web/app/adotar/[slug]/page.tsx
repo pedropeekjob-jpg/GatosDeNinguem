@@ -8,6 +8,8 @@ import { AdoptionInterestForm } from "@/components/forms/AdoptionInterestForm";
 import { SponsorForm } from "@/components/forms/SponsorForm";
 import { JsonLd } from "@/components/JsonLd";
 import { PageHero } from "@/components/PageHero";
+import { TimeAgo } from "@/components/client/TimeAgo";
+import { When } from "@/components/When";
 import { getCat, getSeoSettings, listCats } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
@@ -35,6 +37,7 @@ export default async function CatPage({ params }: Props) {
   const url = `${settings.siteUrl}/adotar/${cat.slug}`;
   const photo = cat.photos[0]!;
   const pronoun = cat.sex === "femea" ? "a" : "o";
+  const renderedAt = new Date().toISOString();
 
   return (
     <>
@@ -71,6 +74,9 @@ export default async function CatPage({ params }: Props) {
             <dl className="facts">
               <div><dt>Idade</dt><dd>{ageLabel(cat.ageYears)}</dd></div>
               <div><dt>Sexo</dt><dd>{cat.sex === "femea" ? "Fêmea" : "Macho"}</dd></div>
+              {cat.arrivedAt ? <div><dt>No gatil desde</dt><dd><When iso={cat.arrivedAt} format="month" />{cat.status !== "adotado" ? <> (<TimeAgo iso={cat.arrivedAt} renderedAt={renderedAt} />)</> : null}</dd></div> : null}
+              {cat.listedAt && cat.status !== "adotado" ? <div><dt>Para adoção desde</dt><dd><When iso={cat.listedAt} /></dd></div> : null}
+              {cat.status === "adotado" && cat.adoptedAt ? <div><dt>Adotad{pronoun} a</dt><dd><When iso={cat.adoptedAt} /></dd></div> : null}
               <div><dt>Feitio</dt><dd>{cat.traits.join(", ") || "A conhecer"}</dd></div>
               <div><dt>Dá-se bem com crianças</dt><dd>{yesNo(cat.goodWithKids)}</dd></div>
               <div><dt>Dá-se bem com gatos</dt><dd>{yesNo(cat.goodWithCats)}</dd></div>
@@ -98,6 +104,7 @@ export default async function CatPage({ params }: Props) {
                 </div>
               </Notice>
             ) : null}
+            <p className="small muted">Ficha atualizada a <When iso={cat.updatedAt} />.</p>
             <ShareBar url={url} text={cat.status === "adotado" ? `${cat.name} encontrou família!` : `Conheça ${pronoun} ${cat.name}, procura família em Viana do Castelo`} label={`Partilhar ${pronoun} ${cat.name}`} />
           </div>
         </div>
