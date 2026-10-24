@@ -529,3 +529,52 @@ test("shop: offer articles to sell", async ({ page }) => {
   await expect(dialog.getByText("Obrigado pela sua oferta!")).toBeVisible();
   await expect(dialog.getByText(/quando podemos ir buscar/)).toBeVisible();
 });
+
+test.describe("avisos de gatos novos", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("the window waits: not on the first page at once, then once on the second page, and never again after 'Agora não'", async ({ page }) => {
+    await page.clock.install();
+    await page.goto("/");
+    const dialog = page.getByRole("dialog", { name: "Quer saber quando chegam gatos novos?" });
+    await page.clock.runFor(20_000);
+    await expect(dialog).toBeHidden();
+
+    await page.getByRole("link", { name: "Adotar" }).first().click();
+    await expect(page).toHaveURL(/\/adotar$/);
+    await page.clock.runFor(16_000);
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel("O seu email", { exact: true })).toBeVisible();
+    await dialog.getByRole("button", { name: "Agora não" }).click();
+    await expect(dialog).toBeHidden();
+
+    await page.goto("/finais-felizes");
+    await page.clock.runFor(90_000);
+    await expect(dialog).toBeHidden();
+  });
+
+  test("never interrupts an emergency", async ({ page }) => {
+    await page.clock.install();
+    await page.goto("/");
+    await page.goto("/sos");
+    await page.clock.runFor(90_000);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+
+  test("from Adotar: ask for alerts about kittens, with explicit consent", async ({ page }) => {
+    await page.goto("/adotar");
+    await page.getByRole("button", { name: "Avisem-me de gatos novos" }).click();
+    const dialog = page.getByRole("dialog", { name: "Quer saber quando chegam gatos novos?" });
+    await dialog.getByLabel("O seu email", { exact: true }).fill("ana@exemplo.pt");
+    await dialog.getByText("Só alguns gatos?").click();
+    await dialog.getByRole("button", { name: "Bebés" }).click();
+    await expect(dialog.getByRole("button", { name: "Bebés" })).toHaveAttribute("aria-pressed", "true");
+    await dialog.getByRole("button", { name: "Avisem-me" }).click();
+    await expect(dialog.getByText("Precisa de aceitar para receber os avisos")).toBeVisible();
+    await dialog.getByLabel("Aceito receber estes avisos por email").check();
+    await dialog.getByRole("button", { name: "Avisem-me" }).click();
+    await expect(dialog.getByText("Falta só confirmar")).toBeVisible();
+    const results = await new AxeBuilder({ page }).include("dialog").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+});

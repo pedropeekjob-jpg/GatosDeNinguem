@@ -12,3 +12,4 @@ export * from "./voluntario";
 export * from "./loja";
 export * from "./seed-loja";
 export * from "./promocao";
+export * from "./alertas";

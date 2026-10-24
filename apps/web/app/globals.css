@@ -432,3 +432,13 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .shop-grid .gn-card__title { font-size: var(--gn-text); }
   .shop-grid .gn-card__text { font-size: var(--gn-text-s); }
 }
+
+/* "Avisem-me quando chegarem gatos": optional preferences fold away so the window stays short. */
+.alert-prefs { border: 1.5px solid var(--gn-line); border-radius: var(--gn-radius-s); padding: 0 1rem; }
+.alert-prefs summary { min-height: var(--gn-target); display: flex; align-items: center; font-weight: 600; cursor: pointer; }
+.alert-prefs summary .muted { font-weight: 400; margin-left: 0.3rem; }
+.alert-prefs[open] { padding-bottom: 1rem; }
+.alert-prefs__group { border: 0; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.alert-prefs__group legend { font-weight: 600; padding: 0; margin-bottom: 0.4rem; }
+.alert-prefs__chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.alert-later { justify-self: center; min-height: var(--gn-target); padding: 0 1rem; border: 0; background: none; font: inherit; color: var(--gn-ink-soft); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }

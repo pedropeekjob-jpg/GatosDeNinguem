@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from
 import { AnimatedLogo, Button, Container, Notice, SiteHeader, TextField } from "@gn/ui";
 import { ApiContext, httpApi, type Api } from "./lib/api";
 import { useUnreadAlerts } from "./lib/equipa";
+import { AvisosPage } from "./pages/AvisosPage";
 import { CuidadoGatoPage } from "./pages/CuidadoGatoPage";
 import { CuidadosPage } from "./pages/CuidadosPage";
 import { EscalasPage } from "./pages/EscalasPage";
@@ -26,6 +27,7 @@ const nav = [
   { href: "/fotos", label: "Fotos do gatil" },
   { href: "/noticias", label: "Notícias" },
   { href: "/promocao", label: "Promoção" },
+  { href: "/avisos", label: "Avisos" },
   { href: "/pedidos", label: "Pedidos" },
   { href: "/loja", label: "Loja" },
   { href: "/patinhas", label: "Patinhas" },
@@ -82,6 +84,7 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
                 <Route path="/fotos" element={<FotosPage />} />
                 <Route path="/noticias" element={<NoticiasPage />} />
                 <Route path="/promocao" element={<PromocaoPage />} />
+                <Route path="/avisos" element={<AvisosPage />} />
                 <Route path="/pedidos" element={<PedidosPage />} />
                 <Route path="/loja" element={<LojaPage today={today} />} />
                 <Route path="/patinhas" element={<PatinhasPage />} />

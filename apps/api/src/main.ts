@@ -5,7 +5,8 @@ import type { PhotoStore } from "./media/photo-store";
 import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/repository";
 import { metaPublishers, resendNewsletterPublisher } from "./promocao/publishers";
 import { PromotionService } from "./promocao/promotion.service";
-import { lisbonNow, lisbonToUtc, type Account, type CareAlert, type Contact } from "@gn/domain";
+import { lisbonNow, lisbonToUtc, type Account, type CareAlert, type Contact, type PushSubscriptionJson } from "@gn/domain";
+import type { OutgoingEmail, PushNotification } from "./common/options";
 
 async function repositories(): Promise<{ repository: ContentRepository; patinhas: PatinhasRepository; photoStore?: PhotoStore }> {
   if (!process.env.DATABASE_URL) {
@@ -106,6 +107,46 @@ function promotionPublishers() {
   return { ...meta, ...(key ? { email: resendNewsletterPublisher({ apiKey: key, from }) } : {}) };
 }
 
+/** Plain-text emails through Resend's batch endpoint (100 per call). Without RESEND_API_KEY the API runs without email. */
+function emailSender() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return undefined;
+  const from = process.env.NEWSLETTER_EMAIL_FROM ?? process.env.LOGIN_EMAIL_FROM ?? "Gatos de Ninguém <novidades@gatosdeninguem.pt>";
+  return async (emails: OutgoingEmail[]) => {
+    for (let i = 0; i < emails.length; i += 100) {
+      const res = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+        body: JSON.stringify(emails.slice(i, i + 100).map((e) => ({ from, to: [e.to], subject: e.subject, text: e.text, headers: e.headers }))),
+      });
+      if (!res.ok) throw new Error(`Email: erro ${res.status} ao enviar${i > 0 ? ` (já tinham saído ${i})` : ""}.`);
+    }
+  };
+}
+
+/**
+ * Notifications on visitors' devices (Web Push). Needs a VAPID key pair: `npx web-push generate-vapid-keys`.
+ * The public key goes to the site through GET /alertas/config.
+ */
+async function pushSender() {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!publicKey || !privateKey) return {};
+  const webpush = (await import("web-push")).default;
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT ?? "mailto:gatosdeninguem@gmail.com", publicKey, privateKey);
+  const sendPush = async (to: PushSubscriptionJson, n: PushNotification): Promise<"ok" | "gone"> => {
+    try {
+      await webpush.sendNotification(to, JSON.stringify(n), { TTL: 3 * 86_400 });
+      return "ok";
+    } catch (err) {
+      const status = (err as { statusCode?: number }).statusCode;
+      if (status === 404 || status === 410) return "gone";
+      throw err;
+    }
+  };
+  return { sendPush, pushPublicKey: publicKey };
+}
+
 const adminToken = process.env.ADMIN_TOKEN;
 if (!adminToken || adminToken.length < 16) throw new Error("Set ADMIN_TOKEN (16+ characters) before starting the API.");
 
@@ -123,6 +164,8 @@ const options = {
   publicUrl: process.env.PUBLIC_API_URL ?? process.env.RENDER_EXTERNAL_URL,
   siteUrl: process.env.PUBLIC_SITE_URL,
   promotionPublishers: promotionPublishers(),
+  sendEmail: emailSender(),
+  ...(await pushSender()),
   unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
 };
 const app = await createApp(options);

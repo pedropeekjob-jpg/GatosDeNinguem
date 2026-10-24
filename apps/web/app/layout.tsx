@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { Splash } from "@/components/Splash";
 import { ScrollReveal } from "@/components/client/ScrollReveal";
 import { ClientNavigation } from "@/components/client/ClientNavigation";
+import { CatAlertPrompt } from "@/components/client/CatAlerts";
 import { getSeoSettings } from "@/lib/content";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Footer />
         <ScrollReveal />
         <ClientNavigation />
+        <CatAlertPrompt />
         <JsonLd data={organizationJsonLd(settings)} />
       </body>
     </html>

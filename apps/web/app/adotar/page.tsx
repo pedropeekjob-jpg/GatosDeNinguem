@@ -1,6 +1,7 @@
 import { Button, Grid, Notice, Section } from "@gn/ui";
 import { isSenior } from "@gn/domain";
 import { CatCard } from "@/components/CatCard";
+import { CatAlertButton } from "@/components/client/CatAlerts";
 import { CatFilter } from "@/components/client/CatFilter";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { PageHero } from "@/components/PageHero";
@@ -22,6 +23,7 @@ export default async function AdoptPage() {
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Adotar" }]}>
         <div className="action-row">
           <Button href="/adotar/descobrir">Ajude-me a escolher</Button>
+          <CatAlertButton />
         </div>
         <FavoritesStrip cats={available} />
         {happy.length > 0 ? (

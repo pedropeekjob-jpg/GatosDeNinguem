@@ -2,6 +2,8 @@ import "reflect-metadata";
 import { Controller, Get, Module, type DynamicModule } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
+import { AlertasController, AlertasGestaoController } from "./alertas/alertas.controller";
+import { CatAlertService } from "./alertas/cat-alert.service";
 import { AdminGuard } from "./common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "./common/options";
 import { AdoptionsController } from "./content/adoptions.controller";
@@ -36,12 +38,13 @@ class AppModule {
     const accounts = options.patinhas ?? new InMemoryPatinhasRepository();
     return {
       module: AppModule,
-      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController],
+      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, AlertasController, AlertasGestaoController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, accounts) },
         { provide: CareService, useValue: new CareService(options, accounts) },
         { provide: PromotionService, useValue: new PromotionService(options) },
+        { provide: CatAlertService, useValue: new CatAlertService(options) },
         AdminGuard,
       ],
     };

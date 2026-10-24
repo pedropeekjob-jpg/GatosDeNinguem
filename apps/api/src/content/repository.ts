@@ -1,6 +1,7 @@
 import type { Appointment, CareAlert, CareNotificationPrefs, CareTask, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
 import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } from "@gn/domain";
 import type { Product, ShopOrder, ShopSettings, ShopSpending, StoredItemDonation } from "@gn/domain";
+import type { CatAlertSent, CatAlertSubscriber } from "@gn/domain";
 import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Promotion, Redirect, SeoSettings } from "@gn/domain";
 
 export type StoredAdoptionInterest = AdoptionInterest & { id: string; receivedAt: string };
@@ -38,6 +39,17 @@ export interface ContentRepository {
   listNewsletterSignups(): Promise<(NewsletterSignup & { subscribedAt: string })[]>;
   /** Unsubscribe. Unknown addresses are ignored. */
   deleteNewsletterSignup(email: string): Promise<void>;
+
+  /** "Avisem-me quando chegarem gatos" sign-ups (email and device notifications). Oldest first. */
+  listCatAlertSubscribers(): Promise<CatAlertSubscriber[]>;
+  getCatAlertSubscriber(id: string): Promise<CatAlertSubscriber | undefined>;
+  findCatAlertSubscriber(by: { email: string } | { endpoint: string }): Promise<CatAlertSubscriber | undefined>;
+  saveCatAlertSubscriber(s: CatAlertSubscriber): Promise<CatAlertSubscriber>;
+  deleteCatAlertSubscriber(id: string): Promise<void>;
+  /** Cats already announced, newest first. */
+  listCatAlertsSent(): Promise<CatAlertSent[]>;
+  getCatAlertSent(catId: string): Promise<CatAlertSent | undefined>;
+  saveCatAlertSent(a: CatAlertSent): Promise<void>;
 
   /** Event promotions (social posts and email a week before), soonest event first. */
   listPromotions(): Promise<Promotion[]>;

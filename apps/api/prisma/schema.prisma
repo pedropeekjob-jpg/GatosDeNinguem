@@ -61,6 +61,23 @@ model NewsletterSignup {
   subscribedAt DateTime
 }
 
+// "Avisem-me quando chegarem gatos": email (confirmed by link) or notifications on a device.
+model CatAlertSubscriber {
+  id        String   @id
+  email     String?  @unique
+  endpoint  String?  @unique
+  status    String
+  createdAt DateTime
+  data      Json
+}
+
+// One alert per cat, ever.
+model CatAlertSent {
+  catId  String   @id
+  sentAt DateTime
+  data   Json
+}
+
 // Social posts, stories and the newsletter email sent a week before each event.
 model Promotion {
   id            String   @id

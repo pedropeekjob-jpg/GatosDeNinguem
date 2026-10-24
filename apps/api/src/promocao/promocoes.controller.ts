@@ -3,6 +3,7 @@ import { promotionEditSchema } from "@gn/domain";
 import type { FastifyReply } from "fastify";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
+import { escapeHtml as escape, htmlPage as page } from "../common/html-page";
 import { parseBody } from "../common/validation";
 import { PromotionService } from "./promotion.service";
 
@@ -42,11 +43,6 @@ export class PromocoesController {
   @HttpCode(200)
   publishNow(@Param("id") id: string) { return this.promotions.publishNow(id); }
 }
-
-const page = (title: string, body: string) => `<!doctype html><html lang="pt-PT"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title>
-<style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#111;line-height:1.5}button{font:inherit;background:#111;color:#fff;border:0;border-radius:999px;padding:.75rem 1.5rem;cursor:pointer}</style></head>
-<body><h1>${title}</h1>${body}</body></html>`;
-const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /**
  * Unsubscribe links in newsletter emails. Opening the link asks for a click (mail scanners open links
