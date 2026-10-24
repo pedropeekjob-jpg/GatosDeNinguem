@@ -89,6 +89,15 @@ describe("writes require the admin token", () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().adoptedAt).toBeTruthy();
   });
+
+  it("remembers when a cat was first put up for adoption", async () => {
+    const res = await req({ method: "PATCH", url: "/cats/cat-5", headers: auth, payload: { status: "para-adocao" } });
+    const listedAt = res.json().listedAt;
+    expect(listedAt).toBeTruthy();
+    await req({ method: "PATCH", url: "/cats/cat-5", headers: auth, payload: { status: "reservado" } });
+    const again = await req({ method: "PATCH", url: "/cats/cat-5", headers: auth, payload: { status: "para-adocao" } });
+    expect(again.json().listedAt).toBe(listedAt);
+  });
 });
 
 describe("adoption interest", () => {

@@ -1,7 +1,7 @@
 import { Button, Container, ProgressMeter, Section, StatTile } from "@gn/ui";
 import { PageHero } from "@/components/PageHero";
 import { getImpact, getPage } from "@/lib/content";
-import { formatDate } from "@/lib/format";
+import { When } from "@/components/When";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -36,7 +36,7 @@ export default async function AboutPage() {
           </div>
         </div>
       </Container>
-      <Section tone="ink" heading="O nosso trabalho em números" intro={`Atualizado em ${formatDate(impact.updatedAt)}.`}>
+      <Section tone="ink" heading="O nosso trabalho em números" intro={<>Atualizado a <When iso={impact.updatedAt} />.</>}>
         <div className="stats">
           <StatTile value={impact.catsInShelter} label="gatos no gatil hoje" />
           <StatTile value={impact.adoptionsThisYear} label="adoções este ano" />

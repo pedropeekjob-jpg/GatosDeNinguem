@@ -529,3 +529,17 @@ test("shop: offer articles to sell", async ({ page }) => {
   await expect(dialog.getByText("Obrigado pela sua oferta!")).toBeVisible();
   await expect(dialog.getByText(/quando podemos ir buscar/)).toBeVisible();
 });
+
+test("dates: cats show how long they have waited, news and happy endings show when", async ({ page }) => {
+  await page.goto("/adotar");
+  await expect(page.locator(".cat-card", { hasText: "Tobias" }).getByText(/^No gatil há \d+ anos?$/)).toBeVisible();
+  await page.goto("/adotar/tobias");
+  await expect(page.locator("dl.facts")).toContainText("No gatil desde");
+  await expect(page.locator("dl.facts div", { hasText: "No gatil desde" }).locator("dd")).toHaveText(/^abril de 2023 \(há \d+ anos?\)$/);
+  await expect(page.locator("dl.facts div", { hasText: "Para adoção desde" }).locator("dd")).toHaveText("2 de junho de 2023");
+  await page.goto("/noticias");
+  await expect(page.locator("time[datetime]").first()).toHaveText(/^\d{1,2} de [a-zç]+ de \d{4}$/);
+  await expect(page.getByText(/^Quando: .*novembro/)).toBeVisible();
+  await page.goto("/finais-felizes");
+  await expect(page.getByText(/Adotada a 14 de setembro de 2026, depois de \d+ anos? no gatil/)).toBeVisible();
+});

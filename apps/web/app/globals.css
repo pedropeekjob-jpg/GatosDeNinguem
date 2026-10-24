@@ -289,6 +289,8 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 .cat-card .gn-card__media { aspect-ratio: 5 / 4; }
 .cat-card .gn-card__body { gap: 0.5rem; }
 .cat-card .gn-card__text p { margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cat-card .gn-card__text p.cat-card__when { font-size: var(--gn-text-s); color: var(--gn-ink-soft); margin-bottom: 0.25rem; }
+.gn-card__text p.news-when { margin-bottom: 0.5rem; }
 
 /* Home: "Procuram família". */
 .cat-rail { padding-block: var(--gn-space-m) var(--gn-space-xl); }
