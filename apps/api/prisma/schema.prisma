@@ -108,6 +108,16 @@ model Sponsorship {
   data    Json
 }
 
+/// Letters from the team to a cat's godparents.
+model SponsorLetter {
+  id        String   @id
+  catSlug   String
+  createdAt DateTime
+  data      Json
+
+  @@index([catSlug])
+}
+
 model Redirect {
   id        String  @id
   from      String  @unique

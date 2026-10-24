@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import { cuidadosHttp, type CuidadosApi } from "./cuidadosApi";
 import { lojaHttp, type LojaApi } from "./lojaApi";
 import { patinhasHttp, type PatinhasApi } from "./patinhasApi";
+import type { Author, SponsorLetter, SponsorLetterInput } from "@gn/domain";
 import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Promotion, PromotionChannel, PromotionEdit, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, StoredFosterApplication, WeeklyRule } from "./types";
 
 export type AuditItem = { id: string; kind: "pagina" | "gato" | "noticia"; label: string; path: string; title: string; description: string; noindex: boolean };
@@ -25,6 +26,9 @@ export interface Api extends PatinhasApi, CuidadosApi, LojaApi {
   setFosterApplicationStatus(id: string, status: StoredFosterApplication["status"]): Promise<StoredFosterApplication>;
   sponsorships(): Promise<(Sponsorship & { needsUpdate: boolean })[]>;
   saveSponsorship(s: Partial<Sponsorship> & Omit<Sponsorship, "id">): Promise<Sponsorship>;
+  sponsorLetters(catSlug?: string): Promise<SponsorLetter[]>;
+  /** Goes to every godparent of the cat: on their page on the site, and by email. */
+  sendSponsorLetter(input: SponsorLetterInput & { by: Author }): Promise<{ letter: SponsorLetter; sponsors: number; emailed: number }>;
 
   cats(): Promise<Cat[]>;
   createCat(input: CatInput): Promise<Cat>;
@@ -88,6 +92,8 @@ export function httpApi(baseUrl: string, token: string): Api {
     setFosterApplicationStatus: (id, status) => call("PATCH", `/escalas/familias-temporarias/candidaturas/${id}`, { status }),
     sponsorships: () => call("GET", "/escalas/padrinhos"),
     saveSponsorship: (s) => call("POST", "/escalas/padrinhos", s),
+    sponsorLetters: (catSlug) => call("GET", `/escalas/padrinhos/novidades${catSlug ? `?gato=${encodeURIComponent(catSlug)}` : ""}`),
+    sendSponsorLetter: (input) => call("POST", "/escalas/padrinhos/novidades", input),
     cats: () => call("GET", "/cats"),
     createCat: (input) => call("POST", "/cats", input),
     updateCat: (id, changes) => call("PATCH", `/cats/${id}`, changes),

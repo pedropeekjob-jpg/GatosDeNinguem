@@ -82,6 +82,14 @@ API tests against Postgres run when `DATABASE_URL` is set. Every public page is 
 | `PUBLIC_API_URL` | api | Public address used in photo URLs (on Render, `RENDER_EXTERNAL_URL`) |
 | `VITE_SITE_URL` | backoffice | Public site address, for links to the site |
 | `RESEND_API_KEY`, `LOGIN_EMAIL_FROM` | api | Sends sign-in codes by email (Resend). Without it codes only go to the log |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | api | Godparents' monthly SEPA debit (see [docs/debito-direto.md](docs/debito-direto.md)). Without them, the team arranges payment by hand |
+| `SPONSOR_EMAIL_FROM` | api | Sender of the news emails to godparents (default: `LOGIN_EMAIL_FROM`) |
+
+## Godparents (apadrinhar)
+
+`/apadrinhar/<gato>` asks for the monthly amount and how to pay. With **débito direto** the person goes to Stripe's secure page, gives their IBAN and accepts the SEPA mandate; the sponsorship becomes active by itself when Stripe confirms (webhook `POST /padrinhos/debito/webhook`). With **combinar** the team confirms it in the back office as before. The provider sits behind `SponsorDebitProvider` (`apps/api/src/padrinhos/debit.ts`), so another one (Easypay, ifthenpay) only needs three functions.
+
+Godparents follow their cat at `/conta/afilhados` (signed in with the email they gave): where the cat is now, the debit, and a feed of moves, vet visits, medication, the team's notes and letters. The same changes go out by email to those who asked for it (each person chooses: everything, letters only, or nothing). Help requests between volunteers stay inside the team. In the back office, **Escalas › Padrinhos** shows each debit and has "Escrever novidade aos padrinhos".
 
 ## Accounts and Patinhas
 

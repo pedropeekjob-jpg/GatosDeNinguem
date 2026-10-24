@@ -124,6 +124,43 @@ export const fosterHowLongLabel: Record<FosterApplication["howLong"], string> = 
   necessario: "O tempo que for preciso",
 };
 
+/** How a godparent pays: a monthly automatic debit they set up themselves, or arranged with the team (transfer, MB WAY). */
+export const sponsorPaymentSchema = z.enum(["debito", "combinar"]);
+export type SponsorPayment = z.infer<typeof sponsorPaymentSchema>;
+
+export const debitStatusSchema = z.enum(["a-configurar", "ativo", "falhou", "cancelado"]);
+export type DebitStatus = z.infer<typeof debitStatusSchema>;
+export const debitStatusLabel: Record<DebitStatus, string> = {
+  "a-configurar": "Débito por ativar",
+  ativo: "Débito ativo",
+  falhou: "Último débito falhou",
+  cancelado: "Débito cancelado",
+};
+
+/** The monthly automatic debit, as the payment provider reports it. The IBAN never reaches us: it stays with the provider. */
+export const sponsorDebitSchema = z.object({
+  provider: z.string(),
+  status: debitStatusSchema,
+  customerId: z.string().optional(),
+  subscriptionId: z.string().optional(),
+  startedAt: z.string().datetime().optional(),
+  lastPaymentAt: z.string().datetime().optional(),
+  lastFailureAt: z.string().datetime().optional(),
+  cancelledAt: z.string().datetime().optional(),
+  /** Everything collected so far, in cents. */
+  paidCents: z.number().int().nonnegative().default(0),
+});
+export type SponsorDebit = z.infer<typeof sponsorDebitSchema>;
+
+/** What a godparent gets by email; everything is always in their area on the site. */
+export const sponsorEmailUpdatesSchema = z.enum(["todas", "cartas", "nenhuma"]);
+export type SponsorEmailUpdates = z.infer<typeof sponsorEmailUpdatesSchema>;
+export const sponsorEmailUpdatesLabel: Record<SponsorEmailUpdates, string> = {
+  todas: "Tudo o que acontece",
+  cartas: "Só as cartas da equipa",
+  nenhuma: "Nada por email (vejo no site)",
+};
+
 export const sponsorshipSchema = z.object({
   id: z.string(),
   catSlug: z.string(),
@@ -138,6 +175,9 @@ export const sponsorshipSchema = z.object({
   /** Asked on the site and not yet confirmed by the team (inactive until then). */
   pending: z.boolean().optional(),
   message: z.string().max(1000).optional(),
+  payment: sponsorPaymentSchema.optional(),
+  debit: sponsorDebitSchema.optional(),
+  emailUpdates: sponsorEmailUpdatesSchema.optional(),
 });
 export type Sponsorship = z.infer<typeof sponsorshipSchema>;
 
@@ -154,6 +194,9 @@ export const sponsorshipRequestSchema = z.object({
     .number({ invalid_type_error: "Indique um valor em euros" })
     .min(MIN_SPONSOR_AMOUNT, `O valor mínimo é ${MIN_SPONSOR_AMOUNT} euros por mês`)
     .max(1000, "Para valores acima de 1000 euros fale connosco"),
+  payment: sponsorPaymentSchema.default("debito"),
+  /** Separate, unticked by default: news about the cat by email. Their area on the site always has it. */
+  newsByEmail: z.boolean().default(false),
   message: z.string().max(1000).optional(),
   consent: z.literal(true, { errorMap: () => ({ message: "Precisa de aceitar para o contactarmos" }) }),
 });
@@ -171,6 +214,8 @@ export function sponsorshipFromRequest(r: SponsorshipRequest, id: string, today:
     startDate: today,
     active: false,
     pending: true,
+    payment: r.payment,
+    emailUpdates: r.newsByEmail ? "todas" : "nenhuma",
     ...(r.message ? { message: r.message } : {}),
   };
 }

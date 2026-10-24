@@ -40,7 +40,7 @@ export function HojePage({ today = new Date() }: { today?: Date }) {
         <StatTile value={needFamily.length} label="gatos à espera de família temporária" />
         <StatTile value={fosterAsks.data?.filter((a) => a.status === "nova").length ?? "…"} label="pessoas que querem ser família temporária" />
         <StatTile value={shopOrders.data?.filter((o) => o.status === "novo" || o.status === "pago").length ?? "…"} label="pedidos da loja por tratar" />
-        <StatTile value={sponsors.data?.filter((s) => s.pending).length ?? "…"} label="pedidos para apadrinhar gatos" />
+        <StatTile value={sponsors.data?.filter((s) => s.pending && s.debit?.status !== "a-configurar").length ?? "…"} label="pedidos para apadrinhar gatos" />
         <StatTile value={sponsors.data?.filter((s) => s.needsUpdate).length ?? "…"} label="padrinhos à espera de notícias" />
       </div>
       <div className="action-row">
