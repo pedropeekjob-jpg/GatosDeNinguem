@@ -6,8 +6,10 @@ import { useEffect, useId, useRef, type ReactNode } from "react";
  * Built on the native <dialog>, so focus stays inside and Esc closes it.
  * Clicking outside does not close it, so a half-filled form is never lost by accident.
  * The content is only mounted while open.
+ * `sheet`: on phones, a panel that rises from the bottom only as tall as its content (for short offers the
+ * visitor did not ask for, which should not take over the whole screen).
  */
-export function Modal({ open, onClose, title, intro, children }: { open: boolean; onClose: () => void; title: string; intro?: ReactNode; children: ReactNode }) {
+export function Modal({ open, onClose, title, intro, sheet, children }: { open: boolean; onClose: () => void; title: string; intro?: ReactNode; sheet?: boolean; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -27,7 +29,7 @@ export function Modal({ open, onClose, title, intro, children }: { open: boolean
   return (
     <dialog
       ref={ref}
-      className="gn-modal"
+      className={sheet ? "gn-modal gn-modal--sheet" : "gn-modal"}
       aria-labelledby={titleId}
       onCancel={(e) => { e.preventDefault(); onClose(); }}
     >

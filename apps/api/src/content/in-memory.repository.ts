@@ -1,5 +1,6 @@
 import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CareNotificationPrefs, type CareTask, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { seedFosterApplications, seedFosterPlacements, seedShifts, seedSponsorLetters, seedSponsorships, type FosterPlacement, type Shift, type SponsorLetter, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
+import type { CatAlertSent, CatAlertSubscriber } from "@gn/domain";
 import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Promotion, type Redirect, type SeoSettings } from "@gn/domain";
 import { seedItemDonations, seedProducts, seedShopOrders, seedShopSettings, seedShopSpending, type Product, type ShopOrder, type ShopSettings, type ShopSpending, type StoredItemDonation } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
@@ -37,6 +38,8 @@ export class InMemoryContentRepository implements ContentRepository {
   private itemDonations = new Map<string, StoredItemDonation>(seedItemDonations.map((x) => [x.id, structuredClone(x)]));
   private shopSettings: ShopSettings = clone(seedShopSettings);
   private promotions = new Map<string, Promotion>();
+  private catAlertSubscribers = new Map<string, CatAlertSubscriber>();
+  private catAlertsSent = new Map<string, CatAlertSent>();
 
   constructor(seed = { cats: seedCats, pages: seedPages, posts: seedPosts, redirects: seedRedirects, settings: seedSeoSettings, partners: seedPartners }) {
     seed.partners.forEach((p) => this.partners.set(p.id, clone(p)));
@@ -76,6 +79,18 @@ export class InMemoryContentRepository implements ContentRepository {
   async saveNewsletterSignup(s: NewsletterSignup & { subscribedAt: string }) { this.newsletter.set(s.email.toLowerCase(), clone({ ...s, email: s.email.toLowerCase() })); }
   async listNewsletterSignups() { return [...this.newsletter.values()].map(clone); }
   async deleteNewsletterSignup(email: string) { this.newsletter.delete(email.toLowerCase()); }
+
+  async listCatAlertSubscribers() { return [...this.catAlertSubscribers.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)).map(clone); }
+  async getCatAlertSubscriber(id: string) { const x = this.catAlertSubscribers.get(id); return x && clone(x); }
+  async findCatAlertSubscriber(by: { email: string } | { endpoint: string }) {
+    const x = [...this.catAlertSubscribers.values()].find((s) => ("email" in by ? s.email === by.email.toLowerCase() : s.push?.endpoint === by.endpoint));
+    return x && clone(x);
+  }
+  async saveCatAlertSubscriber(s: CatAlertSubscriber) { this.catAlertSubscribers.set(s.id, clone(s)); return clone(s); }
+  async deleteCatAlertSubscriber(id: string) { this.catAlertSubscribers.delete(id); }
+  async listCatAlertsSent() { return [...this.catAlertsSent.values()].sort((a, b) => b.sentAt.localeCompare(a.sentAt)).map(clone); }
+  async getCatAlertSent(catId: string) { const x = this.catAlertsSent.get(catId); return x && clone(x); }
+  async saveCatAlertSent(a: CatAlertSent) { this.catAlertsSent.set(a.catId, clone(a)); }
 
   async listPromotions() { return [...this.promotions.values()].sort((a, b) => a.eventStartsAt.localeCompare(b.eventStartsAt)).map(clone); }
   async getPromotion(id: string) { const x = this.promotions.get(id); return x && clone(x); }

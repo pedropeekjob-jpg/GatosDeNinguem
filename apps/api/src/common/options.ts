@@ -1,4 +1,4 @@
-import type { Account, CareAlert, Contact, FeatureFlags, PromotionChannel } from "@gn/domain";
+import type { Account, CareAlert, Contact, FeatureFlags, PromotionChannel, PushSubscriptionJson } from "@gn/domain";
 import type { ContentRepository } from "../content/repository";
 import type { PhotoStore } from "../media/photo-store";
 import type { SponsorDebitProvider } from "../padrinhos/debit";
@@ -16,6 +16,12 @@ export type ApiOptions = {
   notifyVolunteers?: (to: Account[], alert: CareAlert) => Promise<void>;
   /** Publishes event promotions, one function per channel that is set up (Meta Graph API, Resend…). */
   promotionPublishers?: Partial<Record<PromotionChannel, PromotionPublisher>>;
+  /** Sends plain-text emails (Resend). Used for "Avisem-me quando chegarem gatos" confirmations and alerts. */
+  sendEmail?: (emails: OutgoingEmail[]) => Promise<void>;
+  /** Sends a Web Push notification. "gone" means the browser dropped the subscription and it can be deleted. */
+  sendPush?: (to: PushSubscriptionJson, notification: PushNotification) => Promise<"ok" | "gone">;
+  /** VAPID public key the site needs to subscribe a device to notifications. */
+  pushPublicKey?: string;
   /** Monthly automatic debit for godparents (Stripe SEPA today). Without it, the team arranges payment with each person. */
   sponsorDebit?: SponsorDebitProvider;
   /** Emails a godparent news about their cat (Resend). Without it, the news is only in their area on the site. */
@@ -53,5 +59,8 @@ export type PromotionMessage = {
   recipients: { email: string; unsubscribeUrl: string }[];
 };
 export type PromotionPublisher = (message: PromotionMessage) => Promise<{ externalId?: string; detail?: string }>;
+
+export type OutgoingEmail = { to: string; subject: string; text: string; headers?: Record<string, string> };
+export type PushNotification = { title: string; body: string; url: string; image?: string };
 
 export const API_OPTIONS = Symbol("ApiOptions");

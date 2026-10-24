@@ -48,6 +48,7 @@ export default async function PrivacyPage() {
             <li><strong>Pedidos de parceria:</strong> nome da empresa, pessoa de contacto e contactos.</li>
             <li><strong>Débito direto do apadrinhamento:</strong> nome, email e o estado de cada débito. O IBAN é escrito na página segura do prestador de pagamentos e não fica no nosso site.</li>
             <li><strong>Newsletter:</strong> o seu email, para enviarmos novidades. Pode cancelar em qualquer email.</li>
+            <li><strong>Avisos de gatos novos:</strong> o seu email (que confirma numa ligação que lhe enviamos) ou a autorização de notificações deste aparelho, e os gatos que escolheu, para o avisarmos quando chega um gato para adoção. Pode cancelar em qualquer aviso.</li>
             <li><strong>Finais felizes:</strong> o nome e a localidade de quem adotou só são publicados com autorização expressa.</li>
           </ul>
 
@@ -61,7 +62,7 @@ export default async function PrivacyPage() {
           <ul className="gn-stack gn-stack--s">
             <li>Pedidos que não avançam: até 1 ano depois do último contacto.</li>
             <li>Adoções: enquanto for preciso acompanhar o gato e cumprir as regras de registo de animais.</li>
-            <li>Conta e newsletter: até a apagar ou cancelar.</li>
+            <li>Conta, newsletter e avisos de gatos novos: até a apagar ou cancelar. Pedidos de aviso por email que não são confirmados são apagados ao fim de 7 dias.</li>
             <li>Donativos e vendas: o prazo exigido pela lei fiscal (10 anos).</li>
           </ul>
 

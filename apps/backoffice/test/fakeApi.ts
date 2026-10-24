@@ -9,6 +9,7 @@ import {
 } from "@gn/domain";
 import { auditSeo, resolveSeo } from "@gn/seo";
 import type { Api } from "../src/lib/api";
+import type { AlertSubscriberView } from "../src/lib/alertasApi";
 import { fakeCuidados } from "./fakeCuidados";
 import { fakeLoja } from "./fakeLoja";
 
@@ -26,6 +27,13 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z"), features: Fe
   const setPromotion = (pid: string, change: (p: Promotion) => Promotion) => { promotions = promotions.map((p) => (p.id === pid ? change(p) : p)); return view(promotions.find((p) => p.id === pid)!); };
   let n = 0;
   const id = () => `novo-${++n}`;
+  const anyCat = { ages: [], sexes: [], withKids: false, withCats: false, withDogs: false };
+  let alertSubscribers: AlertSubscriberView[] = [
+    { id: "av-1", channel: "email", email: "marta@exemplo.pt", filters: anyCat, preferences: "Todos os gatos", status: "ativo", createdAt: "2026-10-20T10:00:00.000Z", confirmedAt: "2026-10-20T10:05:00.000Z", alertsSent: 1, lastAlertAt: "2026-10-22T18:00:00.000Z" },
+    { id: "av-2", channel: "email", email: "joao@exemplo.pt", filters: { ...anyCat, ages: ["bebe" as const] }, preferences: "Bebés", status: "pendente", createdAt: "2026-10-31T09:00:00.000Z", alertsSent: 0 },
+    { id: "av-3", channel: "push", device: "Chrome ou Android", filters: anyCat, preferences: "Todos os gatos", status: "ativo", createdAt: "2026-10-21T10:00:00.000Z", confirmedAt: "2026-10-21T10:00:00.000Z", alertsSent: 1 },
+  ];
+  let alertsSent = [{ catId: seedCats[0]!.id, catName: seedCats[0]!.name, catSlug: seedCats[0]!.slug, sentAt: "2026-10-22T18:00:00.000Z", emails: 0, pushes: 1, problem: "O envio de emails ainda não está ligado ao site." }];
 
   let rules: PointsRule[] = structuredClone(defaultPointsRules);
   let entries: PatinhasEntry[] = structuredClone(seedEntries);
@@ -39,6 +47,9 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z"), features: Fe
   };
 
   const api: Api = {
+    alertsOverview: async () => ({ setup: { email: false, push: true }, subscribers: alertSubscribers, sent: alertsSent }),
+    removeAlertSubscriber: vi.fn(async (sid: string) => { alertSubscribers = alertSubscribers.filter((s) => s.id !== sid); }),
+    resendCatAlert: vi.fn(async (catId: string) => { alertsSent = alertsSent.map((a) => (a.catId === catId ? { ...a, emails: 1, problem: undefined as unknown as string } : a)); return alertsSent[0]!; }),
     ...fakeCuidados(now, () => cats),
     ...fakeLoja(now),
     features: async () => features,

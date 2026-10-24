@@ -88,3 +88,7 @@ details summary { cursor: pointer; font-weight: 650; min-height: var(--gn-target
   .gn-header .gn-nav { min-width: 0; flex: 1 1 auto; }
   .gn-header .gn-nav__list { flex-wrap: wrap; justify-content: center; }
 }
+
+/* Avisos de gatos novos */
+.bo-alert-stats { font-size: var(--gn-text-l); margin: 0; }
+.bo-alert-problem { color: var(--gn-error); font-weight: 600; }

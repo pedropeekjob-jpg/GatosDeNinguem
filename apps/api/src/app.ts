@@ -2,6 +2,8 @@ import "reflect-metadata";
 import { Controller, Get, Inject, Module, type DynamicModule } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
+import { AlertasController, AlertasGestaoController } from "./alertas/alertas.controller";
+import { CatAlertService } from "./alertas/cat-alert.service";
 import { AdminGuard } from "./common/admin.guard";
 import { featuresOf } from "./common/feature.guard";
 import { API_OPTIONS, type ApiOptions } from "./common/options";
@@ -48,7 +50,7 @@ class AppModule {
     const sponsors = new SponsorService(options);
     return {
       module: AppModule,
-      controllers: [HealthController, FeaturesController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController],
+      controllers: [HealthController, FeaturesController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController, AlertasController, AlertasGestaoController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, accounts) },
@@ -56,6 +58,7 @@ class AppModule {
         // Every change about a cat at the gatil also reaches its godparents.
         { provide: CareService, useValue: new CareService(options, accounts, (alert) => sponsors.onCareAlert(alert)) },
         { provide: PromotionService, useValue: new PromotionService(options) },
+        { provide: CatAlertService, useValue: new CatAlertService(options) },
         AdminGuard,
       ],
     };

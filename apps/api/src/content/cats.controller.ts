@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, Inject, NotFoundException, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { catInputSchema, catStatusSchema, publicHappyEnding, seoFieldsSchema, type Cat } from "@gn/domain";
 import { randomUUID } from "node:crypto";
+import { CatAlertService } from "../alertas/cat-alert.service";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
@@ -19,8 +20,17 @@ function stampDates(cat: Cat, now: string) {
 
 @Controller("cats")
 export class CatsController {
-  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {}
+  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions, @Inject(CatAlertService) private readonly alerts: CatAlertService) {}
   private get repo() { return this.options.repository; }
+
+  /** A cat put up for adoption for the first time: tell the people who asked. Saving never fails because of it. */
+  private async announce(cat: Cat) {
+    try {
+      await this.alerts.catAvailable(cat);
+    } catch (err) {
+      console.error(`Could not send the alert for ${cat.slug}`, err);
+    }
+  }
 
   @Get()
   async list(@Query("status") status?: string) {
@@ -52,6 +62,7 @@ export class CatsController {
     stampDates(cat, cat.updatedAt);
     await this.repo.saveCat(cat);
     await this.options.onContentChanged({ type: "cat", path: `/adotar/${cat.slug}` });
+    await this.announce(cat);
     return cat;
   }
 
@@ -66,6 +77,7 @@ export class CatsController {
     stampDates(next, now);
     await this.repo.saveCat(next);
     await this.options.onContentChanged({ type: "cat", path: `/adotar/${next.slug}` });
+    if (current.status !== "para-adocao") await this.announce(next);
     return next;
   }
 

@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import { alertasHttp, type AlertasApi } from "./alertasApi";
 import { useQuery } from "@tanstack/react-query";
 import { noFeatures, type FeatureFlags } from "@gn/domain";
 import { cuidadosHttp, type CuidadosApi } from "./cuidadosApi";
@@ -14,7 +15,7 @@ export type PromotionView = Promotion & { problems: Partial<Record<PromotionChan
 export type PromotionChannelInfo = { channel: PromotionChannel; label: string; ready: boolean; setup?: string };
 
 /** Everything the back office can ask the API. Tests pass a fake implementation. */
-export interface Api extends PatinhasApi, CuidadosApi, LojaApi {
+export interface Api extends PatinhasApi, CuidadosApi, LojaApi, AlertasApi {
   /** Optional parts switched on in the API (FEATURES setting). */
   features(): Promise<FeatureFlags>;
   shifts(range: { from: string; to: string }): Promise<Shift[]>;
@@ -127,6 +128,7 @@ export function httpApi(baseUrl: string, token: string): Api {
     ...patinhasHttp(call),
     ...cuidadosHttp(call),
     ...lojaHttp(call),
+    ...alertasHttp(call),
   };
 }
 

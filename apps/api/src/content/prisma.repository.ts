@@ -4,6 +4,7 @@ import { appointmentSchema, careAlertSchema, catCareSchema, doseSchema, medicati
 import { fosterApplicationSchema, fosterApplicationStatus, fosterPlacementSchema, shiftSchema, sponsorLetterSchema, sponsorshipSchema, type FosterPlacement, type Shift, type SponsorLetter, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
 import { itemDonationSchema, itemDonationStatus, productSchema, seedShopSettings, shopOrderSchema, shopSettingsSchema, shopSpendingSchema, type Product, type ShopOrder, type ShopSettings, type ShopSpending, type StoredItemDonation } from "@gn/domain";
 import { z } from "zod";
+import { catAlertSentSchema, catAlertSubscriberSchema, type CatAlertSent, type CatAlertSubscriber } from "@gn/domain";
 import { adoptionInterestSchema, catSchema, impactSchema, pageSchema, partnerApplicationSchema, partnerSchema, postSchema, promotionSchema, seoSettingsSchema, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Promotion, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
@@ -84,6 +85,25 @@ export class PrismaContentRepository implements ContentRepository {
     return rows.map((r) => ({ email: r.email, interests: r.interests as NewsletterSignup["interests"], consent: true as const, subscribedAt: r.subscribedAt.toISOString() }));
   }
   async deleteNewsletterSignup(email: string) { await this.db.newsletterSignup.deleteMany({ where: { email: email.toLowerCase() } }); }
+
+  async listCatAlertSubscribers() { return (await this.db.catAlertSubscriber.findMany({ orderBy: { createdAt: "asc" } })).map((r) => catAlertSubscriberSchema.parse(r.data)); }
+  async getCatAlertSubscriber(id: string) { const r = await this.db.catAlertSubscriber.findUnique({ where: { id } }); return r ? catAlertSubscriberSchema.parse(r.data) : undefined; }
+  async findCatAlertSubscriber(by: { email: string } | { endpoint: string }) {
+    const r = await this.db.catAlertSubscriber.findUnique({ where: "email" in by ? { email: by.email.toLowerCase() } : { endpoint: by.endpoint } });
+    return r ? catAlertSubscriberSchema.parse(r.data) : undefined;
+  }
+  async saveCatAlertSubscriber(s: CatAlertSubscriber) {
+    const data = { email: s.email ?? null, endpoint: s.push?.endpoint ?? null, status: s.status, createdAt: new Date(s.createdAt), data: s as object };
+    await this.db.catAlertSubscriber.upsert({ where: { id: s.id }, create: { id: s.id, ...data }, update: data });
+    return s;
+  }
+  async deleteCatAlertSubscriber(id: string) { await this.db.catAlertSubscriber.deleteMany({ where: { id } }); }
+  async listCatAlertsSent() { return (await this.db.catAlertSent.findMany({ orderBy: { sentAt: "desc" } })).map((r) => catAlertSentSchema.parse(r.data)); }
+  async getCatAlertSent(catId: string) { const r = await this.db.catAlertSent.findUnique({ where: { catId } }); return r ? catAlertSentSchema.parse(r.data) : undefined; }
+  async saveCatAlertSent(a: CatAlertSent) {
+    const data = { sentAt: new Date(a.sentAt), data: a as object };
+    await this.db.catAlertSent.upsert({ where: { catId: a.catId }, create: { catId: a.catId, ...data }, update: data });
+  }
 
   async listPromotions() { return (await this.db.promotion.findMany({ orderBy: { eventStartsAt: "asc" } })).map((r) => promotionSchema.parse(r.data)); }
   async getPromotion(id: string) { const r = await this.db.promotion.findUnique({ where: { id } }); return r ? promotionSchema.parse(r.data) : undefined; }

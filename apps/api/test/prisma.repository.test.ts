@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.sponsorLetter.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.promotion.deleteMany(), db.product.deleteMany(), db.shopOrder.deleteMany(), db.shopSpending.deleteMany(), db.itemDonation.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.sponsorLetter.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.promotion.deleteMany(), db.product.deleteMany(), db.shopOrder.deleteMany(), db.shopSpending.deleteMany(), db.itemDonation.deleteMany(), db.catAlertSubscriber.deleteMany(), db.catAlertSent.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());
@@ -94,6 +94,22 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     expect((await repo.listShopSpending()).map((s) => s.id)).toEqual(["gasto-2", "gasto-1"]);
     expect((await repo.listItemDonations())[0]?.status).toBe("nova");
     expect((await repo.getShopSettings()).iban).toMatch(/^PT50/);
+  });
+
+  it("stores cat alert sign-ups by email or device, and one alert per cat", async () => {
+    const filters = { ages: [], sexes: ["femea" as const], withKids: false, withCats: false, withDogs: false };
+    await repo.saveCatAlertSubscriber({ id: "al-1", channel: "email", email: "ana@b.pt", filters, status: "pendente", createdAt: "2026-10-24T10:00:00.000Z", alertsSent: 0 });
+    await repo.saveCatAlertSubscriber({ id: "al-2", channel: "push", push: { endpoint: "https://fcm.googleapis.com/x", keys: { p256dh: "p256dhp256dh", auth: "authauth" } }, filters, status: "ativo", createdAt: "2026-10-24T11:00:00.000Z", alertsSent: 0 });
+    expect((await repo.findCatAlertSubscriber({ email: "ANA@b.pt" }))?.id).toBe("al-1");
+    expect((await repo.findCatAlertSubscriber({ endpoint: "https://fcm.googleapis.com/x" }))?.id).toBe("al-2");
+    await repo.saveCatAlertSubscriber({ ...(await repo.getCatAlertSubscriber("al-1"))!, status: "ativo" });
+    expect((await repo.listCatAlertSubscribers()).map((s) => [s.id, s.status])).toEqual([["al-1", "ativo"], ["al-2", "ativo"]]);
+    await repo.deleteCatAlertSubscriber("al-2");
+    expect(await repo.listCatAlertSubscribers()).toHaveLength(1);
+
+    await repo.saveCatAlertSent({ catId: "cat-1", catName: "Tobias", catSlug: "tobias", sentAt: "2026-10-24T12:00:00.000Z", emails: 1, pushes: 0 });
+    expect((await repo.getCatAlertSent("cat-1"))?.emails).toBe(1);
+    expect(await repo.listCatAlertsSent()).toHaveLength(1);
   });
 
   it("lists and removes newsletter subscribers, and stores promotions by event", async () => {

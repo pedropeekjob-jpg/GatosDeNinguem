@@ -67,6 +67,11 @@ services:
         sync: false
       - key: META_PAGE_TOKEN
         sync: false
+      # Optional: "Avisem-me" notifications on visitors' devices (npx web-push generate-vapid-keys).
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
       # Optional: TikTok (the association has no account yet). Same care as above.
       - key: TIKTOK_CLIENT_KEY
         sync: false

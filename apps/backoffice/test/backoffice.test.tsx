@@ -234,3 +234,25 @@ describe("Promoção de eventos", () => {
     await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ category: "evento", event: { startsAt: "2026-11-11T15:00:00.000Z", endsAt: undefined, location: "Gatil, Santa Marta de Portuzelo" } })));
   });
 });
+
+describe("Avisos de gatos novos", () => {
+  it("shows who asked, what went out, and sends again after a problem", async () => {
+    const user = userEvent.setup();
+    const { api, container } = renderAt("/avisos");
+    expect(await screen.findByText("Os emails ainda não estão ligados")).toBeInTheDocument();
+    expect(screen.getByText("2 pessoas recebem avisos")).toBeInTheDocument();
+    expect(screen.getByText("marta@exemplo.pt")).toBeInTheDocument();
+    expect(screen.getByText("Por confirmar")).toBeInTheDocument();
+    expect(screen.getByText("Chrome ou Android")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Enviar outra vez" }));
+    await waitFor(() => expect(api.resendCatAlert).toHaveBeenCalledWith("cat-1"));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Enviar outra vez" })).not.toBeInTheDocument());
+
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    await user.click(screen.getAllByRole("button", { name: "Remover" })[1]!);
+    await waitFor(() => expect(api.removeAlertSubscriber).toHaveBeenCalledWith("av-2"));
+    await waitFor(() => expect(screen.queryByText("joao@exemplo.pt")).not.toBeInTheDocument());
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
