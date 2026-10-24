@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Modal, Notice, NextStep, TextField } from "@gn/ui";
 import { useModalHistory } from "@/components/client/FormModal";
 import { signUpForShift } from "@/lib/submit";
+import { PrivacyHint } from "@/components/forms/PrivacyHint";
 
 type ShiftSummary = { id: string; title: string; startsAt: string; endsAt: string; location: string; when: string };
 
@@ -95,7 +96,7 @@ export function ShiftSignUp({ shift }: { shift: ShiftSummary }) {
             <label htmlFor={`${formId}-website_url`}>Não preencher</label>
             <input id={`${formId}-website_url`} tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
           </div>
-          <Checkbox id={`${formId}-consentimento`} label="Aceito que a associação me contacte sobre este turno" checked={consent} onChange={setConsent} />
+          <Checkbox id={`${formId}-consentimento`} label="Aceito que a associação me contacte sobre este turno" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
           {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
           <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Confirmar inscrição"}</Button>
         </form>

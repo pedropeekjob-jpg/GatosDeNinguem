@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Notice, NextStep, TextArea, TextField } from "@gn/ui";
 import { submitForm } from "@/lib/submit";
+import { PrivacyHint } from "@/components/forms/PrivacyHint";
 
 export function PartnerApplicationForm() {
   const [form, setForm] = useState({ businessName: "", contactName: "", email: "", phone: "", town: "", offer: "", website_url: "" });
@@ -41,7 +42,7 @@ export function PartnerApplicationForm() {
         <label htmlFor="p-website_url">Não preencher</label>
         <input id="p-website_url" tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
       </div>
-      <Checkbox id="p-consentimento" label="Aceito que a associação me contacte sobre esta parceria" checked={consent} onChange={setConsent} />
+      <Checkbox id="p-consentimento" label="Aceito que a associação me contacte sobre esta parceria" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
       <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Enviar pedido"}</Button>
     </form>

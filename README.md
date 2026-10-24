@@ -46,6 +46,10 @@ Without `DATABASE_URL` the API runs on in-memory demo content; without `API_URL`
 
 `/loja` sells the association's articles. Orders reserve the stock and say how to pay (MB WAY, bank transfer or on pickup); nothing is charged on the site yet. The team confirms payments, records sales at stands, adds what the money paid for (shown publicly) and handles offers of donated articles in the back office (Loja). The MB WAY number is set there. Online payment (MB WAY, Multibanco, card) can be added later through a payment provider, at the point where an order is placed.
 
+## Avisos de gatos novos
+
+Visitors ask to be told when a cat is put up for adoption: a window offers it once (never on the first page at once, never on SOS, forms or the shop, and not again for two months after "Agora não"), and Adotar has a button for it. Email needs a click on a confirmation link before anything is sent; unconfirmed sign-ups are dropped after 7 days, and every alert has a one-click unsubscribe. Where the browser allows and the VAPID keys are set, people can choose notifications on their device instead. The alert goes out by itself the first time a cat is saved as "Para adoção"; managers see who asked and what was sent in the back office (Avisos). Uses the same `RESEND_API_KEY` as sign-in codes.
+
 ## Online demo (GitHub Pages)
 
 `.github/workflows/pages.yml` publishes a static demo of the public site on every push to `main`. It uses the example content, and forms check what you type but send nothing. Turn it on once in **Settings → Pages → Source: GitHub Actions**. To build it locally: `BASE_PATH=/GatosDeNinguem pnpm --filter @gn/web export:pages` (output in `apps/web/out`).
@@ -82,6 +86,7 @@ API tests against Postgres run when `DATABASE_URL` is set. Every public page is 
 | `PUBLIC_API_URL` | api | Public address used in photo URLs (on Render, `RENDER_EXTERNAL_URL`) |
 | `VITE_SITE_URL` | backoffice | Public site address, for links to the site |
 | `RESEND_API_KEY`, `LOGIN_EMAIL_FROM` | api | Sends sign-in codes by email (Resend). Without it codes only go to the log |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | api | Optional: "Avisem-me de gatos novos" as notifications on the visitor's device. Make the pair with `npx web-push generate-vapid-keys`. Without them only email is offered |
 
 ## Accounts and Patinhas
 

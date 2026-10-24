@@ -1,4 +1,5 @@
 import { AnimatedLogo, Container } from "@gn/ui";
+import { association } from "@/lib/association";
 import { NewsletterForm } from "./forms/NewsletterForm";
 
 export function Footer() {
@@ -23,9 +24,21 @@ export function Footer() {
               <li><a href="/loja">Loja solidária</a></li>
               <li><a href="/parceiros">Parceiros</a></li>
               <li><a href="/sos">Encontrei um gato</a></li>
-              <li><a href="/ajudar#doar">Fazer um donativo</a></li>
+              <li><a href="/ajudar/doar">Fazer um donativo</a></li>
             </ul>
           </nav>
+          <div className="gn-stack gn-stack--s">
+            <h2 className="site-footer__title">Onde estamos</h2>
+            <address className="site-footer__address">
+              <strong>{association.gatil.label}</strong>
+              {association.gatil.lines.map((line) => <span key={line}>{line}</span>)}
+              <span className="site-footer__small">{association.gatil.visits}</span>
+            </address>
+            <ul className="site-footer__links">
+              <li><a href={association.gatil.mapUrl} rel="noopener" target="_blank">Ver no mapa<span className="gn-sr-only"> (abre o Google Maps)</span></a></li>
+              <li><a href={`mailto:${association.email}`}>{association.email}</a></li>
+            </ul>
+          </div>
           <div className="gn-stack gn-stack--s">
             <h2 className="site-footer__title">Siga-nos</h2>
             <ul className="social-links">
@@ -40,10 +53,20 @@ export function Footer() {
                 </a>
               </li>
             </ul>
-            <p className="site-footer__small">Associação Gatos de Ninguém, Viana do Castelo. Desde 2014.</p>
             <p className="site-footer__small">Maus tratos e abandono são crime (Lei 69/2014). Denuncie à PSP ou GNR.</p>
           </div>
         </div>
+        <nav aria-label="Informação legal" className="site-footer__legal">
+          <span>© {association.name} · NIF {association.nif}</span>
+          <a href="/privacidade">Política de privacidade</a>
+          <a href="/cookies">Política de cookies</a>
+          <a href="/loja/condicoes">Condições da loja</a>
+          <a href="https://www.livroreclamacoes.pt" rel="noopener">Livro de reclamações</a>
+        </nav>
+        <p className="site-footer__small site-footer__ral">
+          Em caso de litígio de consumo pode recorrer ao <a href="https://www.ciab.pt" rel="noopener">CIAB – Tribunal Arbitral de Consumo</a> (Braga), competente para Viana do Castelo.
+          Mais informação no <a href="https://www.consumidor.gov.pt" rel="noopener">Portal do Consumidor</a>.
+        </p>
       </Container>
     </footer>
   );

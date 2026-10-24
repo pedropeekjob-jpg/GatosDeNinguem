@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { alertAgeGroupLabel, alertAgeGroups, noAlertFilters, type AlertAgeGroup, type CatAlertFilters } from "@gn/domain";
 import { Button, Checkbox, Modal, Notice, TextField } from "@gn/ui";
 import { pushSetup, rememberAlerts, shouldOfferAlerts, signUpForAlerts, subscribeThisDevice } from "@/lib/alertas";
+import { PrivacyHint } from "../forms/PrivacyHint";
 import { useModalHistory } from "./FormModal";
 
 const TITLE = "Quer saber quando chegam gatos novos?";
@@ -99,7 +100,7 @@ export function CatAlertForm({ onDone, onLater }: { onDone: () => void; onLater?
       <Checkbox
         id="aviso-consentimento"
         label="Aceito receber estes avisos por email"
-        hint="Usamos o seu email só para isto. Pode cancelar quando quiser, com a ligação no fim de cada email."
+        hint={<PrivacyHint>Usamos o seu email só para isto. Pode cancelar quando quiser, com a ligação no fim de cada aviso.</PrivacyHint>}
         checked={consent}
         onChange={setConsent}
       />

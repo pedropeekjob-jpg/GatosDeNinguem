@@ -1,4 +1,4 @@
-import { euros, type Delivery, type Payment, type ShopSettings } from "@gn/domain";
+import { euros, WITHDRAWAL_DAYS, type Delivery, type Payment, type ShopSettings } from "@gn/domain";
 import { CopyIban } from "@/components/client/CopyIban";
 
 /** What to do after ordering, in the words of the payment the person chose. */
@@ -22,7 +22,7 @@ export function PaymentSteps({ code, totalCents, payment, delivery, settings }: 
       ) : null}
       {payment === "ao-levantar" ? <p>Paga <strong>{total}</strong> quando levantar, em dinheiro ou MB WAY.</p> : null}
       <p>{delivery === "correio" ? settings.shipping : settings.pickup}</p>
-      <p className="small muted">Guardamos os artigos para si. Quando o pagamento chegar, avisamos. Se mudar de ideias, responda-nos ou ligue-nos.</p>
+      <p className="small muted">Guardamos os artigos para si. Quando o pagamento chegar, avisamos. Se mudar de ideias, responda-nos ou ligue-nos: pode desistir até {WITHDRAWAL_DAYS} dias depois de receber os artigos e devolvemos o dinheiro. <a href="/loja/condicoes">Condições da loja</a></p>
     </div>
   );
 }
