@@ -13,3 +13,5 @@ export * from "./loja";
 export * from "./seed-loja";
 export * from "./promocao";
 export * from "./adocao";
+export * from "./datas";
+export * from "./legal";

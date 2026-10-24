@@ -277,6 +277,11 @@ export const shopSettingsSchema = z.object({
   iban: z.string().min(15),
   pickup: z.string().min(3).max(300),
   shipping: z.string().min(3).max(300),
+  /**
+   * How VAT applies to the prices, shown next to every price, e.g. "IVA incluído" or
+   * "Isento de IVA (artigo 53.º do CIVA)". Depends on the association's tax status, so it is not guessed.
+   */
+  vatNote: z.string().max(120).optional(),
 });
 export type ShopSettings = z.infer<typeof shopSettingsSchema>;
 
