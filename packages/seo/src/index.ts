@@ -101,6 +101,15 @@ export function breadcrumbJsonLd(settings: SeoSettings, items: { name: string; p
   };
 }
 
+/** Questions and answers, so search engines can show them under the page. */
+export function faqJsonLd(items: { q: string; a: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map(({ q, a }) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+  };
+}
+
 export type SitemapEntry = { path: string; lastModified?: string; noindex?: boolean; priority?: number };
 
 const escapeXml = (s: string) =>

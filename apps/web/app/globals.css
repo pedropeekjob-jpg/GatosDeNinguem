@@ -358,7 +358,14 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 .cat-filter__list[data-filtro="femea"] [data-f]:not([data-f~="femea"]),
 .cat-filter__list[data-filtro="macho"] [data-f]:not([data-f~="macho"]),
 .cat-filter__list[data-filtro="senior"] [data-f]:not([data-f~="senior"]),
-.cat-filter__list[data-filtro="cuidados"] [data-f]:not([data-f~="cuidados"]) { display: none; }
+.cat-filter__list[data-filtro="cuidados"] [data-f]:not([data-f~="cuidados"]),
+.cat-filter__list[data-filtro="jovem"] [data-f]:not([data-f~="jovem"]),
+.cat-filter__list[data-filtro="criancas"] [data-f]:not([data-f~="criancas"]),
+.cat-filter__list[data-filtro="gatos"] [data-f]:not([data-f~="gatos"]),
+.cat-filter__list[data-filtro="caes"] [data-f]:not([data-f~="caes"]),
+.cat-filter__list[data-filtro="calmo"] [data-f]:not([data-f~="calmo"]) { display: none; }
+/* The cat list has many filters: they wrap onto rows on every screen, so none hides behind a sideways swipe. */
+.cat-filter--wrap .cat-filter__chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; }
 .cat-filter__list .gn-grid > [data-f] { display: flex; }
 .cat-filter__list .gn-grid > [data-f] > .gn-card { width: 100%; }
 
@@ -374,7 +381,34 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 }
 /* Beside a button the heart takes the button's size and an outline, so it reads as a button too. */
 .cat-profile__cta .gn-fav { flex: none; width: var(--gn-target); height: var(--gn-target); border-radius: var(--gn-radius-s); border: 1.5px solid var(--gn-ink); box-shadow: none; background: var(--gn-surface); }
-@media (min-width: 52rem) { .cat-profile__photo { position: sticky; top: var(--gn-space-l); } }
+@media (min-width: 52rem) { :is(.cat-profile__photo, .cat-profile__gallery) { position: sticky; top: var(--gn-space-l); } }
+/* A cat's photos: the shelter carousel, sized to the column, with the arrows inside the photo. */
+.cat-profile__gallery { min-width: 0; }
+.cat-profile__gallery .gn-carousel { border-radius: var(--gn-radius-hand); overflow: hidden; background: var(--gn-sand); }
+.cat-profile__gallery .gn-carousel__slide { aspect-ratio: 4 / 3; max-height: none; }
+.cat-profile__gallery .gn-carousel__controls { right: var(--gn-space-s); bottom: var(--gn-space-s); }
+/* What the cat goes home with: a short checklist. */
+.goes-home { display: grid; gap: 0.6rem; padding: var(--gn-space-m); border-radius: var(--gn-radius); background: var(--gn-sand); }
+.goes-home h2 { font-size: var(--gn-text-l); margin: 0; }
+.goes-home__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.goes-home__list li { display: flex; gap: 0.6rem; align-items: baseline; }
+.goes-home__mark { flex: none; display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 999px; background: var(--gn-ink); color: #fff; font-size: 0.85rem; font-weight: 700; transform: translateY(0.2rem); }
+.goes-home__list .is-missing .goes-home__mark { background: var(--gn-line); color: var(--gn-ink); }
+.goes-home__note { color: var(--gn-ink-soft); }
+/* The adoption steps: big numbers, a title and one sentence each. */
+.adoption-steps { list-style: none; counter-reset: passo; margin: 0; padding: 0; display: grid; gap: var(--gn-space-m); grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+.adoption-steps li { counter-increment: passo; display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); column-gap: 0.75rem; row-gap: 0.15rem; align-content: start; }
+.adoption-steps li::before { content: counter(passo); grid-row: span 2; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-weight: 800; }
+.adoption-steps span { color: var(--gn-ink-soft); }
+/* Questions about adopting: native details, so they open with a tap and work without JavaScript. */
+.faq { display: grid; max-width: 44rem; border-top: 1px solid var(--gn-line); }
+.faq details { border-bottom: 1px solid var(--gn-line); }
+.faq summary { display: flex; justify-content: space-between; gap: 1rem; align-items: center; min-height: var(--gn-target); padding: 0.9rem 0; font-weight: 700; cursor: pointer; list-style: none; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; flex: none; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; border: 1.5px solid var(--gn-ink); font-size: 1.2rem; line-height: 1; }
+.faq details[open] summary::after { content: "−"; background: var(--gn-ink); color: #fff; }
+.faq summary:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 2px; }
+.faq details p { margin: 0 0 1rem; max-width: 40rem; }
 
 /* Desktop home photo: on the dark gradient the main button turns white, the second one a white outline. */
 @media (min-width: 60rem) {
