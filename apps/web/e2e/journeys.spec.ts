@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/privacidade", "/cookies"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -469,6 +469,20 @@ test("footer: social networks are logos with their names for screen readers", as
   await expect(footer.getByRole("link", { name: "Facebook" })).toBeVisible();
   await expect(footer.getByRole("link", { name: "Instagram" })).toBeVisible();
   await expect(footer.getByText("Facebook", { exact: true })).toHaveCount(0);
+});
+
+test("footer: shows where the gatil is and links to the privacy and cookie policies", async ({ page }) => {
+  await page.goto("/");
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByText("Santa Marta de Portuzelo")).toBeVisible();
+  await expect(footer.getByRole("link", { name: /Ver no mapa/ })).toHaveAttribute("href", /google\.com\/maps/);
+  await footer.getByRole("link", { name: "Política de privacidade" }).click();
+  await expect(page).toHaveURL(/\/privacidade\/?$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Política de privacidade" })).toBeVisible();
+  await expect(page.getByText("Texto em revisão")).toBeVisible();
+  await page.getByRole("contentinfo").getByRole("link", { name: "Política de cookies" }).click();
+  await expect(page).toHaveURL(/\/cookies\/?$/);
+  await expect(page.getByRole("cell", { name: "gn-sessao" })).toBeVisible();
 });
 
 test("shop: choose a size, put it in the basket, order and see how to pay", async ({ page }) => {
