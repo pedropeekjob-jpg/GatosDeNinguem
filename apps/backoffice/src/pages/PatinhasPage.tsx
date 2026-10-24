@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { actionLabel, defaultPointsRules, earnActionSchema, levels, monthLabel, type Badge, type EarnAction, type Partner, type PointsRule } from "@gn/domain";
 import { AnimatedLogo, Badge as Tag, Button, Checkbox, Notice, ProgressMeter, TextField } from "@gn/ui";
-import { errorMessage, useApi } from "../lib/api";
+import { errorMessage, useApi, useFeatures } from "../lib/api";
 import type { ChallengeRow, PersonRow } from "../lib/patinhasApi";
 import { slugify } from "../lib/slug";
 
@@ -15,6 +15,8 @@ const tabs: [Tab, string][] = [
   ["desafios", "Desafios"],
   ["vantagens", "Vantagens"],
 ];
+/** Swaps and partner perks wait for the "trocas" switch. */
+const swapTabs: Tab[] = ["trocas", "vantagens"];
 
 const n = new Intl.NumberFormat("pt-PT");
 const when = (iso?: string) => (iso ? new Intl.DateTimeFormat("pt-PT", { dateStyle: "medium", timeZone: "Europe/Lisbon" }).format(new Date(iso)) : "—");
@@ -23,11 +25,24 @@ const earnActions = earnActionSchema.options;
 /** Patinhas: confirm helpers' actions, hand over perks, and tune points, badges, challenges and partner perks. */
 export function PatinhasPage() {
   const [tab, setTab] = useState<Tab>("pessoas");
+  const { features, loaded } = useFeatures();
+  if (!loaded) return <AnimatedLogo variant="loader" size={110} />;
+  if (!features.patinhas) {
+    return (
+      <div className="gn-stack gn-stack--m">
+        <h1>Patinhas</h1>
+        <Notice tone="info" title="As Patinhas estão desligadas">
+          Ainda não aparecem no site nem contam pontos. Para as ligar, junte "patinhas" à definição FEATURES do servidor (e "trocas" para as trocas nos parceiros).
+        </Notice>
+      </div>
+    );
+  }
+  const shown = tabs.filter(([key]) => features.trocas || !swapTabs.includes(key));
   return (
     <div className="gn-stack gn-stack--m">
       <h1>Patinhas</h1>
       <div className="tabs" role="tablist" aria-label="Patinhas">
-        {tabs.map(([key, label]) => (
+        {shown.map(([key, label]) => (
           <button key={key} type="button" role="tab" aria-selected={tab === key} className="tabs__tab" onClick={() => setTab(key)}>{label}</button>
         ))}
       </div>

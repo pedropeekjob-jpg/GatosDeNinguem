@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Headers, HttpCode, Inject, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Headers, HttpCode, Inject, Patch, Post, UseGuards } from "@nestjs/common";
 import { accountUpdateSchema, awardErrorMessage, signInStartSchema, signInVerifySchema } from "@gn/domain";
 import { z } from "zod";
+import { FeatureGuard } from "../common/feature.guard";
 import { parseBody } from "../common/validation";
 import { PatinhasService } from "./service";
 
@@ -65,6 +66,7 @@ export class ContaController {
 
   @Post("eu/trocas")
   @HttpCode(201)
+  @UseGuards(FeatureGuard("trocas"))
   async redeem(@Headers("authorization") auth: string | undefined, @Body() body: unknown) {
     const account = await this.patinhas.accountFromHeader(auth);
     const { partnerId, perkId } = parseBody(redeemSchema, body);

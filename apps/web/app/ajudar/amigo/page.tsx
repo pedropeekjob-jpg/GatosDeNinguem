@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { Button, Section } from "@gn/ui";
 import { PageHero } from "@/components/PageHero";
+import { switchedOffRedirect } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 const intro = "Com uma quota mínima de 24 euros por ano ajuda a manter o gatil e tem 10% a 15% de desconto nos nossos parceiros.";
@@ -9,6 +11,9 @@ export async function generateMetadata() {
 }
 
 export default function FriendPage() {
+  // Switched off (FEATURES without "amigo"): the middleware already redirects; this covers the static demo.
+  const off = switchedOffRedirect("/ajudar/amigo");
+  if (off) redirect(off);
   return (
     <>
       <PageHero heading="Ser Amigo da associação" intro={intro} crumbs={[{ href: "/", label: "Início" }, { href: "/ajudar", label: "Ajudar" }, { label: "Ser Amigo" }]}>

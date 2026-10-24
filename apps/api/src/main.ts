@@ -6,7 +6,7 @@ import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/
 import { stripeSepaDebit } from "./padrinhos/debit";
 import { metaPublishers, resendNewsletterPublisher } from "./promocao/publishers";
 import { PromotionService } from "./promocao/promotion.service";
-import { lisbonNow, lisbonToUtc, type Account, type CareAlert, type Contact } from "@gn/domain";
+import { formatFeatures, lisbonNow, lisbonToUtc, parseFeatures, type Account, type CareAlert, type Contact } from "@gn/domain";
 
 async function repositories(): Promise<{ repository: ContentRepository; patinhas: PatinhasRepository; photoStore?: PhotoStore }> {
   if (!process.env.DATABASE_URL) {
@@ -133,8 +133,13 @@ function promotionPublishers() {
 const adminToken = process.env.ADMIN_TOKEN;
 if (!adminToken || adminToken.length < 16) throw new Error("Set ADMIN_TOKEN (16+ characters) before starting the API.");
 
+// Optional parts, all off unless named, e.g. FEATURES=patinhas,trocas,amigo (see docs/funcionalidades.md).
+const features = parseFeatures(process.env.FEATURES);
+console.log(`Features switched on: ${formatFeatures(features) || "none"}`);
+
 const options = {
   ...(await repositories()),
+  features,
   sendLoginCode,
   // Demo without a database: the code is shown on screen so anyone can try signing in.
   exposeLoginCodes: !process.env.DATABASE_URL,

@@ -3,6 +3,7 @@ import { CopyIban } from "@/components/client/CopyIban";
 import { PageHero } from "@/components/PageHero";
 import { getImpact, getPage } from "@/lib/content";
 import { IBAN } from "@/lib/donations";
+import { features } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -37,7 +38,7 @@ export default async function DonatePage() {
       <Section heading="Outras formas de doar">
         <Grid min="16rem">
           <Card title="Apadrinhar um gato" href="/apadrinhar"><p>Um valor por mês para a comida e o veterinário de um gato. Recebe fotografias e notícias dele.</p></Card>
-          <Card title="Ser Amigo da associação" href="/ajudar/amigo"><p>24 euros por ano, com 10% a 15% de desconto nos parceiros.</p></Card>
+          {features.amigo ? <Card title="Ser Amigo da associação" href="/ajudar/amigo"><p>24 euros por ano, com 10% a 15% de desconto nos parceiros.</p></Card> : null}
           <Card title="Comprar na loja solidária" href="/loja"><p>T-shirts, canecas e calendários. Também pode doar coisas para vender.</p></Card>
           <Card title="Doar comida e mantas" href="#bens"><p>Areia, ração e mantas, entregues no gatil.</p></Card>
         </Grid>

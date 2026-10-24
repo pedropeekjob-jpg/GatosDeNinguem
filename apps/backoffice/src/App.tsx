@@ -1,8 +1,9 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import type { FeatureFlags } from "@gn/domain";
 import { AnimatedLogo, Button, Container, Notice, SiteHeader, TextField } from "@gn/ui";
-import { ApiContext, httpApi, type Api } from "./lib/api";
+import { ApiContext, httpApi, useFeatures, type Api } from "./lib/api";
 import { useUnreadAlerts } from "./lib/equipa";
 import { CuidadoGatoPage } from "./pages/CuidadoGatoPage";
 import { CuidadosPage } from "./pages/CuidadosPage";
@@ -18,7 +19,7 @@ import { PedidosPage } from "./pages/PedidosPage";
 import { PromocaoPage } from "./pages/PromocaoPage";
 import { SeoPage } from "./pages/SeoPage";
 
-const nav = [
+const nav: { href: string; label: string; feature?: keyof FeatureFlags }[] = [
   { href: "/", label: "Hoje" },
   { href: "/cuidados", label: "Cuidados" },
   { href: "/escalas", label: "Escalas" },
@@ -28,7 +29,7 @@ const nav = [
   { href: "/promocao", label: "Promoção" },
   { href: "/pedidos", label: "Pedidos" },
   { href: "/loja", label: "Loja" },
-  { href: "/patinhas", label: "Patinhas" },
+  { href: "/patinhas", label: "Patinhas", feature: "patinhas" },
   { href: "/numeros", label: "Números" },
   { href: "/seo", label: "SEO" },
 ];
@@ -100,7 +101,8 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
 /** The menu shows how many care changes this person has not seen yet. */
 function Header({ currentPath, onLogout }: { currentPath: string; onLogout?: () => void }) {
   const { unread } = useUnreadAlerts();
-  const items = nav.map((item) => (item.href === "/cuidados" ? { ...item, count: unread.length, countLabel: unread.length === 1 ? "novidade por ver" : "novidades por ver" } : item));
+  const { features } = useFeatures();
+  const items = nav.filter((item) => !item.feature || features[item.feature]).map(({ feature: _, ...item }) => item).map((item) => (item.href === "/cuidados" ? { ...item, count: unread.length, countLabel: unread.length === 1 ? "novidade por ver" : "novidades por ver" } : item));
   return (
     <SiteHeader
       brand={<><img className="bo-logo" src="/logo.svg" alt="Gatos de Ninguém" width={54} height={56} /><span className="bo-brand-label">Gestão</span></>}

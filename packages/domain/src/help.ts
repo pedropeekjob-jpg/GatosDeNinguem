@@ -22,8 +22,8 @@ export const helpActions: Record<HelpAction["id"], HelpAction> = {
   adotar: { id: "adotar", title: "Adotar um gato", description: "Dê uma casa para sempre a um dos nossos gatos.", href: "/adotar/descobrir" },
 };
 
-/** One main suggestion and two alternatives. There is always something anyone can do. */
-export function recommendHelp(a: HelpAnswers): { main: HelpAction; alternatives: HelpAction[] } {
+/** One main suggestion and two alternatives. There is always something anyone can do. Ser Amigo only while it is offered. */
+export function recommendHelp(a: HelpAnswers, offer: { amigo?: boolean } = {}): { main: HelpAction; alternatives: HelpAction[] } {
   const ids: HelpAction["id"][] = [];
   if (a.space === "sim" && a.time === "muito") ids.push("adotar", "fat");
   else if (a.space === "sim") ids.push("fat");
@@ -31,6 +31,6 @@ export function recommendHelp(a: HelpAnswers): { main: HelpAction; alternatives:
   if (a.money === "sim") ids.push("apadrinhar", "amigo", "doar");
   if (a.money === "pouco") ids.push("amigo", "doar");
   ids.push("partilhar");
-  const unique = [...new Set(ids)];
+  const unique = [...new Set(ids)].filter((id) => id !== "amigo" || offer.amigo !== false);
   return { main: helpActions[unique[0]!], alternatives: unique.slice(1, 3).map((id) => helpActions[id]) };
 }

@@ -3,6 +3,7 @@ import { LegalDraftNotice } from "@/components/LegalDraftNotice";
 import { PageHero } from "@/components/PageHero";
 import { association } from "@/lib/association";
 import { getPage } from "@/lib/content";
+import { features } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -38,7 +39,11 @@ export default async function PrivacyPage() {
           <ul className="gn-stack gn-stack--s">
             <li><strong>Pedidos de adoção, apadrinhamento e família temporária:</strong> nome, contactos, localidade e o que nos conta sobre a sua casa, para avaliarmos o pedido e falarmos consigo.</li>
             <li><strong>Turnos de voluntariado:</strong> nome e telemóvel, para organizarmos os turnos no gatil e o avisarmos de alterações.</li>
-            <li><strong>Conta e Patinhas:</strong> nome, email ou telemóvel e as ajudas que regista, para mostrar as suas Patinhas e vantagens. O seu nome só aparece no mural se o autorizar.</li>
+            {features.patinhas ? (
+              <li><strong>Conta e Patinhas:</strong> nome, email ou telemóvel e as ajudas que regista, para mostrar as suas Patinhas e vantagens. O seu nome só aparece no mural se o autorizar.</li>
+            ) : (
+              <li><strong>Conta:</strong> nome e email ou telemóvel, para entrar na sua área pessoal, ver os turnos no gatil e receber as notificações.</li>
+            )}
             <li><strong>Loja solidária e oferta de artigos:</strong> nome, contactos e o pedido, para combinarmos o pagamento e a entrega.</li>
             <li><strong>Pedidos de parceria:</strong> nome da empresa, pessoa de contacto e contactos.</li>
             <li><strong>Débito direto do apadrinhamento:</strong> nome, email e o estado de cada débito. O IBAN é escrito na página segura do prestador de pagamentos e não fica no nosso site.</li>

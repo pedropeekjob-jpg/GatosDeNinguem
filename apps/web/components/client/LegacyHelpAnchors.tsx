@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { features } from "@/lib/features";
 
 /** Old links such as /ajudar#doar (campaigns, posts, shares) now open the page of their own. */
 const pages: Record<string, string> = {
@@ -8,7 +9,7 @@ const pages: Record<string, string> = {
   "#apadrinhar": "/apadrinhar",
   "#voluntariado": "/ajudar/voluntariado",
   "#familia-temporaria": "/ajudar/familia-temporaria",
-  "#amigo": "/ajudar/amigo",
+  ...(features.amigo ? { "#amigo": "/ajudar/amigo" } : {}),
 };
 
 export function LegacyHelpAnchors() {

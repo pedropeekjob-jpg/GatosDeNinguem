@@ -6,6 +6,7 @@ import { HappyEndings } from "@/components/HappyEndings";
 import { PatinhasTeaser } from "@/components/PatinhasTeaser";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { getImpact, getPage, listCats, listHappyEndings } from "@/lib/content";
+import { features } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -61,16 +62,18 @@ export default async function HomePage() {
 
       {featured ? <FeaturedCat cat={featured} /> : null}
 
-      <section className="home-next">
-        <Container>
-          <div className="home-next__grid">
-            <PatinhasTeaser />
-            <div className="home-next__art" aria-hidden="true">
-              <AnimatedLogo size={200} />
+      {features.patinhas ? (
+        <section className="home-next">
+          <Container>
+            <div className="home-next__grid">
+              <PatinhasTeaser />
+              <div className="home-next__art" aria-hidden="true">
+                <AnimatedLogo size={200} />
+              </div>
             </div>
-          </div>
-        </Container>
-      </section>
+          </Container>
+        </section>
+      ) : null}
     </>
   );
 }

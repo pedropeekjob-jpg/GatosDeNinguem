@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { seedRedirects, type Redirect } from "@gn/domain";
 import { findRedirect } from "@gn/seo";
+import { switchedOffRedirect } from "@/lib/features";
 
 /**
  * Redirects managed in the back office (e.g. old Wix URLs → new pages).
@@ -22,6 +23,9 @@ async function redirects(): Promise<Redirect[]> {
 }
 
 export async function middleware(request: NextRequest) {
+  // Pages of parts that are switched off (FEATURES) send their old links somewhere useful.
+  const off = switchedOffRedirect(request.nextUrl.pathname);
+  if (off) return NextResponse.redirect(new URL(off, request.url), 307);
   const match = findRedirect(await redirects(), request.nextUrl.pathname);
   if (!match) return NextResponse.next();
   const target = new URL(match.to, request.url);

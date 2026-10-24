@@ -33,6 +33,10 @@ services:
         fromDatabase:
           name: gatosdeninguem-db
           property: connectionString
+      # Optional parts, all off for now: list the ones to switch on, e.g. "patinhas,trocas,amigo"
+      # (docs/funcionalidades.md). Keep the same value on the site below.
+      - key: FEATURES
+        value: nenhuma
       # Back office password (16+ characters). Render asks for it when the Blueprint is created.
       - key: ADMIN_TOKEN
         sync: false
@@ -84,6 +88,9 @@ services:
         value: "22"
       - key: API_URL
         value: https://gatosdeninguem-api.onrender.com
+      # Same as the API's FEATURES. The site reads it when it is built, so change it and redeploy.
+      - key: FEATURES
+        value: nenhuma
       - key: REVALIDATE_SECRET
         fromService:
           type: web
