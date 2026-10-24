@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { NestFastifyApplication } from "@nestjs/platform-fastify";
-import type { Contact } from "@gn/domain";
+import { allFeatures, type Contact } from "@gn/domain";
 import { createApp } from "../src/app";
 import { InMemoryContentRepository } from "../src/content/in-memory.repository";
 import { InMemoryPatinhasRepository } from "../src/patinhas/repository";
@@ -15,6 +15,7 @@ beforeAll(async () => {
   app = await createApp({
     repository: new InMemoryContentRepository(),
     patinhas: new InMemoryPatinhasRepository(),
+    features: allFeatures,
     adminToken: TOKEN,
     onContentChanged: async () => {},
     logger: false,
@@ -221,5 +222,49 @@ describe("demo mode", () => {
     const res = await demo.inject({ method: "POST", url: "/conta/codigo", payload: { contact: "912000001" } });
     expect(res.json().demoCode).toMatch(/^\d{6}$/);
     await demo.close();
+  });
+});
+
+describe("feature flags", () => {
+  async function appWith(features?: Parameters<typeof createApp>[0]["features"]) {
+    const codes: string[] = [];
+    const other = await createApp({ repository: new InMemoryContentRepository(), adminToken: TOKEN, onContentChanged: async () => {}, logger: false, features, sendLoginCode: async (_to, code) => { codes.push(code); } });
+    await other.init();
+    await other.getHttpAdapter().getInstance().ready();
+    const call = (method: Method, url: string, payload?: object, headers?: Record<string, string>) => other.inject({ method, url, payload, headers });
+    const signInHere = async (contact: string, name: string) => {
+      await call("POST", "/conta/codigo", { contact, name, consent: true });
+      return (await call("POST", "/conta/entrar", { contact, code: codes.at(-1)! })).json().token as string;
+    };
+    return { other, call, signInHere };
+  }
+
+  it("with everything off (the default): accounts work, but nothing earns, swaps or shows Patinhas", async () => {
+    const { other, call, signInHere } = await appWith();
+    expect((await call("GET", "/features")).json()).toEqual({ patinhas: false, trocas: false, amigo: false });
+    const token = await signInHere("sem.patinhas@exemplo.pt", "Rita Sem");
+    const me = (await call("GET", "/conta/eu", undefined, session(token))).json();
+    expect(me.account.name).toBe("Rita Sem");
+    expect(me.features.patinhas).toBe(false);
+    expect(me.earned).toBe(0);
+    expect(me.perks).toEqual([]);
+    expect((await call("POST", "/conta/eu/questionario", undefined, session(token))).json()).toMatchObject({ counted: false });
+    expect((await call("POST", "/conta/eu/trocas", { partnerId: "partner-1", perkId: "consulta-10" }, session(token))).statusCode).toBe(404);
+    expect((await call("GET", "/patinhas")).statusCode).toBe(404);
+    expect((await call("GET", "/patinhas/contas", undefined, admin)).statusCode).toBe(404);
+    await other.close();
+  });
+
+  it("with Patinhas on but swaps off: earning works, swaps stay closed", async () => {
+    const { other, call, signInHere } = await appWith({ patinhas: true, trocas: false, amigo: false });
+    const token = await signInHere("so.patinhas@exemplo.pt", "Rui Pontos");
+    const me = (await call("GET", "/conta/eu", undefined, session(token))).json();
+    expect(me.earned).toBe(10);
+    expect(me.perks).toEqual([]);
+    expect((await call("GET", "/patinhas")).statusCode).toBe(200);
+    expect((await call("GET", "/patinhas/contas", undefined, admin)).statusCode).toBe(200);
+    expect((await call("GET", "/patinhas/trocas", undefined, admin)).statusCode).toBe(404);
+    expect((await call("POST", "/conta/eu/trocas", { partnerId: "partner-1", perkId: "consulta-10" }, session(token))).statusCode).toBe(404);
+    await other.close();
   });
 });

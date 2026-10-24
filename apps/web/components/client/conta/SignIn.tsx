@@ -2,6 +2,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Button, Checkbox, Notice, TextField } from "@gn/ui";
 import { contaClient } from "@/lib/conta";
+import { features } from "@/lib/features";
 
 type Step = { name: "contacto" } | { name: "nome" } | { name: "codigo"; sentTo: "email" | "telemovel"; newAccount: boolean; demoCode?: string };
 
@@ -88,7 +89,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: (newAccount: boolean) => vo
         <TextField id="conta-nome" label="O seu nome" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} />
         <Checkbox
           id="conta-consentimento"
-          label="Aceito que a associação guarde o meu nome e contacto para as Patinhas"
+          label={features.patinhas ? "Aceito que a associação guarde o meu nome e contacto para as Patinhas" : "Aceito que a associação guarde o meu nome e contacto para a minha conta"}
           hint="Pode apagar a conta quando quiser. Nunca partilhamos os seus dados."
           checked={consent}
           onChange={setConsent}
@@ -108,7 +109,7 @@ export function SignIn({ onSignedIn }: { onSignedIn: (newAccount: boolean) => vo
       <TextField id="conta-contacto" label="Email ou telemóvel" autoComplete="username" value={contact} onChange={(e) => setContact(e.target.value)} error={errors.contact} />
       <Button type="submit" disabled={busy} block>{busy ? "A continuar…" : "Continuar"}</Button>
       {client.demo ? (
-        <p className="small muted">Demonstração: para ver uma conta com Patinhas, medalhas e trocas, entre com o telemóvel 912 000 001.</p>
+        <p className="small muted">Demonstração: para ver uma conta {features.patinhas ? "com Patinhas e medalhas" : "de exemplo"}, entre com o telemóvel 912 000 001.</p>
       ) : null}
     </form>
   );

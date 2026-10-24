@@ -5,6 +5,7 @@ import { HappyEndings } from "@/components/HappyEndings";
 import { PatinhasTeaser } from "@/components/PatinhasTeaser";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
 import { getPage, listCats, listHappyEndings } from "@/lib/content";
+import { features } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -44,19 +45,28 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="home-next">
-        <Container>
-          <div className="home-next__grid">
-            <div className="gn-stack gn-stack--m">
-              <PatinhasTeaser />
-              <FavoritesStrip cats={cats} />
+      {features.patinhas ? (
+        <section className="home-next">
+          <Container>
+            <div className="home-next__grid">
+              <div className="gn-stack gn-stack--m">
+                <PatinhasTeaser />
+                <FavoritesStrip cats={cats} />
+              </div>
+              <div className="home-next__art" aria-hidden="true">
+                <AnimatedLogo size={200} />
+              </div>
             </div>
-            <div className="home-next__art" aria-hidden="true">
-              <AnimatedLogo size={200} />
-            </div>
-          </div>
-        </Container>
-      </section>
+          </Container>
+        </section>
+      ) : (
+        // Without Patinhas only the saved cats are left here, and only for people who saved one.
+        <div className="home-saved">
+          <Container>
+            <FavoritesStrip cats={cats} />
+          </Container>
+        </div>
+      )}
 
       {/* Every cat looking for a home, one swipe away; the cat of the week has its own section below. */}
       <CatRail cats={ordered.filter((c) => c !== featured)} total={cats.length} />

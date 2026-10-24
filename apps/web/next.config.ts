@@ -8,7 +8,8 @@ const config: NextConfig = {
   ...(staticExport ? { output: "export" as const, trailingSlash: true, basePath } : {}),
   // Workspace packages ship TypeScript source.
   // Without an API (the GitHub Pages demo, tests) accounts and Patinhas run in the browser on example data.
-  env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1" },
+  // FEATURES switches on optional parts (patinhas, trocas, amigo); the same setting as the API's.
+  env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1", NEXT_PUBLIC_FEATURES: process.env.FEATURES ?? process.env.NEXT_PUBLIC_FEATURES ?? "" },
   transpilePackages: ["@gn/ui", "@gn/domain", "@gn/seo"],
   poweredByHeader: false,
   images: { unoptimized: true },

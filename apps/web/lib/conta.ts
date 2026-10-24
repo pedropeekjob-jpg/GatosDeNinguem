@@ -21,13 +21,15 @@ import {
   type Account,
   type AccountUpdate,
   type EarnAction,
+  type FeatureFlags,
   type Painel,
   type PatinhasEntry,
   type Redemption,
 } from "@gn/domain";
+import { features } from "./features";
 
-/** The helper's page as the site shows it. */
-export type MeuPainel = Painel & { account: Account };
+/** The helper's page as the site shows it, with what is switched on. */
+export type MeuPainel = Painel & { account: Account; features: FeatureFlags };
 
 export type CodeResult = { status: "precisa-nome" } | { status: "codigo-enviado"; sentTo: "email" | "telemovel"; newAccount: boolean; demoCode?: string };
 export type Failure = { ok: false; message: string; fieldErrors: Record<string, string> };
@@ -173,6 +175,7 @@ const findBy = (state: DemoState, contact: string) => {
 function demoClient(): ContaClient {
   const me = (state: DemoState) => state.accounts.find((a) => a.id === state.signedIn);
   const give = (state: DemoState, accountId: string, action: EarnAction, extra: { quantity?: number; by?: PatinhasEntry["by"]; sourceId?: string } = {}) => {
+    if (!features.patinhas) return { ok: false as const };
     const r = award(defaultPointsRules, state.entries.filter((e) => e.accountId === accountId), { id: newId(), accountId, action, at: new Date(), ...extra });
     if (r.ok) state.entries.push(r.entry);
     return r;
@@ -220,10 +223,9 @@ function demoClient(): ContaClient {
       if (!account) { rememberSignedIn(null); return null; }
       const now = new Date();
       const ledger = state.entries.filter((e) => e.accountId === account.id);
-      return {
-        account,
-        ...buildPainel({ ledger, rules: defaultPointsRules, badges: seedBadges, challenges: seedChallenges, communityEntries: state.entries, partners: seedPartners, redemptions: state.redemptions.filter((r) => r.accountId === account.id), now }),
-      };
+      const painel = buildPainel({ ledger, rules: defaultPointsRules, badges: seedBadges, challenges: seedChallenges, communityEntries: state.entries, partners: seedPartners, redemptions: state.redemptions.filter((r) => r.accountId === account.id), now });
+      // Like the API: perks are only offered while swaps are switched on.
+      return { account, features, ...painel, perks: features.trocas ? painel.perks : [] };
     },
     async update(changes) {
       const state = loadDemo();
@@ -247,7 +249,7 @@ function demoClient(): ContaClient {
       const account = me(state);
       const partner = seedPartners.find((p) => p.id === partnerId);
       const perk = partner?.perks.find((p) => p.id === perkId);
-      if (!account || !partner || !perk) return fail("Vantagem não encontrada.");
+      if (!features.trocas || !account || !partner || !perk) return fail("Vantagem não encontrada.");
       const ledger = state.entries.filter((e) => e.accountId === account.id);
       const mine = state.redemptions.filter((r) => r.accountId === account.id);
       const check = canRedeem(partner, perk, { level: levelFor(earnedTotal(ledger)).level, balance: balance(ledger), redemptions: mine }, new Date());

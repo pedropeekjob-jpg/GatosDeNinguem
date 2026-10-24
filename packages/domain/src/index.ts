@@ -2,6 +2,7 @@ export * from "./seo-fields";
 export * from "./content";
 export * from "./seed";
 export * from "./matching";
+export * from "./features";
 export * from "./help";
 export * from "./escalas";
 export * from "./contas";

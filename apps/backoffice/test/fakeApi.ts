@@ -4,8 +4,8 @@ import {
   type Shift,
 } from "@gn/domain";
 import {
-  award, balance, defaultPointsRules, earnedTotal, levelFor, seedAccounts, seedBadges, seedChallenges, seedEntries, seedPartners, seedRedemptions,
-  type Badge, type Challenge, type PatinhasEntry, type PointsRule, type Redemption,
+  allFeatures, award, balance, defaultPointsRules, earnedTotal, levelFor, seedAccounts, seedBadges, seedChallenges, seedEntries, seedPartners, seedRedemptions,
+  type Badge, type Challenge, type FeatureFlags, type PatinhasEntry, type PointsRule, type Redemption,
 } from "@gn/domain";
 import { auditSeo, resolveSeo } from "@gn/seo";
 import type { Api } from "../src/lib/api";
@@ -13,7 +13,7 @@ import { fakeCuidados } from "./fakeCuidados";
 import { fakeLoja } from "./fakeLoja";
 
 /** In-memory Api for component tests, built on the same demo data and rules as the server. */
-export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
+export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z"), features: FeatureFlags = allFeatures) {
   let shifts: Shift[] = structuredClone(seedShifts);
   let cats = structuredClone(seedCats);
   let pages = structuredClone(seedPages);
@@ -40,6 +40,7 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
   const api: Api = {
     ...fakeCuidados(now, () => cats),
     ...fakeLoja(now),
+    features: async () => features,
     people: async () => seedAccounts.map((a) => ({ ...a, ...person(a.id) })),
     person: async () => { throw new Error("not used"); },
     givePatinhas: vi.fn(async (accountId, input) => {

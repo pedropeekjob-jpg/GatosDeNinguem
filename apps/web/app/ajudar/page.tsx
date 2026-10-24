@@ -3,6 +3,7 @@ import { CopyIban } from "@/components/client/CopyIban";
 import { HelpQuiz } from "@/components/client/HelpQuiz";
 import { PageHero } from "@/components/PageHero";
 import { getPage } from "@/lib/content";
+import { features } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -26,8 +27,10 @@ export default async function HelpPage() {
           <Card title="Ser voluntário" href="#voluntariado"><p>Limpeza, transporte ao veterinário e eventos.</p></Card>
           <Card title="Família temporária" href="/ajudar/familia-temporaria"><p>Acolha um gato por umas semanas.</p></Card>
           <Card title="Comprar na loja solidária" href="/loja"><p>T-shirts, canecas e calendários. Também pode doar coisas para vender.</p></Card>
-          <Card title="Ser Amigo" href="#amigo"><p>24 euros por ano, com descontos nos parceiros.</p></Card>
-          <Card title="Ganhar Patinhas" href="/patinhas"><p>Cada ajuda dá Patinhas, que pode trocar por vantagens nos parceiros.</p></Card>
+          {features.amigo ? <Card title="Ser Amigo" href="#amigo"><p>24 euros por ano, com descontos nos parceiros.</p></Card> : null}
+          {features.patinhas ? (
+            <Card title="Ganhar Patinhas" href="/patinhas"><p>{features.trocas ? "Cada ajuda dá Patinhas, que pode trocar por vantagens nos parceiros." : "Cada ajuda dá Patinhas, que sobem o seu nível."}</p></Card>
+          ) : null}
         </Grid>
       </Section>
 
@@ -82,15 +85,17 @@ export default async function HelpPage() {
         </Container>
       </section>
 
-      <section id="amigo" className="gn-section">
-        <Container narrow>
-          <div className="gn-stack gn-stack--m">
-            <h2>Ser Amigo da associação</h2>
-            <p>Com uma quota mínima de 24 euros por ano ajuda a manter o gatil e tem 10% a 15% de desconto nos nossos parceiros.</p>
-            <div className="action-row"><Button href="/parceiros" variant="secondary">Ver parceiros e vantagens</Button></div>
-          </div>
-        </Container>
-      </section>
+      {features.amigo ? (
+        <section id="amigo" className="gn-section">
+          <Container narrow>
+            <div className="gn-stack gn-stack--m">
+              <h2>Ser Amigo da associação</h2>
+              <p>Com uma quota mínima de 24 euros por ano ajuda a manter o gatil e tem 10% a 15% de desconto nos nossos parceiros.</p>
+              <div className="action-row"><Button href="/parceiros" variant="secondary">Ver parceiros e vantagens</Button></div>
+            </div>
+          </Container>
+        </section>
+      ) : null}
     </>
   );
 }

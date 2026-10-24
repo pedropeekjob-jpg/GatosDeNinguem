@@ -30,6 +30,7 @@ main { display: block; }
 .home-next { padding-block: var(--gn-space-m) var(--gn-space-l); }
 .home-next__grid { display: grid; gap: var(--gn-space-l); align-items: center; }
 .home-next__art { display: none; }
+.home-saved > * > :first-child { margin-top: var(--gn-space-m); }
 @media (min-width: 60rem) {
   .home-next__grid { grid-template-columns: minmax(0, 1fr) auto; }
   /* The logo's cat comes to life beside the Patinhas. */

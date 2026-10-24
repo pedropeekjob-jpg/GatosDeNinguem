@@ -1,10 +1,12 @@
-import type { Account, CareAlert, Contact, PromotionChannel } from "@gn/domain";
+import type { Account, CareAlert, Contact, FeatureFlags, PromotionChannel } from "@gn/domain";
 import type { ContentRepository } from "../content/repository";
 import type { PhotoStore } from "../media/photo-store";
 import type { PatinhasRepository } from "../patinhas/repository";
 
 export type ApiOptions = {
   repository: ContentRepository;
+  /** Parts switched on (FEATURES setting). Default: all off. */
+  features?: FeatureFlags;
   /** Helper accounts and Patinhas. Defaults to in-memory example data. */
   patinhas?: PatinhasRepository;
   /** Delivers a sign-in code by email or SMS. */
