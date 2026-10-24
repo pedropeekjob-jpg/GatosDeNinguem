@@ -209,6 +209,21 @@ main > .gn-container + :is(.gn-section--ink, .gn-section--soft) { margin-top: va
 .gatil__silenciar legend { font-weight: 650; margin-bottom: 0.4rem; }
 .gatil__resumo { display: grid; gap: 0.75rem; justify-items: start; padding: var(--gn-space-m); border-radius: var(--gn-radius); border: 2px solid var(--gn-ink); background: var(--gn-accent-soft); }
 .gatil__resumo h2 { margin: 0; }
+/* Godparents: their cat, the monthly debit and the news. */
+.afilhado { padding: var(--gn-space-m); border-radius: var(--gn-radius); border: 1px solid var(--gn-line); background: var(--gn-surface); }
+.afilhado h2, .afilhado h3, .afilhado p { margin: 0; }
+.afilhado__topo { display: flex; gap: var(--gn-space-m); align-items: flex-start; }
+.afilhado__topo img { width: 6.5rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius-s); flex: none; }
+.afilhado__pagamento { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.afilhado__novidades { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.novidade { display: grid; gap: 0.3rem; padding-left: 0.85rem; border-left: 3px solid var(--gn-line); }
+.novidade--carta { padding: 0.75rem 0.85rem; border-left-color: var(--gn-accent); border-radius: 0 var(--gn-radius-s) var(--gn-radius-s) 0; background: var(--gn-sand); }
+.novidade__quando { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.novidade__tipo { font-weight: 700; color: var(--gn-ink); margin-right: 0.35rem; }
+.novidade__foto { width: 100%; max-width: 22rem; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius-s); }
+.afilhado__definicoes { border-top: 1px solid var(--gn-line); padding-top: 0.75rem; }
+.afilhado__definicoes summary { cursor: pointer; font-weight: 650; padding-block: 0.25rem; margin-bottom: 0.5rem; }
+.afilhado__definicoes fieldset { border: 0; margin: 0; padding: 0; }
 .loc { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 6px; font-size: var(--gn-text-s); font-weight: 650; background: var(--gn-sand); }
 .loc--cage { background: var(--gn-accent-soft); box-shadow: inset 0 0 0 1.5px var(--gn-accent-strong); }
 .loc--unknown { color: var(--gn-warning); }

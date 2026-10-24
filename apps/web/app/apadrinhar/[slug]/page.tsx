@@ -41,7 +41,7 @@ export default async function SponsorCatPage({ params }: Props) {
           </div>
         </div>
         <div className="action-row">
-          <FormModal label={`Quero apadrinhar ${pronoun} ${cat.name}`} title={`Apadrinhar ${pronoun} ${cat.name}`} intro="Deixe os seus dados e entramos em contacto para combinar.">
+          <FormModal label={`Quero apadrinhar ${pronoun} ${cat.name}`} title={`Apadrinhar ${pronoun} ${cat.name}`} intro="Escolha o valor e como quer contribuir. Depois acompanha tudo na sua conta.">
             <SponsorForm catSlug={cat.slug} catName={cat.name} pronoun={pronoun} />
           </FormModal>
         </div>

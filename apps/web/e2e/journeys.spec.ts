@@ -95,14 +95,14 @@ test("sponsor: Apadrinhar leads to sponsoring that cat, not to adopting it", asy
   await page.getByRole("button", { name: "Quero apadrinhar o Tobias" }).click();
   await page.getByText("Outro valor").click();
   await page.getByLabel("Valor por mês, em euros").fill("2");
-  await page.getByRole("button", { name: "Enviar pedido" }).click();
+  await page.getByRole("button", { name: "Continuar para o débito" }).click();
   await expect(page.getByText("O valor mínimo é 5 euros por mês")).toBeVisible();
   await expect(page.getByText("Indique o seu nome").first()).toBeVisible();
   await page.getByLabel("Valor por mês, em euros").fill("15");
   await page.getByLabel("O seu nome").fill("Ana Lima");
   await page.getByLabel("Email", { exact: true }).fill("ana@example.pt");
-  await page.getByText("Aceito que a associação me contacte").click();
-  await page.getByRole("button", { name: "Enviar pedido" }).click();
+  await page.getByText("Tenho 18 anos ou mais e aceito").click();
+  await page.getByRole("button", { name: "Continuar para o débito" }).click();
   await expect(page.getByText("Obrigado! Tobias agradece.")).toBeVisible();
 });
 

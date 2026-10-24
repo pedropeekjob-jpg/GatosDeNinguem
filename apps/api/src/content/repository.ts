@@ -1,5 +1,5 @@
 import type { Appointment, CareAlert, CareNotificationPrefs, CareTask, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
-import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } from "@gn/domain";
+import type { FosterPlacement, Shift, SponsorLetter, Sponsorship, StoredFosterApplication } from "@gn/domain";
 import type { Product, ShopOrder, ShopSettings, ShopSpending, StoredItemDonation } from "@gn/domain";
 import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Promotion, Redirect, SeoSettings } from "@gn/domain";
 
@@ -56,6 +56,9 @@ export interface ContentRepository {
   saveFosterApplication(a: StoredFosterApplication): Promise<StoredFosterApplication>;
   listSponsorships(): Promise<Sponsorship[]>;
   saveSponsorship(s: Sponsorship): Promise<Sponsorship>;
+  /** Letters from the team to a cat's godparents. Newest first. */
+  listSponsorLetters(catSlug?: string): Promise<SponsorLetter[]>;
+  saveSponsorLetter(l: SponsorLetter): Promise<SponsorLetter>;
 
   // Loja solidária
   listProducts(): Promise<Product[]>;

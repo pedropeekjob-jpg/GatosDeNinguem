@@ -17,6 +17,22 @@ export function signUpForShift(shiftId: string, data: unknown): Promise<SubmitRe
   return postJson(`/api/turnos/${encodeURIComponent(shiftId)}`, data, volunteerSignupInputSchema);
 }
 
+/**
+ * "Quero apadrinhar". With automatic debit on, the answer carries the address of the bank details page to go to next.
+ * The static demo only checks the form.
+ */
+export async function requestSponsorship(data: unknown): Promise<SubmitResult & { checkoutUrl?: string }> {
+  if (STATIC_DEMO) return postJson("/api/forms/apadrinhar", data, sponsorshipRequestSchema);
+  try {
+    const res = await fetch("/api/forms/apadrinhar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
+    const body = (await res.json().catch(() => ({}))) as { checkoutUrl?: string; message?: string; issues?: Issue[] };
+    if (res.ok) return { ok: true, checkoutUrl: body.checkoutUrl };
+    return toResult(body.message ?? "Não foi possível enviar. Tente outra vez.", body.issues);
+  } catch {
+    return toResult("Sem ligação à internet. Verifique a ligação e tente outra vez.");
+  }
+}
+
 export type OrderPlaced = { code: string; totalCents: number };
 
 /** Sends a shop order and returns its code. The static demo makes up a code and sends nothing. */
