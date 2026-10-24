@@ -23,7 +23,7 @@ export function Footer() {
               <li><a href="/loja">Loja solidária</a></li>
               <li><a href="/parceiros">Parceiros</a></li>
               <li><a href="/sos">Encontrei um gato</a></li>
-              <li><a href="/ajudar#doar">Fazer um donativo</a></li>
+              <li><a href="/ajudar/doar">Fazer um donativo</a></li>
             </ul>
           </nav>
           <div className="gn-stack gn-stack--s">
