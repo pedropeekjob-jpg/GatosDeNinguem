@@ -35,7 +35,7 @@ export function NumerosPage() {
           <div><Button variant="quiet" onClick={() => setDraft({ ...draft, campaign: undefined })}>Terminar campanha</Button></div>
         </>
       ) : (
-        <div><Button variant="secondary" onClick={() => setDraft({ ...draft, campaign: { title: "", current: 0, goal: 10, unit: "gatos", href: "/ajudar#doar" } })}>Criar campanha</Button></div>
+        <div><Button variant="secondary" onClick={() => setDraft({ ...draft, campaign: { title: "", current: 0, goal: 10, unit: "gatos", href: "/doar" } })}>Criar campanha</Button></div>
       )}
       {save.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(save.error)}</Notice> : null}
       {save.isSuccess ? <Notice tone="success" title="Guardado">A página inicial é atualizada em poucos segundos.</Notice> : null}

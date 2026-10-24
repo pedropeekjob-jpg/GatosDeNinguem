@@ -3,15 +3,13 @@ import { CopyIban } from "@/components/client/CopyIban";
 import { HelpQuiz } from "@/components/client/HelpQuiz";
 import { PageHero } from "@/components/PageHero";
 import { getPage } from "@/lib/content";
+import { IBAN } from "@/lib/donations";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
   const page = await getPage("/ajudar");
   return buildMetadata({ path: "/ajudar", title: page.heading, description: page.intro, overrides: page.seo });
 }
-
-// IBAN as published on the association's current website.
-const IBAN = "PT50 0045 1436 4033 0203 2321 6";
 
 export default async function HelpPage() {
   const page = await getPage("/ajudar");
@@ -22,7 +20,7 @@ export default async function HelpPage() {
         <Grid>
           <Card title="Adotar" href="/adotar"><p>Dê uma casa para sempre a um gato.</p></Card>
           <Card title="Apadrinhar" href="#apadrinhar"><p>Ajude um gato todos os meses e receba notícias dele.</p></Card>
-          <Card title="Fazer um donativo" href="#doar"><p>Qualquer valor ajuda. 35 euros pagam uma esterilização.</p></Card>
+          <Card title="Fazer um donativo" href="/doar"><p>Qualquer valor ajuda. 35 euros pagam uma esterilização.</p></Card>
           <Card title="Ser voluntário" href="#voluntariado"><p>Limpeza, transporte ao veterinário e eventos.</p></Card>
           <Card title="Família temporária" href="/ajudar/familia-temporaria"><p>Acolha um gato por umas semanas.</p></Card>
           <Card title="Comprar na loja solidária" href="/loja"><p>T-shirts, canecas e calendários. Também pode doar coisas para vender.</p></Card>

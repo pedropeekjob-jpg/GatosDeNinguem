@@ -432,3 +432,30 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .shop-grid .gn-card__title { font-size: var(--gn-text); }
   .shop-grid .gn-card__text { font-size: var(--gn-text-s); }
 }
+
+/* ---------- Adotar e doar primeiro ---------- */
+
+/* Under the two main buttons, a quiet way to every other kind of help. */
+.home-more { margin: 0; font-size: var(--gn-text-s); }
+.home-more a { color: inherit; font-weight: 600; text-underline-offset: 0.2em; }
+@media (min-width: 60rem) {
+  .home-top:not(.home-top--plain) .home-more a { color: #fff; }
+}
+/* Saved cats: only takes room when there are some. */
+.home-favorites:has(.gn-notice) { padding-top: var(--gn-space-m); }
+/* Home "Doar": one white card with a soft shadow, the way in for those who can't adopt. */
+.donate-band { padding-block: var(--gn-space-s) var(--gn-space-xl); }
+.donate-band__inner {
+  display: grid; gap: var(--gn-space-m); padding: var(--gn-space-m); border-radius: var(--gn-radius);
+  background: #fff; box-shadow: 0 10px 32px rgb(28 26 27 / .10), 0 1px 3px rgb(28 26 27 / .06);
+}
+.donate-band__inner h2 { margin: 0; }
+.donate-band__inner p { margin: 0; color: var(--gn-ink-soft); }
+.donate-band__actions { display: grid; gap: 0.6rem; grid-template-columns: 1fr 1fr; }
+.donate-band__actions .gn-btn { white-space: nowrap; }
+@media (max-width: 26rem) { .donate-band__actions { grid-template-columns: 1fr; } }
+@media (min-width: 60rem) {
+  .donate-band__inner { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; padding: var(--gn-space-l); column-gap: var(--gn-space-xl); }
+  .donate-band__inner > :first-child { grid-row: span 2; }
+  .donate-band__actions { grid-template-columns: repeat(2, auto); justify-content: start; }
+}

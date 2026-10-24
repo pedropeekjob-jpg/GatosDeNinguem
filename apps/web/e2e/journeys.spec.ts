@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/doar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -25,9 +25,11 @@ test.describe("every page", () => {
 
 test("main navigation is always visible (no hidden menu)", async ({ page }) => {
   await page.goto("/");
-  for (const name of ["Início", "Adotar", "Ajudar", "Notícias", "Sobre nós"]) {
+  for (const name of ["Início", "Adotar", "Doar", "Ajudar", "Notícias"]) {
     await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name })).toBeVisible();
   }
+  // Phones keep five tabs; "Sobre nós" is in the top menu on wide screens and always in the footer.
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Sobre nós" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Encontrei um gato" }).first()).toBeVisible();
   // The association's own logo leads home.
   await expect(page.getByRole("link", { name: "Gatos de Ninguém, página inicial" })).toBeVisible();
@@ -203,7 +205,7 @@ test("home: opens on the shelter's real photos, with the welcome and main button
   // Nothing to scroll for: the title and the two main buttons are on screen, clear of the phone tab bar.
   await expect(page.getByRole("heading", { level: 1 })).toBeInViewport({ ratio: 1 });
   const tabBarTop = await page.locator(".gn-nav").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
-  for (const name of ["Quero adotar", "Quero ajudar"]) {
+  for (const name of ["Quero adotar", "Quero doar"]) {
     const button = page.locator(".home-actions").getByRole("link", { name });
     await expect(button).toBeInViewport({ ratio: 1 });
     expect((await button.boundingBox())!.y + (await button.boundingBox())!.height).toBeLessThanOrEqual(tabBarTop);
@@ -378,16 +380,32 @@ test.describe("no gatil: the volunteer's shift", () => {
   });
 });
 
-test("home: Patinhas are explained above the fold, with a link to how they work", async ({ page }) => {
+test("home: adopting and donating come first, and Patinhas are still explained further down", async ({ page }) => {
+  await page.goto("/");
+  // Order on the page: the cats waiting for a home, then how to donate, then the Patinhas.
+  const tops = await page.evaluate(() =>
+    [".cat-rail", ".donate-band", ".patinhas-teaser"].map((sel) => document.querySelector(sel)!.getBoundingClientRect().top),
+  );
+  expect(tops).toEqual([...tops].sort((a, b) => a - b));
+  const donate = page.getByRole("region", { name: "Não pode adotar? Pode doar." });
+  await expect(donate.getByRole("link", { name: "Apadrinhar um gato" })).toHaveAttribute("href", "/apadrinhar");
+  await page.getByRole("link", { name: "Outras formas de ajudar" }).click();
+  await expect(page).toHaveURL(/\/ajudar\/?$/);
   await page.goto("/");
   const teaser = page.getByRole("complementary", { name: "Cada ajuda vale Patinhas" });
-  // Whole card in the first screen, clear of the phone tab bar.
-  await expect(teaser).toBeInViewport({ ratio: 1 });
-  const tabBarTop = await page.locator(".gn-nav").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
-  const box = (await teaser.boundingBox())!;
-  expect(box.y + box.height).toBeLessThanOrEqual(tabBarTop);
+  await teaser.scrollIntoViewIfNeeded();
   await teaser.getByRole("link", { name: "Como funcionam as Patinhas" }).click();
   await expect(page).toHaveURL(/\/patinhas\/?$/);
+});
+
+test("donate: from the home page to the bank details, ready to copy", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".home-actions").getByRole("link", { name: "Quero doar" }).click();
+  await expect(page).toHaveURL(/\/doar\/?$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Fazer um donativo");
+  await expect(page.getByText("PT50 0045 1436 4033 0203 2321 6")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Apadrinhar um gato" })).toBeVisible();
+  await expect(page.locator("header nav").getByRole("link", { name: "Doar", exact: true })).toHaveAttribute("aria-current", "page");
 });
 
 test("menu links change page inside the app, without a reload or a loader flash", async ({ page }) => {
@@ -395,7 +413,7 @@ test("menu links change page inside the app, without a reload or a loader flash"
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await page.evaluate(() => { (window as unknown as { __same: boolean }).__same = true; });
-  for (const name of ["Adotar", "Sobre nós", "Início"]) {
+  for (const name of ["Adotar", "Doar", "Início"]) {
     await page.locator("header nav").getByRole("link", { name, exact: true }).click();
     await expect(page.locator("header nav").getByRole("link", { name, exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.locator("main h1")).toBeVisible();

@@ -1,10 +1,11 @@
 import { AnimatedLogo, Button, Carousel, Container } from "@gn/ui";
 import { CatRail } from "@/components/CatRail";
+import { DonateBand } from "@/components/DonateBand";
 import { FeaturedCat } from "@/components/FeaturedCat";
 import { HappyEndings } from "@/components/HappyEndings";
 import { PatinhasTeaser } from "@/components/PatinhasTeaser";
 import { FavoritesStrip } from "@/components/client/FavoritesStrip";
-import { getPage, listCats, listHappyEndings } from "@/lib/content";
+import { getImpact, getPage, listCats, listHappyEndings } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -13,8 +14,9 @@ export async function generateMetadata() {
 }
 
 export default async function HomePage() {
-  // Kept short on purpose: a welcome with the three main paths, and one cat to meet. Everything else has its own page.
-  const [page, cats, happy] = await Promise.all([getPage("/"), listCats("para-adocao"), listHappyEndings()]);
+  // Adopting and donating come first: the welcome leads to both, then the cats waiting, then how to give.
+  // Everything else stays on the page, further down.
+  const [page, cats, happy, impact] = await Promise.all([getPage("/"), listCats("para-adocao"), listHappyEndings(), getImpact()]);
   // Gato da semana: rotates weekly, favouring cats that wait longest for attention (seniors first).
   const week = Math.floor(Date.now() / (7 * 24 * 3600 * 1000));
   const ordered = [...cats].sort((a, b) => b.ageYears - a.ageYears);
@@ -36,35 +38,39 @@ export default async function HomePage() {
               <p className="gn-lead">{firstSentence}{more.length ? <span className="home-hero__more"> {more.join(" ")}</span> : null}</p>
               <div className="home-actions">
                 <Button href="/adotar">Quero adotar</Button>
-                <Button href="/ajudar" variant="secondary">Quero ajudar</Button>
+                <Button href="/doar" variant="secondary">Quero doar</Button>
                 <Button href="/sos" variant="urgent">Encontrei um gato</Button>
               </div>
+              <p className="home-more"><a href="/ajudar">Outras formas de ajudar</a></p>
             </div>
           </Container>
         </div>
       </section>
 
+      {/* Cats a visitor saved earlier, so they can pick up where they left off. */}
+      <div className="home-favorites"><Container><FavoritesStrip cats={cats} /></Container></div>
+
+      {/* Every cat looking for a home, one swipe away; the cat of the week has its own section below. */}
+      <CatRail cats={ordered.filter((c) => c !== featured)} total={cats.length} />
+
+      {/* For those who can't adopt: donate, or sponsor a cat. */}
+      <DonateBand impact={impact} />
+
+      {/* Proof that it works: the newest adoptions, right after the cats still waiting. */}
+      <HappyEndings items={happy} />
+
+      {featured ? <FeaturedCat cat={featured} /> : null}
+
       <section className="home-next">
         <Container>
           <div className="home-next__grid">
-            <div className="gn-stack gn-stack--m">
-              <PatinhasTeaser />
-              <FavoritesStrip cats={cats} />
-            </div>
+            <PatinhasTeaser />
             <div className="home-next__art" aria-hidden="true">
               <AnimatedLogo size={200} />
             </div>
           </div>
         </Container>
       </section>
-
-      {/* Every cat looking for a home, one swipe away; the cat of the week has its own section below. */}
-      <CatRail cats={ordered.filter((c) => c !== featured)} total={cats.length} />
-
-      {/* Proof that it works: the newest adoptions, right after the cats still waiting. */}
-      <HappyEndings items={happy} />
-
-      {featured ? <FeaturedCat cat={featured} /> : null}
     </>
   );
 }
