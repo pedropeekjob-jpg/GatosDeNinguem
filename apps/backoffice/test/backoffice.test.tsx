@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import axe from "axe-core";
 import { Shell } from "../src/App";
 import { fakeApi } from "./fakeApi";
@@ -181,5 +181,41 @@ describe("Fotos do gatil", () => {
     const home = (await api.pages()).find((p) => p.path === "/")!;
     expect(home.carousel).toEqual({ autoplay: true, intervalSeconds: 8 });
     expect(home.gallery.map((p) => !!p.hidden)).toEqual([false, false, true, false, false, false]);
+  });
+});
+
+describe("Promoção de eventos", () => {
+  it("asks for a JPG photo for Instagram, then approves the Open Day promotion", async () => {
+    const user = userEvent.setup();
+    const { api, container } = renderAt("/promocao");
+    expect(await screen.findByText("Por ligar: Facebook")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: /Rever e aprovar Open Day/ }));
+    expect((screen.getByLabelText(/Texto das publicações/) as HTMLTextAreaElement).value).toContain("📍 Gatil, Santa Marta de Portuzelo");
+    expect(screen.getByText("Antes de aprovar")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Aprovar/ })).toBeDisabled();
+
+    await user.upload(container.querySelector<HTMLInputElement>('input[type="file"]')!, new File(["x"], "open-day.jpg", { type: "image/jpeg" }));
+    await waitFor(() => expect(screen.queryByText("Antes de aprovar")).not.toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Aprovar: sai domingo, 8 de novembro" }));
+    await waitFor(() => expect(api.promotionAction).toHaveBeenCalledWith("promo-post-2", "aprovar"));
+    expect(api.editPromotion).toHaveBeenCalledWith("promo-post-2", expect.objectContaining({ imageUrl: expect.stringMatching(/\.jpg$/), scheduledFor: "2026-11-08T10:00:00.000Z" }));
+    expect(await screen.findByText("Agendada")).toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("asks for the day and place when a news post is an event", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/noticias");
+    await user.click(await screen.findByRole("button", { name: "Escrever notícia" }));
+    await user.type(screen.getByLabelText("Título"), "Magusto solidário no gatil");
+    await user.click(screen.getByLabelText("Evento"));
+    await user.type(screen.getByLabelText("Resumo"), "Castanhas e a Loja Solidária aberta.");
+    await user.type(screen.getByLabelText(/^Texto/), "Venha passar a tarde connosco.");
+    expect(screen.getByRole("button", { name: "Publicar" })).toBeDisabled();
+    await user.type(screen.getByLabelText("Dia"), "2026-11-11");
+    await user.type(screen.getByLabelText("Começa às"), "15:00");
+    const create = vi.spyOn(api, "createPost");
+    await user.click(screen.getByRole("button", { name: "Publicar" }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ category: "evento", event: { startsAt: "2026-11-11T15:00:00.000Z", endsAt: undefined, location: "Gatil, Santa Marta de Portuzelo" } })));
   });
 });

@@ -18,6 +18,8 @@ import { ContaController } from "./patinhas/conta.controller";
 import { PatinhasController } from "./patinhas/patinhas.controller";
 import { InMemoryPatinhasRepository } from "./patinhas/repository";
 import { PatinhasService } from "./patinhas/service";
+import { NewsletterSairController, PromocoesController } from "./promocao/promocoes.controller";
+import { PromotionService } from "./promocao/promotion.service";
 import { SeoController } from "./seo/seo.controller";
 import { MAX_UPLOAD_BYTES, UploadsController } from "./media/uploads.controller";
 
@@ -33,11 +35,12 @@ class AppModule {
     const accounts = options.patinhas ?? new InMemoryPatinhasRepository();
     return {
       module: AppModule,
-      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController],
+      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, accounts) },
         { provide: CareService, useValue: new CareService(options, accounts) },
+        { provide: PromotionService, useValue: new PromotionService(options) },
         AdminGuard,
       ],
     };

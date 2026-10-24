@@ -1,6 +1,6 @@
 import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CareNotificationPrefs, type CareTask, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { seedFosterApplications, seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
-import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
+import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Promotion, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
 const clone = <T>(v: T): T => structuredClone(v);
@@ -29,6 +29,7 @@ export class InMemoryContentRepository implements ContentRepository {
   private alerts = new Map<string, CareAlert>(seedCareAlerts.map((x) => [x.id, structuredClone(x)]));
   private tasks = new Map<string, CareTask>();
   private carePrefs = new Map<string, CareNotificationPrefs>();
+  private promotions = new Map<string, Promotion>();
 
   constructor(seed = { cats: seedCats, pages: seedPages, posts: seedPosts, redirects: seedRedirects, settings: seedSeoSettings, partners: seedPartners }) {
     seed.partners.forEach((p) => this.partners.set(p.id, clone(p)));
@@ -65,7 +66,14 @@ export class InMemoryContentRepository implements ContentRepository {
 
   async getImpact() { return clone(this.impact); }
   async saveImpact(impact: Impact) { this.impact = clone(impact); return clone(impact); }
-  async saveNewsletterSignup(s: NewsletterSignup & { subscribedAt: string }) { this.newsletter.set(s.email.toLowerCase(), clone(s)); }
+  async saveNewsletterSignup(s: NewsletterSignup & { subscribedAt: string }) { this.newsletter.set(s.email.toLowerCase(), clone({ ...s, email: s.email.toLowerCase() })); }
+  async listNewsletterSignups() { return [...this.newsletter.values()].map(clone); }
+  async deleteNewsletterSignup(email: string) { this.newsletter.delete(email.toLowerCase()); }
+
+  async listPromotions() { return [...this.promotions.values()].sort((a, b) => a.eventStartsAt.localeCompare(b.eventStartsAt)).map(clone); }
+  async getPromotion(id: string) { const x = this.promotions.get(id); return x && clone(x); }
+  async getPromotionByPost(postId: string) { const x = [...this.promotions.values()].find((p) => p.postId === postId); return x && clone(x); }
+  async savePromotion(p: Promotion) { this.promotions.set(p.id, clone(p)); return clone(p); }
 
   async listShifts(range: { from?: string; to?: string } = {}) {
     return [...this.shifts.values()]

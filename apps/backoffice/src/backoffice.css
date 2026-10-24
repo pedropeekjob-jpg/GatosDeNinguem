@@ -79,3 +79,9 @@ details summary { cursor: pointer; font-weight: 650; min-height: var(--gn-target
 .help-requests__list { list-style: none; margin: 0; padding: 0; display: grid; }
 .help-requests__list > li { display: grid; gap: 0.25rem; justify-items: start; padding-block: 0.7rem; border-top: 1px solid var(--gn-line); }
 .help-requests__list .care-card__head { width: 100%; }
+.bo-plain { border: 0; margin: 0; padding: 0; min-width: 0; }
+/* The team menu has many entries: on wide screens it wraps instead of pushing "Sair" off the page. */
+@media (min-width: 64rem) {
+  .gn-header .gn-nav { min-width: 0; flex: 1 1 auto; }
+  .gn-header .gn-nav__list { flex-wrap: wrap; justify-content: center; }
+}

@@ -14,6 +14,7 @@ import { NoticiasPage } from "./pages/NoticiasPage";
 import { NumerosPage } from "./pages/NumerosPage";
 import { PatinhasPage } from "./pages/PatinhasPage";
 import { PedidosPage } from "./pages/PedidosPage";
+import { PromocaoPage } from "./pages/PromocaoPage";
 import { SeoPage } from "./pages/SeoPage";
 
 const nav = [
@@ -23,6 +24,7 @@ const nav = [
   { href: "/gatos", label: "Gatos" },
   { href: "/fotos", label: "Fotos do gatil" },
   { href: "/noticias", label: "Notícias" },
+  { href: "/promocao", label: "Promoção" },
   { href: "/pedidos", label: "Pedidos" },
   { href: "/patinhas", label: "Patinhas" },
   { href: "/numeros", label: "Números" },
@@ -77,6 +79,7 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
                 <Route path="/gatos" element={<GatosPage />} />
                 <Route path="/fotos" element={<FotosPage />} />
                 <Route path="/noticias" element={<NoticiasPage />} />
+                <Route path="/promocao" element={<PromocaoPage />} />
                 <Route path="/pedidos" element={<PedidosPage />} />
                 <Route path="/patinhas" element={<PatinhasPage />} />
                 <Route path="/numeros" element={<NumerosPage />} />
