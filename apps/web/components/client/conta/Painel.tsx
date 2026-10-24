@@ -104,7 +104,7 @@ function PainelPatinhas({ painel, welcome, onChange, onSignedOut }: { painel: Me
               <li key={r.id} className="painel__linha">
                 <div>
                   <p><strong>{r.partnerName}</strong>: {r.perkDescription}</p>
-                  <p className="small muted">{day.format(new Date(r.createdAt))} · {r.cost} Patinhas</p>
+                  <p className="small muted"><time dateTime={r.createdAt}>{day.format(new Date(r.createdAt))}</time> · {r.cost} Patinhas</p>
                 </div>
                 <div className="painel__linha-fim">
                   {r.status === "ativa" ? <span className="codigo" aria-label={`Código ${r.code.split("").join(" ")}`}>{r.code}</span> : null}
@@ -165,7 +165,7 @@ function PainelPatinhas({ painel, welcome, onChange, onSignedOut }: { painel: Me
             <li key={e.id} className="painel__linha">
               <div>
                 <p>{e.label}{e.action === "turno-hora" && e.quantity > 1 ? ` (${n.format(e.quantity)} horas)` : ""}</p>
-                <p className="small muted">{day.format(new Date(e.at))}</p>
+                <p className="small muted"><time dateTime={e.at}>{day.format(new Date(e.at))}</time></p>
               </div>
               <strong className={e.points < 0 ? "painel__pontos painel__pontos--menos" : "painel__pontos"}>{e.points > 0 ? "+" : ""}{n.format(e.points)}</strong>
             </li>
