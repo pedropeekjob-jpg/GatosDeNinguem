@@ -91,6 +91,14 @@ export const postCategoryLabel: Record<PostCategory, string> = {
   precisamos: "Precisamos de ajuda",
 };
 
+/** When and where an event happens. Events get an automatic promotion a week before (see promocao.ts). */
+export const postEventSchema = z.object({
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime().optional(),
+  location: z.string().min(2).max(120),
+});
+export type PostEvent = z.infer<typeof postEventSchema>;
+
 /** Announcements feed (Notícias). One post can later be sent to every channel. */
 export const postSchema = z.object({
   id: z.string(),
@@ -103,6 +111,8 @@ export const postSchema = z.object({
   publishedAt: z.string().datetime(),
   /** Optional call to action, e.g. "Inscrever no Open Day". */
   cta: z.object({ label: z.string(), href: z.string() }).optional(),
+  /** Only for category "evento". */
+  event: postEventSchema.optional(),
   seo: seoFieldsSchema.default({}),
   updatedAt: z.string().datetime(),
 });

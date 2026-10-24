@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import {
-  checkIn, expandWeeklyRule, seedCats, seedFosterApplications, seedFosterPlacements, seedImpact, seedPages, seedPosts, seedRedirects, seedSeoSettings, seedShifts, seedSponsorships, signUp,
+  channelProblem, checkIn, draftPromotion, editPromotion, expandWeeklyRule, promotionChannelLabel, promotionChannels, type Promotion, seedCats, seedFosterApplications, seedFosterPlacements, seedImpact, seedPages, seedPosts, seedRedirects, seedSeoSettings, seedShifts, seedSponsorships, signUp,
   type Shift,
 } from "@gn/domain";
 import {
@@ -18,6 +18,10 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
   let pages = structuredClone(seedPages);
   let redirects = structuredClone(seedRedirects);
   const fosterApplications = structuredClone(seedFosterApplications);
+  // The Open Day promotion, drafted on 24 Oct like the server would.
+  let promotions: Promotion[] = seedPosts.flatMap((p) => draftPromotion(p, { siteUrl: "https://gatosdeninguem.pt", now: new Date("2026-10-24T10:00:00.000Z"), id: `promo-${p.id}` }) ?? []);
+  const view = (p: Promotion) => ({ ...p, problems: Object.fromEntries(p.channels.flatMap((c) => { const why = channelProblem(p, c); return why ? [[c, why]] : []; })) });
+  const setPromotion = (pid: string, change: (p: Promotion) => Promotion) => { promotions = promotions.map((p) => (p.id === pid ? change(p) : p)); return view(promotions.find((p) => p.id === pid)!); };
   let n = 0;
   const id = () => `novo-${++n}`;
 
@@ -84,6 +88,10 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z")) {
     posts: async () => seedPosts,
     createPost: async (input) => ({ ...input, id: id(), updatedAt: now.toISOString() }),
     updatePost: async (pid, changes) => ({ ...seedPosts.find((p) => p.id === pid)!, ...changes }),
+    promotions: async () => promotions.map(view),
+    promotionChannels: async () => promotionChannels.map((c) => ({ channel: c, label: promotionChannelLabel[c], ready: c !== "facebook-story", setup: c === "facebook-story" ? "O Facebook ainda não está ligado." : undefined })),
+    editPromotion: vi.fn(async (pid, edit) => setPromotion(pid, (p) => editPromotion(p, edit, now))),
+    promotionAction: vi.fn(async (pid, action) => setPromotion(pid, (p) => ({ ...p, status: action === "aprovar" ? "aprovada" : action === "cancelar" ? "cancelada" : action === "publicar" ? "publicada" : "rascunho" }))),
     pages: async () => pages,
     updatePage: async (pid, changes) => { pages = pages.map((p) => (p.id === pid ? { ...p, ...changes } : p)); return pages.find((p) => p.id === pid)!; },
     uploadPhoto: vi.fn(async () => ({ url: `/demo/novo-${++n}.jpg` })),

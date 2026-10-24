@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { postCategoryLabel, type PostCategory } from "@gn/domain";
 import { Badge, Button, ChoiceList, Notice, TextArea, TextField } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
+import { lisbonDate, lisbonToUtc, timeLabel } from "../lib/dates";
 import { slugify } from "../lib/slug";
 import type { Post } from "../lib/types";
 
@@ -39,6 +40,13 @@ function PostForm({ post, onClose }: { post?: Post; onClose: () => void }) {
   const [body, setBody] = useState(post?.body ?? "");
   const [ctaLabel, setCtaLabel] = useState(post?.cta?.label ?? "");
   const [ctaHref, setCtaHref] = useState(post?.cta?.href ?? "");
+  const ev = post?.event;
+  const [eventDay, setEventDay] = useState(ev ? lisbonDate(ev.startsAt) : "");
+  const [eventStart, setEventStart] = useState(ev ? timeLabel(ev.startsAt) : "");
+  const [eventEnd, setEventEnd] = useState(ev?.endsAt ? timeLabel(ev.endsAt) : "");
+  const [eventLocation, setEventLocation] = useState(ev?.location ?? "Gatil, Santa Marta de Portuzelo");
+  const isEvent = category === "evento";
+  const eventReady = !isEvent || (eventDay && eventStart && eventLocation.length >= 2);
   const save = useMutation({
     mutationFn: () => {
       const input = {
@@ -49,6 +57,7 @@ function PostForm({ post, onClose }: { post?: Post; onClose: () => void }) {
         body,
         publishedAt: post?.publishedAt ?? new Date().toISOString(),
         cta: ctaLabel && ctaHref ? { label: ctaLabel, href: ctaHref } : undefined,
+        event: isEvent ? { startsAt: lisbonToUtc(eventDay, eventStart), endsAt: eventEnd ? lisbonToUtc(eventDay, eventEnd) : undefined, location: eventLocation } : undefined,
         seo: post?.seo ?? {},
       };
       return post ? api.updatePost(post.id, input) : api.createPost(input);
@@ -61,12 +70,22 @@ function PostForm({ post, onClose }: { post?: Post; onClose: () => void }) {
       <h1>{post ? "Editar notícia" : "Nova notícia"}</h1>
       <TextField id="p-title" label="Título" value={title} onChange={(e) => setTitle(e.target.value)} recommended={{ min: 20, max: 80 }} />
       <ChoiceList name="p-cat" legend="Tipo" value={category} onChange={setCategory} options={categories} />
+      {isEvent ? (
+        <fieldset className="bo-fieldset">
+          <legend>Quando e onde</legend>
+          <p className="small muted">Uma semana antes, o site prepara a promoção no Facebook, na Instagram e por email. Só precisa de a aprovar em <a href="/promocao">Promoção</a>.</p>
+          <TextField id="p-ev-day" label="Dia" type="date" value={eventDay} onChange={(e) => setEventDay(e.target.value)} />
+          <TextField id="p-ev-start" label="Começa às" type="time" value={eventStart} onChange={(e) => setEventStart(e.target.value)} />
+          <TextField id="p-ev-end" label="Acaba às (opcional)" type="time" value={eventEnd} onChange={(e) => setEventEnd(e.target.value)} />
+          <TextField id="p-ev-place" label="Local" value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} />
+        </fieldset>
+      ) : null}
       <TextArea id="p-summary" label="Resumo" hint="Aparece na lista e nas partilhas." rows={2} value={summary} onChange={(e) => setSummary(e.target.value)} recommended={{ min: 70, max: 200 }} />
       <TextArea id="p-body" label="Texto" hint="Deixe uma linha em branco entre parágrafos." rows={8} value={body} onChange={(e) => setBody(e.target.value)} />
       <TextField id="p-cta-label" label="Botão (opcional)" hint="Ex.: Inscrever no Open Day" value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} />
       <TextField id="p-cta-href" label="Para onde leva o botão" hint="Ex.: /ajudar ou https://…" value={ctaHref} onChange={(e) => setCtaHref(e.target.value)} />
       {save.isError ? <Notice tone="error" title="Não foi publicada">{errorMessage(save.error)}</Notice> : null}
-      <div><Button type="submit" disabled={!title || !summary || !body || save.isPending}>{post ? "Guardar" : "Publicar"}</Button></div>
+      <div><Button type="submit" disabled={!title || !summary || !body || !eventReady || save.isPending}>{post ? "Guardar" : "Publicar"}</Button></div>
     </form>
   );
 }

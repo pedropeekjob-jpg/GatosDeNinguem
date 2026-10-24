@@ -50,6 +50,19 @@ services:
         sync: false
       - key: LOGIN_EMAIL_FROM
         sync: false
+      # Event promotion (docs/promocao-eventos.md). Links in posts and emails point to the site.
+      - key: PUBLIC_SITE_URL
+        value: https://gatosdeninguem-site.onrender.com
+      - key: UNSUBSCRIBE_SECRET
+        generateValue: true
+      # Optional: Facebook Page and Instagram. Without them those channels wait, marked "por ligar".
+      # Careful: with real values this test environment publishes on the association's real accounts.
+      - key: META_PAGE_ID
+        sync: false
+      - key: META_IG_USER_ID
+        sync: false
+      - key: META_PAGE_TOKEN
+        sync: false
 
   - type: web
     name: gatosdeninguem-site

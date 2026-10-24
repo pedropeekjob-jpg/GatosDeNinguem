@@ -3,7 +3,7 @@ import { careNotificationPrefsSchema, careTaskSchema, type CareNotificationPrefs
 import { appointmentSchema, careAlertSchema, catCareSchema, doseSchema, medicationSchema, visitNoteSchema, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { fosterApplicationSchema, fosterApplicationStatus, fosterPlacementSchema, shiftSchema, sponsorshipSchema, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
 import { z } from "zod";
-import { adoptionInterestSchema, catSchema, impactSchema, pageSchema, partnerApplicationSchema, partnerSchema, postSchema, seoSettingsSchema, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
+import { adoptionInterestSchema, catSchema, impactSchema, pageSchema, partnerApplicationSchema, partnerSchema, postSchema, promotionSchema, seoSettingsSchema, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Promotion, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
 const SEO_KEY = "seo";
@@ -76,6 +76,20 @@ export class PrismaContentRepository implements ContentRepository {
     const email = s.email.toLowerCase();
     const data = { interests: s.interests, subscribedAt: new Date(s.subscribedAt) };
     await this.db.newsletterSignup.upsert({ where: { email }, create: { email, ...data }, update: data });
+  }
+  async listNewsletterSignups() {
+    const rows = await this.db.newsletterSignup.findMany({ orderBy: { subscribedAt: "asc" } });
+    return rows.map((r) => ({ email: r.email, interests: r.interests as NewsletterSignup["interests"], consent: true as const, subscribedAt: r.subscribedAt.toISOString() }));
+  }
+  async deleteNewsletterSignup(email: string) { await this.db.newsletterSignup.deleteMany({ where: { email: email.toLowerCase() } }); }
+
+  async listPromotions() { return (await this.db.promotion.findMany({ orderBy: { eventStartsAt: "asc" } })).map((r) => promotionSchema.parse(r.data)); }
+  async getPromotion(id: string) { const r = await this.db.promotion.findUnique({ where: { id } }); return r ? promotionSchema.parse(r.data) : undefined; }
+  async getPromotionByPost(postId: string) { const r = await this.db.promotion.findUnique({ where: { postId } }); return r ? promotionSchema.parse(r.data) : undefined; }
+  async savePromotion(p: Promotion) {
+    const data = { postId: p.postId, status: p.status, scheduledFor: new Date(p.scheduledFor), eventStartsAt: new Date(p.eventStartsAt), data: p as object };
+    await this.db.promotion.upsert({ where: { id: p.id }, create: { id: p.id, ...data }, update: data });
+    return p;
   }
 
   async listShifts(range: { from?: string; to?: string } = {}) {

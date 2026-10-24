@@ -3,6 +3,8 @@ import { InMemoryContentRepository } from "./content/in-memory.repository";
 import type { ContentRepository } from "./content/repository";
 import type { PhotoStore } from "./media/photo-store";
 import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/repository";
+import { metaPublishers, resendNewsletterPublisher } from "./promocao/publishers";
+import { PromotionService } from "./promocao/promotion.service";
 import { lisbonNow, lisbonToUtc, type Account, type CareAlert, type Contact } from "@gn/domain";
 
 async function repositories(): Promise<{ repository: ContentRepository; patinhas: PatinhasRepository; photoStore?: PhotoStore }> {
@@ -92,10 +94,22 @@ async function revalidateSite(what: { type: string; path?: string }) {
   }
 }
 
+/**
+ * Event promotion channels. Facebook and Instagram need a long-lived Page token from a Meta app
+ * (see docs/promocao-eventos.md); the newsletter email uses the same Resend key as sign-in codes.
+ */
+function promotionPublishers() {
+  const token = process.env.META_PAGE_TOKEN;
+  const meta = token ? metaPublishers({ pageId: process.env.META_PAGE_ID, igUserId: process.env.META_IG_USER_ID, pageToken: token, graphVersion: process.env.META_GRAPH_VERSION }) : {};
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.NEWSLETTER_EMAIL_FROM ?? process.env.LOGIN_EMAIL_FROM ?? "Gatos de Ninguém <novidades@gatosdeninguem.pt>";
+  return { ...meta, ...(key ? { email: resendNewsletterPublisher({ apiKey: key, from }) } : {}) };
+}
+
 const adminToken = process.env.ADMIN_TOKEN;
 if (!adminToken || adminToken.length < 16) throw new Error("Set ADMIN_TOKEN (16+ characters) before starting the API.");
 
-const app = await createApp({
+const options = {
   ...(await repositories()),
   sendLoginCode,
   // Demo without a database: the code is shown on screen so anyone can try signing in.
@@ -107,5 +121,15 @@ const app = await createApp({
   uploadDir: process.env.UPLOAD_DIR,
   // Render sets RENDER_EXTERNAL_URL to the service's public https address.
   publicUrl: process.env.PUBLIC_API_URL ?? process.env.RENDER_EXTERNAL_URL,
-});
+  siteUrl: process.env.PUBLIC_SITE_URL,
+  promotionPublishers: promotionPublishers(),
+  unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
+};
+const app = await createApp(options);
+// Approved promotions go out when their day comes. On hosts that sleep, an external cron also calls POST /promocoes/correr.
+const promotions = app.get(PromotionService);
+await promotions.draftMissing().catch((err) => console.error("Could not draft event promotions", err));
+const runPromotions = () => promotions.runDue().catch((err) => console.error("Could not publish event promotions", err));
+setInterval(runPromotions, 10 * 60_000).unref();
+setTimeout(runPromotions, 30_000).unref();
 await app.listen({ port: Number(process.env.PORT ?? 4000), host: "0.0.0.0" });

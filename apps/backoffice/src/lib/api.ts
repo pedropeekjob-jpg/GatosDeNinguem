@@ -1,10 +1,13 @@
 import { createContext, useContext } from "react";
 import { cuidadosHttp, type CuidadosApi } from "./cuidadosApi";
 import { patinhasHttp, type PatinhasApi } from "./patinhasApi";
-import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, StoredFosterApplication, WeeklyRule } from "./types";
+import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Promotion, PromotionChannel, PromotionEdit, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, StoredFosterApplication, WeeklyRule } from "./types";
 
 export type AuditItem = { id: string; kind: "pagina" | "gato" | "noticia"; label: string; path: string; title: string; description: string; noindex: boolean };
 export type SeoTarget = { kind: AuditItem["kind"]; id: string };
+/** A promotion with what still stops each chosen channel from going out. */
+export type PromotionView = Promotion & { problems: Partial<Record<PromotionChannel, string>> };
+export type PromotionChannelInfo = { channel: PromotionChannel; label: string; ready: boolean; setup?: string };
 
 /** Everything the back office can ask the API. Tests pass a fake implementation. */
 export interface Api extends PatinhasApi, CuidadosApi {
@@ -28,6 +31,10 @@ export interface Api extends PatinhasApi, CuidadosApi {
   posts(): Promise<Post[]>;
   createPost(input: PostInput): Promise<Post>;
   updatePost(id: string, changes: Partial<PostInput>): Promise<Post>;
+  promotions(): Promise<PromotionView[]>;
+  promotionChannels(): Promise<PromotionChannelInfo[]>;
+  editPromotion(id: string, edit: PromotionEdit): Promise<PromotionView>;
+  promotionAction(id: string, action: "aprovar" | "rascunho" | "cancelar" | "publicar"): Promise<PromotionView>;
   pages(): Promise<Page[]>;
   updatePage(id: string, changes: Partial<Pick<Page, "heading" | "intro" | "gallery" | "carousel">>): Promise<Page>;
   /** Stores a photo (already resized) and returns its public address. */
@@ -86,6 +93,10 @@ export function httpApi(baseUrl: string, token: string): Api {
     posts: () => call("GET", "/posts"),
     createPost: (input) => call("POST", "/posts", input),
     updatePost: (id, changes) => call("PATCH", `/posts/${id}`, changes),
+    promotions: () => call("GET", "/promocoes"),
+    promotionChannels: () => call("GET", "/promocoes/canais"),
+    editPromotion: (id, edit) => call("PATCH", `/promocoes/${id}`, edit),
+    promotionAction: (id, action) => call("POST", `/promocoes/${id}/${action}`),
     pages: () => call("GET", "/pages"),
     updatePage: (id, changes) => call("PATCH", `/pages/${id}`, changes),
     uploadPhoto: (photo) => call("POST", "/uploads", photo),
