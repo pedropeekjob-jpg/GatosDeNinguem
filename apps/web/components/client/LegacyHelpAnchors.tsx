@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 /** Old links such as /ajudar#doar (campaigns, posts, shares) now open the page of their own. */
 const pages: Record<string, string> = {
-  "#doar": "/ajudar/doar",
+  "#doar": "/doar",
   "#apadrinhar": "/apadrinhar",
   "#voluntariado": "/ajudar/voluntariado",
   "#familia-temporaria": "/ajudar/familia-temporaria",
