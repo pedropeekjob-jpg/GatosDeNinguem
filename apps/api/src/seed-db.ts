@@ -7,6 +7,7 @@ import { PrismaClient } from "@prisma/client";
 import { seedAppointments, seedCareAlerts, seedCatCare, seedMedications, seedVisitNotes } from "@gn/domain";
 import { seedCats, seedFosterPlacements, seedImpact, seedShifts, seedSponsorships, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings } from "@gn/domain";
 import { seedBadges, seedChallenges } from "@gn/domain";
+import { seedItemDonations, seedProducts, seedShopOrders, seedShopSettings, seedShopSpending } from "@gn/domain";
 import { PrismaContentRepository } from "./content/prisma.repository";
 import { PrismaPatinhasRepository } from "./patinhas/prisma.repository";
 
@@ -31,6 +32,11 @@ export async function seedDatabase(db: PrismaClient) {
   for (const a of seedAppointments) await repo.saveAppointment(a);
   for (const n of seedVisitNotes) await repo.saveVisitNote(n);
   for (const a of seedCareAlerts) await repo.saveCareAlert(a);
+  await repo.saveShopSettings(seedShopSettings);
+  await repo.saveProducts(seedProducts);
+  for (const o of seedShopOrders) await repo.saveShopOrder(o);
+  for (const s of seedShopSpending) await repo.saveShopSpending(s);
+  for (const d of seedItemDonations) await repo.saveItemDonation(d);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -1,5 +1,6 @@
 import type { Appointment, CareAlert, CareNotificationPrefs, CareTask, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
 import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } from "@gn/domain";
+import type { Product, ShopOrder, ShopSettings, ShopSpending, StoredItemDonation } from "@gn/domain";
 import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Redirect, SeoSettings } from "@gn/domain";
 
 export type StoredAdoptionInterest = AdoptionInterest & { id: string; receivedAt: string };
@@ -46,6 +47,25 @@ export interface ContentRepository {
   saveFosterApplication(a: StoredFosterApplication): Promise<StoredFosterApplication>;
   listSponsorships(): Promise<Sponsorship[]>;
   saveSponsorship(s: Sponsorship): Promise<Sponsorship>;
+
+  // Loja solidária
+  listProducts(): Promise<Product[]>;
+  getProduct(id: string): Promise<Product | undefined>;
+  getProductBySlug(slug: string): Promise<Product | undefined>;
+  /** Saves several at once (an order changes the stock of each article in it). */
+  saveProducts(products: Product[]): Promise<void>;
+  /** Newest first. */
+  listShopOrders(): Promise<ShopOrder[]>;
+  getShopOrder(id: string): Promise<ShopOrder | undefined>;
+  saveShopOrder(o: ShopOrder): Promise<ShopOrder>;
+  listShopSpending(): Promise<ShopSpending[]>;
+  saveShopSpending(s: ShopSpending): Promise<ShopSpending>;
+  deleteShopSpending(id: string): Promise<void>;
+  /** "Quero doar artigos para a loja" offers. Newest first. */
+  listItemDonations(): Promise<StoredItemDonation[]>;
+  saveItemDonation(d: StoredItemDonation): Promise<StoredItemDonation>;
+  getShopSettings(): Promise<ShopSettings>;
+  saveShopSettings(s: ShopSettings): Promise<ShopSettings>;
 
   getSeoSettings(): Promise<SeoSettings>;
   saveSeoSettings(settings: SeoSettings): Promise<SeoSettings>;

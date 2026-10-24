@@ -16,7 +16,7 @@ export type ApiOptions = {
   /** Bearer token for back office writes. Replaced by per-user login in a later phase. */
   adminToken: string;
   /** Called after any write so the public site can refresh its cached pages. */
-  onContentChanged: (what: { type: "cat" | "page" | "post" | "seo"; path?: string }) => Promise<void>;
+  onContentChanged: (what: { type: "cat" | "page" | "post" | "seo" | "loja"; path?: string }) => Promise<void>;
   /** Injectable clock for tests. */
   now?: () => Date;
   logger?: false | ("log" | "error" | "warn")[];

@@ -8,6 +8,7 @@ const items = [
   { href: "/adotar", label: "Adotar", icon: <IconHeart /> },
   { href: "/finais-felizes", label: "Finais felizes", wideOnly: true },
   { href: "/ajudar", label: "Ajudar", icon: <IconHand /> },
+  { href: "/loja", label: "Loja", wideOnly: true },
   { href: "/noticias", label: "Notícias", icon: <IconNews /> },
   { href: "/sobre", label: "Sobre nós", icon: <IconPaw /> },
 ];

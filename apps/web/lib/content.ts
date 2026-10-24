@@ -37,6 +37,7 @@ import {
   type SeoSettings,
   type Shift,
 } from "@gn/domain";
+import { seedProducts, seedShopOrders, seedShopSettings, seedShopSpending, shopTransparency, type Product, type ShopSettings, type ShopTransparency } from "@gn/domain";
 
 /**
  * All public content comes through here. With API_URL set it reads from the API
@@ -190,4 +191,24 @@ export async function getPatinhasSummary(): Promise<PatinhasSummary> {
       .filter((a) => a.showOnWall)
       .map((a) => ({ name: wallName(a), levelName: levelFor(earnedTotal(seedEntries.filter((e) => e.accountId === a.id))).name })),
   };
+}
+
+/** Articles on sale in the Loja solidária. Short cache: stock changes with every order. */
+export async function listProducts(): Promise<Product[]> {
+  if (!API_URL) return seedProducts.filter((p) => p.active);
+  return (await api<Product[]>("/loja/artigos"))!;
+}
+
+export async function getProduct(slug: string): Promise<Product | undefined> {
+  if (!API_URL) return seedProducts.find((p) => p.slug === slug && p.active);
+  return api<Product>(`/loja/artigos/${encodeURIComponent(slug)}`);
+}
+
+export type ShopSummary = { settings: ShopSettings; transparency: ShopTransparency };
+
+/** How to pay, and how much the shop raised this year and what it paid for. */
+export async function getShopSummary(): Promise<ShopSummary> {
+  if (API_URL) return (await api<ShopSummary>("/loja/resumo"))!;
+  const now = new Date(process.env.DEMO_NOW ?? "2026-11-01T09:00:00.000Z");
+  return { settings: seedShopSettings, transparency: shopTransparency(seedShopOrders, seedShopSpending, now.getUTCFullYear()) };
 }

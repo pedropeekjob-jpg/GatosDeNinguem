@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -469,4 +469,63 @@ test("footer: social networks are logos with their names for screen readers", as
   await expect(footer.getByRole("link", { name: "Facebook" })).toBeVisible();
   await expect(footer.getByRole("link", { name: "Instagram" })).toBeVisible();
   await expect(footer.getByText("Facebook", { exact: true })).toHaveCount(0);
+});
+
+test("shop: choose a size, put it in the basket, order and see how to pay", async ({ page }) => {
+  await page.goto("/loja");
+  await page.getByRole("link", { name: "T-shirt Gatos de Ninguém" }).click();
+  await expect(page).toHaveURL(/\/loja\/t-shirt-gatos-de-ninguem$/);
+  // Every article says how much of its price goes to the cats.
+  await expect(page.getByText("9 € vão para os gatos", { exact: false })).toBeVisible();
+  await page.getByText("M", { exact: true }).click();
+  await page.getByRole("button", { name: "Mais um" }).click();
+  await page.getByRole("button", { name: "Pôr no cesto" }).click();
+  await page.getByRole("link", { name: "Ver o cesto e fazer o pedido" }).click();
+  await expect(page).toHaveURL(/\/loja\/cesto$/);
+  await expect(page.getByText(/Total\s*30\s€/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Fazer o pedido" }).click();
+  const dialog = page.getByRole("dialog", { name: "Fazer o pedido" });
+  await dialog.getByText("Receber pelo correio").click();
+  // By post there is no "pay when you pick up".
+  await expect(dialog.getByText("Pagar quando levantar")).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Enviar pedido" }).click();
+  await expect(dialog.getByText("Indique a morada completa, com código postal")).toBeVisible();
+  await dialog.getByLabel("Morada completa, com código postal").fill("Rua das Flores 12, 4900-000 Viana do Castelo");
+  await dialog.getByText("Transferência bancária").click();
+  await dialog.getByLabel("O seu nome").fill("Maria Silva");
+  await dialog.getByLabel("Telemóvel").fill("912345678");
+  await dialog.getByText("Aceito que a associação me contacte").click();
+  await dialog.getByRole("button", { name: "Enviar pedido" }).click();
+
+  await expect(page.getByText("Obrigado! O seu pedido foi enviado.")).toBeVisible();
+  await expect(page.getByText(/^L-[2-9A-Z]{4}$/).first()).toBeVisible();
+  await expect(page.getByText("PT50 0045 1436 4033 0203 2321 6")).toBeVisible();
+  // The basket is empty again.
+  await page.goto("/loja/cesto");
+  await expect(page.getByText("O cesto está vazio.")).toBeVisible();
+});
+
+test("shop: sold-out articles cannot be added, and the page shows where the money goes", async ({ page }) => {
+  await page.goto("/loja/porta-chaves-gato");
+  await expect(page.getByText("Este artigo esgotou.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pôr no cesto" })).toHaveCount(0);
+  await page.goto("/loja");
+  await expect(page.getByRole("heading", { name: "Para onde vai o dinheiro" })).toBeVisible();
+  await expect(page.getByText("Vacinas da Estrela e do Tobias")).toBeVisible();
+});
+
+test("shop: offer articles to sell", async ({ page }) => {
+  await page.goto("/loja");
+  await page.getByRole("button", { name: "Doar artigos para a loja" }).click();
+  const dialog = page.getByRole("dialog", { name: "Doar artigos para a loja" });
+  await dialog.getByLabel("O que quer doar?").fill("Uma caixa de livros infantis");
+  await dialog.getByText("Preciso que alguém vá buscar").click();
+  await dialog.getByLabel("O seu nome").fill("Rosa Lima");
+  await dialog.getByLabel("Telemóvel").fill("915000000");
+  await dialog.getByLabel("Onde vive?").fill("Areosa");
+  await dialog.getByText("Aceito que a associação me contacte").click();
+  await dialog.getByRole("button", { name: "Enviar oferta" }).click();
+  await expect(dialog.getByText("Obrigado pela sua oferta!")).toBeVisible();
+  await expect(dialog.getByText(/quando podemos ir buscar/)).toBeVisible();
 });

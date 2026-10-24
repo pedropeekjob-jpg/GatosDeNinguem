@@ -1,4 +1,4 @@
-import { adoptionInterestSchema, fosterApplicationSchema, newsletterSignupSchema, partnerApplicationSchema, sponsorshipRequestSchema } from "@gn/domain";
+import { adoptionInterestSchema, fosterApplicationSchema, itemDonationSchema, newsletterSignupSchema, partnerApplicationSchema, sponsorshipRequestSchema } from "@gn/domain";
 
 /**
  * Same-origin endpoint for the public forms. Validates with the shared schemas,
@@ -10,6 +10,7 @@ const forms = {
   newsletter: { schema: newsletterSignupSchema, path: "/newsletter" },
   apadrinhar: { schema: sponsorshipRequestSchema, path: "/escalas/padrinhos/pedido" },
   "familia-temporaria": { schema: fosterApplicationSchema, path: "/escalas/familias-temporarias/candidatura" },
+  "doacao-loja": { schema: itemDonationSchema, path: "/loja/doacoes" },
 } as const;
 
 export async function POST(request: Request, { params }: { params: Promise<{ kind: string }> }) {

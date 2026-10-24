@@ -2,12 +2,14 @@ import type { PrismaClient } from "@prisma/client";
 import { careNotificationPrefsSchema, careTaskSchema, type CareNotificationPrefs, type CareTask } from "@gn/domain";
 import { appointmentSchema, careAlertSchema, catCareSchema, doseSchema, medicationSchema, visitNoteSchema, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { fosterApplicationSchema, fosterApplicationStatus, fosterPlacementSchema, shiftSchema, sponsorshipSchema, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
+import { itemDonationSchema, itemDonationStatus, productSchema, seedShopSettings, shopOrderSchema, shopSettingsSchema, shopSpendingSchema, type Product, type ShopOrder, type ShopSettings, type ShopSpending, type StoredItemDonation } from "@gn/domain";
 import { z } from "zod";
 import { adoptionInterestSchema, catSchema, impactSchema, pageSchema, partnerApplicationSchema, partnerSchema, postSchema, seoSettingsSchema, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Redirect, type SeoSettings } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
 const SEO_KEY = "seo";
 const IMPACT_KEY = "impact";
+const SHOP_KEY = "loja";
 
 /** PostgreSQL storage. Documents are re-validated on read so bad rows fail loudly. */
 export class PrismaContentRepository implements ContentRepository {
@@ -114,6 +116,50 @@ export class PrismaContentRepository implements ContentRepository {
   async saveSponsorship(x: Sponsorship) {
     const data = { catSlug: x.catSlug, active: x.active, data: x as object };
     await this.db.sponsorship.upsert({ where: { id: x.id }, create: { id: x.id, ...data }, update: data });
+    return x;
+  }
+
+  async listProducts() { return (await this.db.product.findMany()).map((r) => productSchema.parse(r.data)); }
+  async getProduct(id: string) { const r = await this.db.product.findUnique({ where: { id } }); return r ? productSchema.parse(r.data) : undefined; }
+  async getProductBySlug(slug: string) { const r = await this.db.product.findUnique({ where: { slug } }); return r ? productSchema.parse(r.data) : undefined; }
+  async saveProducts(products: Product[]) {
+    await this.db.$transaction(
+      products.map((p) => {
+        const data = { slug: p.slug, active: p.active, data: p as object };
+        return this.db.product.upsert({ where: { id: p.id }, create: { id: p.id, ...data }, update: data });
+      }),
+    );
+  }
+  async listShopOrders() { return (await this.db.shopOrder.findMany({ orderBy: { createdAt: "desc" } })).map((r) => shopOrderSchema.parse(r.data)); }
+  async getShopOrder(id: string) { const r = await this.db.shopOrder.findUnique({ where: { id } }); return r ? shopOrderSchema.parse(r.data) : undefined; }
+  async saveShopOrder(o: ShopOrder) {
+    const data = { code: o.code, status: o.status, createdAt: new Date(o.createdAt), data: o as object };
+    await this.db.shopOrder.upsert({ where: { id: o.id }, create: { id: o.id, ...data }, update: data });
+    return o;
+  }
+  async listShopSpending() { return (await this.db.shopSpending.findMany({ orderBy: { date: "desc" } })).map((r) => shopSpendingSchema.parse(r.data)); }
+  async saveShopSpending(x: ShopSpending) {
+    const data = { date: x.date, data: x as object };
+    await this.db.shopSpending.upsert({ where: { id: x.id }, create: { id: x.id, ...data }, update: data });
+    return x;
+  }
+  async deleteShopSpending(id: string) { await this.db.shopSpending.deleteMany({ where: { id } }); }
+  async listItemDonations() {
+    const rows = await this.db.itemDonation.findMany({ orderBy: { receivedAt: "desc" } });
+    return rows.map((r) => ({ ...itemDonationSchema.parse(r.data), id: r.id, receivedAt: r.receivedAt.toISOString(), status: z.enum(itemDonationStatus).parse(r.status) }));
+  }
+  async saveItemDonation(d: StoredItemDonation) {
+    const data = { receivedAt: new Date(d.receivedAt), status: d.status, data: d as object };
+    await this.db.itemDonation.upsert({ where: { id: d.id }, create: { id: d.id, ...data }, update: data });
+    return d;
+  }
+  /** Databases created before the shop existed get the defaults until the team edits them. */
+  async getShopSettings() {
+    const r = await this.db.setting.findUnique({ where: { key: SHOP_KEY } });
+    return r ? shopSettingsSchema.parse(r.value) : seedShopSettings;
+  }
+  async saveShopSettings(x: ShopSettings) {
+    await this.db.setting.upsert({ where: { key: SHOP_KEY }, create: { key: SHOP_KEY, value: x as object }, update: { value: x as object } });
     return x;
   }
 

@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import { cuidadosHttp, type CuidadosApi } from "./cuidadosApi";
+import { lojaHttp, type LojaApi } from "./lojaApi";
 import { patinhasHttp, type PatinhasApi } from "./patinhasApi";
 import type { Cat, CatInput, FosterPlacement, Impact, Page, Partner, Post, PostInput, Redirect, SeoFields, SeoIssue, SeoSettings, Shift, ShiftInput, Sponsorship, StoredFosterApplication, WeeklyRule } from "./types";
 
@@ -7,7 +8,7 @@ export type AuditItem = { id: string; kind: "pagina" | "gato" | "noticia"; label
 export type SeoTarget = { kind: AuditItem["kind"]; id: string };
 
 /** Everything the back office can ask the API. Tests pass a fake implementation. */
-export interface Api extends PatinhasApi, CuidadosApi {
+export interface Api extends PatinhasApi, CuidadosApi, LojaApi {
   shifts(range: { from: string; to: string }): Promise<Shift[]>;
   createShift(input: ShiftInput): Promise<Shift>;
   createWeekly(rule: WeeklyRule): Promise<{ created: number }>;
@@ -103,6 +104,7 @@ export function httpApi(baseUrl: string, token: string): Api {
     deleteRedirect: (id) => call("DELETE", `/seo/redirects/${id}`),
     ...patinhasHttp(call),
     ...cuidadosHttp(call),
+    ...lojaHttp(call),
   };
 }
 
