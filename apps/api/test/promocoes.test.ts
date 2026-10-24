@@ -4,7 +4,7 @@ import { createApp } from "../src/app";
 import type { PromotionMessage } from "../src/common/options";
 import { InMemoryContentRepository } from "../src/content/in-memory.repository";
 import { PromotionService } from "../src/promocao/promotion.service";
-import { metaPublishers, resendNewsletterPublisher } from "../src/promocao/publishers";
+import { metaPublishers, resendNewsletterPublisher, tiktokPublisher } from "../src/promocao/publishers";
 
 const TOKEN = "test-admin-token";
 const auth = { authorization: `Bearer ${TOKEN}` };
@@ -172,6 +172,24 @@ describe("publishers", () => {
     const p = metaPublishers({ pageId: "pg1", pageToken: "tok", fetch: f as typeof fetch });
     await expect(p["facebook-post"]!(message)).rejects.toThrow("Meta: Invalid OAuth access token");
     expect(p["instagram-post"]).toBeUndefined();
+  });
+
+  it("refreshes the TikTok token, then posts the photo with the text", async () => {
+    const f = vi.fn(async (url: string | URL | Request) => (String(url).includes("/oauth/token/") ? reply({ access_token: "act" }) : reply({ data: { publish_id: "p1" }, error: { code: "ok" } })));
+    const send = tiktokPublisher({ clientKey: "ck", clientSecret: "cs", refreshToken: "rt", fetch: f as typeof fetch });
+    expect(await send({ ...message, text: "Magusto!\nNo gatil." })).toEqual({ externalId: "p1" });
+    const [, init] = f.mock.calls[1] as unknown as [string, RequestInit];
+    expect((init.headers as Record<string, string>).authorization).toBe("Bearer act");
+    const body = JSON.parse(String(init.body));
+    expect(body.media_type).toBe("PHOTO");
+    expect(body.post_info.title).toBe("Magusto!");
+    expect(body.source_info.photo_images).toEqual(["https://x.pt/a.jpg"]);
+  });
+
+  it("says when TikTok refuses the sign-in", async () => {
+    const f = async () => reply({ error: "invalid_grant", error_description: "Refresh token is invalid or expired." }, 400);
+    const send = tiktokPublisher({ clientKey: "ck", clientSecret: "cs", refreshToken: "rt", fetch: f as typeof fetch });
+    await expect(send(message)).rejects.toThrow("TikTok: não foi possível entrar na conta (Refresh token is invalid or expired.).");
   });
 
   it("emails each subscriber with their own unsubscribe link", async () => {

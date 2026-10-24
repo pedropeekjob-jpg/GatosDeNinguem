@@ -63,6 +63,13 @@ services:
         sync: false
       - key: META_PAGE_TOKEN
         sync: false
+      # Optional: TikTok (the association has no account yet). Same care as above.
+      - key: TIKTOK_CLIENT_KEY
+        sync: false
+      - key: TIKTOK_CLIENT_SECRET
+        sync: false
+      - key: TIKTOK_REFRESH_TOKEN
+        sync: false
 
   - type: web
     name: gatosdeninguem-site

@@ -4,6 +4,7 @@ Quando a equipa publica uma notícia do tipo **Evento** com dia, hora e local, o
 
 - uma publicação na Página de Facebook e na Instagram, com fotografia e texto;
 - uma story na Instagram (e, se quiser, no Facebook);
+- uma publicação de fotografia no TikTok, quando a associação tiver conta (até lá fica por ligar);
 - um email aos subscritores da newsletter que escolheram "eventos" (ou que não escolheram nenhum tema).
 
 Tudo sai **uma semana antes do evento** (ou logo, se o evento for daqui a menos de uma semana).
@@ -19,6 +20,7 @@ Se algum canal falhar (por exemplo, o token da Meta expirou), os outros saem na 
 | Story na Página de Facebook | Sim | Precisa de fotografia. |
 | Publicação na Instagram | Sim | Só **fotografias JPG**. As fotografias carregadas no back office já são JPG. |
 | Story na Instagram | Sim | Só a fotografia: a API não põe autocolantes de ligação, texto nem música. Uma imagem vertical (1080×1920) com o texto já escrito fica melhor. |
+| Publicação no TikTok | Sim | Fotografia JPG ou WebP, com música automática. Até a app ser aprovada pelo TikTok, só pode publicar como privado. |
 | Grupos de Facebook e WhatsApp | Não | A Meta não deixa publicar em grupos por API. |
 
 Outros limites: a Instagram aceita até 100 publicações por API em 24 horas; a conta tem de ser profissional e estar ligada à Página de Facebook; a fotografia tem de estar num endereço público (a Meta vai buscá-la).
@@ -41,6 +43,17 @@ Feito por quem é administrador da Página de Facebook da associação.
 Basta um dos ids para ligar só esse canal. Em **Gestão › Promoção** aparece o que ainda falta ligar.
 
 > O ambiente de testes no Render publica nas contas verdadeiras se lá puser estes valores. Para experimentar sem publicar, deixe-os vazios: a promoção fica marcada "Com erros: ainda não está ligado" e pode ver tudo o resto a funcionar.
+
+## Ligar o TikTok (quando houver conta)
+
+A associação ainda não tem TikTok. O ícone no rodapé do site aponta para `https://www.tiktok.com/@gatosdeninguem`, um endereço provisório: quando a conta existir, mude `TIKTOK_URL` em `apps/web/components/Footer.tsx` se o nome for outro.
+
+1. Criar a conta TikTok da associação (de preferência conta de empresa).
+2. Em [developers.tiktok.com](https://developers.tiktok.com/) criar uma app com os produtos *Login Kit* e *Content Posting API* (com *Direct Post*) e o âmbito `video.publish`.
+3. Verificar o domínio de onde vêm as fotografias (o TikTok vai buscá-las). Na prática, o site tem de estar no domínio próprio (ex.: `gatosdeninguem.pt`), verificado por DNS no portal do TikTok.
+4. Entrar uma vez com a conta da associação na app para obter o *refresh token* (válido um ano).
+5. Pedir a auditoria da app ao TikTok. Até lá as publicações ficam privadas: ponha `TIKTOK_PRIVACY_LEVEL=SELF_ONLY` para testar.
+6. No servidor: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` e `TIKTOK_REFRESH_TOKEN`. A partir daí o TikTok passa a vir marcado nas novas promoções.
 
 ## Email aos subscritores
 

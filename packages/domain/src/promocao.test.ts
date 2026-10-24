@@ -101,6 +101,9 @@ describe("publishing", () => {
     expect(channelProblem({ imageUrl: "/fotos/gato.webp" }, "instagram-post")).toMatch(/JPG/);
     expect(channelProblem({ imageUrl: "https://api/uploads/a.jpg" }, "instagram-post")).toBeUndefined();
     expect(channelProblem({ imageUrl: "/fotos/gato.webp" }, "facebook-story")).toBeUndefined();
+    expect(channelProblem({}, "tiktok")).toMatch(/fotografia/);
+    expect(channelProblem({ imageUrl: "/fotos/gato.webp" }, "tiktok")).toBeUndefined();
+    expect(channelProblem({ imageUrl: "/fotos/gato.png" }, "tiktok")).toMatch(/JPG ou WebP/);
   });
 
   it("emails people who want events or did not choose", () => {
