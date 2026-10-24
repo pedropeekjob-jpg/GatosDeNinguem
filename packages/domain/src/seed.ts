@@ -347,6 +347,14 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
     updatedAt: now,
   },
   {
+    id: "page-perguntas-adocao",
+    path: "/adotar/perguntas",
+    heading: "Perguntas sobre adotar",
+    intro: "As dúvidas que mais nos chegam antes de uma adoção. Se a sua não estiver aqui, fale connosco.",
+    seo: { title: "Adotar um gato em Viana do Castelo: perguntas frequentes" },
+    updatedAt: now,
+  },
+  {
     id: "page-descobrir",
     path: "/adotar/descobrir",
     heading: "Descobrir o gato certo para si",
