@@ -12,6 +12,12 @@ function toPublic(cat: Cat) {
   return rest;
 }
 
+/** Remembers when a cat was first put up for adoption and when it was adopted. */
+function stampDates(cat: Cat, now: string) {
+  if (cat.status === "para-adocao" && !cat.listedAt) cat.listedAt = now;
+  if (cat.status === "adotado" && !cat.adoptedAt) cat.adoptedAt = now;
+}
+
 @Controller("cats")
 export class CatsController {
   constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions, @Inject(CatAlertService) private readonly alerts: CatAlertService) {}
@@ -53,7 +59,7 @@ export class CatsController {
   async create(@Body() body: unknown) {
     const input = parseBody(catInputSchema, body);
     const cat: Cat = { ...input, id: randomUUID(), updatedAt: new Date().toISOString() };
-    if (cat.status === "adotado" && !cat.adoptedAt) cat.adoptedAt = cat.updatedAt;
+    stampDates(cat, cat.updatedAt);
     await this.repo.saveCat(cat);
     await this.options.onContentChanged({ type: "cat", path: `/adotar/${cat.slug}` });
     await this.announce(cat);
@@ -68,7 +74,7 @@ export class CatsController {
     const changes = parseBody(catInputSchema.partial(), body);
     const now = new Date().toISOString();
     const next: Cat = { ...current, ...changes, updatedAt: now };
-    if (next.status === "adotado" && !next.adoptedAt) next.adoptedAt = now;
+    stampDates(next, now);
     await this.repo.saveCat(next);
     await this.options.onContentChanged({ type: "cat", path: `/adotar/${next.slug}` });
     if (current.status !== "para-adocao") await this.announce(next);

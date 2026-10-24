@@ -110,6 +110,21 @@ describe("Escalas", () => {
     expect(await screen.findByText(/1 padrinho espera notícias/)).toBeInTheDocument();
   });
 
+  it("shows how each godparent pays and writes them a letter about their cat", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/escalas");
+    await user.click(await screen.findByRole("tab", { name: "Padrinhos" }));
+    expect(await screen.findByText("Débito ativo")).toBeInTheDocument();
+    expect(screen.getByText(/20,00\s€ recebidos/)).toBeInTheDocument();
+    expect(screen.getAllByText("Transferência ou MB WAY")).toHaveLength(2);
+    await user.click(screen.getByLabelText("tobias (espera notícias)"));
+    await user.type(screen.getByLabelText("Novidade"), "O Tobias ganhou peso e anda muito brincalhão.");
+    await user.type(screen.getByLabelText("O seu nome"), "Rui Sousa");
+    await user.click(screen.getByRole("button", { name: "Enviar aos padrinhos" }));
+    expect(await screen.findByText(/Chegou a 2 padrinhos/)).toBeInTheDocument();
+    expect(api.sendSponsorLetter).toHaveBeenCalledWith({ catSlug: "tobias", text: "O Tobias ganhou peso e anda muito brincalhão.", by: { name: "Rui Sousa" } });
+  });
+
   it("lists people who asked to be a foster family, and the team marks the call", async () => {
     const user = userEvent.setup();
     const { api } = renderAt("/escalas");

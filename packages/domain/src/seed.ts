@@ -1,5 +1,6 @@
 import type { Appointment, CareAlert, CatCare, Dose, Medication, VisitNote } from "./cuidados";
 import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } from "./escalas";
+import type { SponsorLetter } from "./padrinhos";
 import type { z } from "zod";
 import { pageSchema } from "./content";
 import type { Cat, Impact, Page, Partner, Post, Redirect, SeoSettings } from "./index";
@@ -47,6 +48,8 @@ export const seedCats: Cat[] = [
     sterilized: true,
     vaccinated: true,
     microchipped: true,
+    arrivedAt: "2023-04-18",
+    listedAt: "2023-06-02T10:00:00.000Z",
     photos: [
       { url: "/fotos/gato-senior-ruby.webp", alt: "O Tobias, gato sénior preto e branco, a receber festas numa mesa da clínica" },
       { url: "/fotos/gato-tigrado-branco-riquinho.webp", alt: "Gato tigrado e branco de olhos verdes deitado numa mesa" },
@@ -72,6 +75,8 @@ export const seedCats: Cat[] = [
     sterilized: true,
     vaccinated: true,
     microchipped: true,
+    arrivedAt: "2026-06-20",
+    listedAt: "2026-09-30T10:00:00.000Z",
     photos: [
       { url: "/fotos/gato-tigrado-dani.webp", alt: "A Mia, gata tigrada, sentada a olhar para nós" },
       { url: "/fotos/gatinho-tigrado-zeca.webp", alt: "Gatinho tigrado de barriga para cima a receber festas" },
@@ -97,6 +102,8 @@ export const seedCats: Cat[] = [
     sterilized: true,
     vaccinated: true,
     microchipped: true,
+    arrivedAt: "2025-11-03",
+    listedAt: "2026-01-12T10:00:00.000Z",
     photos: [{ url: "/fotos/gato-preto-branco-betty.webp", alt: "O Carvão, gato preto e branco, sentado num canto branco a olhar para nós" }],
     seo: {},
     updatedAt: now,
@@ -120,6 +127,8 @@ export const seedCats: Cat[] = [
     sterilized: true,
     vaccinated: true,
     microchipped: true,
+    arrivedAt: "2024-08-27",
+    listedAt: "2024-11-05T10:00:00.000Z",
     photos: [{ url: "/fotos/gata-tartaruga.webp", alt: "A Estrela, gata tartaruga preta e laranja de olhos cor de mel, deitada" }],
     seo: {},
     updatedAt: now,
@@ -138,6 +147,7 @@ export const seedCats: Cat[] = [
     sterilized: true,
     vaccinated: true,
     microchipped: false,
+    arrivedAt: "2026-10-08",
     photos: [{ url: "/fotos/gatinho-tigrado-oscar.webp", alt: "A Pimenta, gata tigrada, a descansar numa cama branca enquanto recupera" }],
     seo: {},
     updatedAt: now,
@@ -156,6 +166,8 @@ export const seedCats: Cat[] = [
     sterilized: true,
     vaccinated: true,
     microchipped: true,
+    arrivedAt: "2023-06-12",
+    listedAt: "2023-09-01T10:00:00.000Z",
     photos: [{ url: "/fotos/gatinhos-caixa-cartao.webp", alt: "A Bolacha em bebé, numa caixa de cartão com um irmão" }],
     adoptedAt: "2026-09-14T10:00:00.000Z",
     happyEnding: {
@@ -181,6 +193,8 @@ export const seedCats: Cat[] = [
     sterilized: true,
     vaccinated: true,
     microchipped: true,
+    arrivedAt: "2024-07-20",
+    listedAt: "2024-08-30T10:00:00.000Z",
     photos: [{ url: "/fotos/gato-cinzento-pelo-comprido.webp", alt: "A Lua, gata cinzenta de pelo comprido, sentada no sofá da nova casa" }],
     adoptedAt: "2026-08-02T10:00:00.000Z",
     happyEnding: {
@@ -347,6 +361,14 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
     updatedAt: now,
   },
   {
+    id: "page-perguntas-adocao",
+    path: "/adotar/perguntas",
+    heading: "Perguntas sobre adotar",
+    intro: "As dúvidas que mais nos chegam antes de uma adoção. Se a sua não estiver aqui, fale connosco.",
+    seo: { title: "Adotar um gato em Viana do Castelo: perguntas frequentes" },
+    updatedAt: now,
+  },
+  {
     id: "page-descobrir",
     path: "/adotar/descobrir",
     heading: "Descobrir o gato certo para si",
@@ -443,6 +465,19 @@ export const seedFosterApplications: StoredFosterApplication[] = [
 export const seedSponsorships: Sponsorship[] = [
   { id: "sp-1", catSlug: "tobias", sponsorName: "Marta Gomes", email: "marta@example.pt", monthlyAmount: 10, startDate: "2026-03-01", active: true, lastUpdateSentAt: "2026-09-10" },
   { id: "sp-2", catSlug: "estrela", sponsorName: "Escola EB de Darque (exemplo)", monthlyAmount: 25, startDate: "2026-05-01", active: true, lastUpdateSentAt: "2026-10-15" },
+  // Ana (demo account ana@exemplo.pt) pays by automatic debit, so the demo shows a godparent's own page.
+  {
+    id: "sp-3", catSlug: "tobias", sponsorName: "Ana Ribeiro", email: "ana@exemplo.pt", phone: "912000001", monthlyAmount: 10, startDate: "2026-09-01", active: true, lastUpdateSentAt: "2026-10-15",
+    payment: "debito", debit: { provider: "stripe", status: "ativo", startedAt: "2026-09-01T10:00:00.000Z", lastPaymentAt: "2026-10-01T08:00:00.000Z", paidCents: 2000 },
+  },
+];
+
+/** Letters the team wrote to the godparents. */
+export const seedSponsorLetters: SponsorLetter[] = [
+  {
+    id: "carta-1", catSlug: "tobias", catName: "Tobias", by: { name: "Rui Sousa" }, createdAt: "2026-10-15T17:00:00.000Z", photoUrl: "/fotos/gato-senior-ruby.webp",
+    text: "O Tobias continua o senhor tranquilo de sempre. Esta semana descobriu um raio de sol novo junto à janela do contentor Paquito e passa lá as tardes. Fez análises aos rins: estão estáveis, e por isso continua com o Semintra todas as manhãs. Obrigado por estar com ele!",
+  },
 ];
 
 /** Example care data: where the demo cats live, their medication and appointments. */

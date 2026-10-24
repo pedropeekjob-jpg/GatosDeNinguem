@@ -1,5 +1,6 @@
 import { Button, Grid, Notice, Section } from "@gn/ui";
-import { isSenior } from "@gn/domain";
+import { adoptionSteps, catFilterTags, catFilters } from "@gn/domain";
+import { AdoptionSteps } from "@/components/AdoptionSteps";
 import { CatCard } from "@/components/CatCard";
 import { CatAlertButton } from "@/components/client/CatAlerts";
 import { CatFilter } from "@/components/client/CatFilter";
@@ -13,8 +14,8 @@ export async function generateMetadata() {
   return buildMetadata({ path: "/adotar", title: page.heading, description: page.intro, overrides: page.seo });
 }
 
-/** The words a filter chip matches against: sex, senior, special needs. */
-const tags = (cat: PublicCat) => [cat.sex, isSenior(cat) && "senior", cat.specialNeeds && "cuidados"].filter(Boolean).join(" ");
+/** The words a filter chip matches against: age, who the cat lives well with, energy, sex, special needs. */
+const tags = (cat: PublicCat) => catFilterTags(cat).join(" ");
 
 export default async function AdoptPage() {
   const [page, available, recovering, happy] = await Promise.all([getPage("/adotar"), listCats("para-adocao"), listCats("a-recuperar"), listHappyEndings()]);
@@ -38,12 +39,8 @@ export default async function AdoptPage() {
       <Section heading={`${available.length} gatos procuram família`}>
         <CatFilter
           total={available.length}
-          options={[
-            { value: "femea", label: "Fêmeas", count: available.filter((c) => c.sex === "femea").length },
-            { value: "macho", label: "Machos", count: available.filter((c) => c.sex === "macho").length },
-            { value: "senior", label: "Séniores", count: available.filter(isSenior).length },
-            { value: "cuidados", label: "Cuidados especiais", count: available.filter((c) => c.specialNeeds).length },
-          ]}
+          wrap
+          options={catFilters.map((f) => ({ value: f.value, label: f.label, count: available.filter(f.test).length }))}
         >
           <Grid>{available.map((cat) => <div key={cat.id} data-f={tags(cat)}><CatCard cat={cat} /></div>)}</Grid>
         </CatFilter>
@@ -55,13 +52,9 @@ export default async function AdoptPage() {
         </Section>
       ) : null}
       <Section heading="Como funciona a adoção">
-        <ol className="gn-stack gn-stack--s">
-          <li>Escolhe um gato e carrega em “Quero conhecer”.</li>
-          <li>Ligamos-lhe para conversar e marcar uma visita ao gatil.</li>
-          <li>Se for o gato certo, assinamos o contrato de adoção e leva-o para casa.</li>
-          <li>Ligamos uma semana e um mês depois para saber como estão.</li>
-        </ol>
+        <AdoptionSteps steps={adoptionSteps} />
         <Notice tone="info" title="Adotar é para toda a vida">Um gato pode viver 15 a 20 anos. Pense com calma; estamos aqui para ajudar.</Notice>
+        <div className="action-row"><Button href="/adotar/perguntas" variant="secondary">Perguntas sobre adotar</Button></div>
       </Section>
     </>
   );

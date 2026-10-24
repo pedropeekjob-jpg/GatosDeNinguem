@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/doar", "/ajudar/voluntariado", "/ajudar/amigo", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/doar", "/ajudar/voluntariado", "/ajudar/amigo", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -97,14 +97,14 @@ test("sponsor: Apadrinhar leads to sponsoring that cat, not to adopting it", asy
   await page.getByRole("button", { name: "Quero apadrinhar o Tobias" }).click();
   await page.getByText("Outro valor").click();
   await page.getByLabel("Valor por mês, em euros").fill("2");
-  await page.getByRole("button", { name: "Enviar pedido" }).click();
+  await page.getByRole("button", { name: "Continuar para o débito" }).click();
   await expect(page.getByText("O valor mínimo é 5 euros por mês")).toBeVisible();
   await expect(page.getByText("Indique o seu nome").first()).toBeVisible();
   await page.getByLabel("Valor por mês, em euros").fill("15");
   await page.getByLabel("O seu nome").fill("Ana Lima");
   await page.getByLabel("Email", { exact: true }).fill("ana@example.pt");
-  await page.getByText("Aceito que a associação me contacte").click();
-  await page.getByRole("button", { name: "Enviar pedido" }).click();
+  await page.getByText("Tenho 18 anos ou mais e aceito").click();
+  await page.getByRole("button", { name: "Continuar para o débito" }).click();
   await expect(page.getByText("Obrigado! Tobias agradece.")).toBeVisible();
 });
 
@@ -440,6 +440,31 @@ test("adotar: filter chips narrow the list, and the heart on a photo saves the c
   await expect(list.getByRole("button", { name: "Tobias está nos favoritos" })).toHaveAttribute("aria-pressed", "true");
 });
 
+test("adotar: a cat's page shows all its photos, what it goes home with, and other cats, never a dead end", async ({ page }) => {
+  await page.goto("/adotar/tobias");
+  const gallery = page.getByRole("region", { name: "Fotografias do Tobias" });
+  await expect(gallery.getByText("1 / 2")).toBeVisible();
+  await gallery.getByRole("button", { name: "Fotografia seguinte" }).click();
+  await expect(gallery.getByText("2 / 2")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Vai para casa com" })).toBeVisible();
+  const others = page.getByRole("region", { name: "Também procuram família" }).or(page.locator("section", { has: page.getByRole("heading", { name: "Também procuram família" }) }));
+  await expect(others.getByRole("heading", { level: 3 })).toHaveCount(3);
+  await page.getByRole("link", { name: "Perguntas sobre adotar" }).click();
+  await expect(page).toHaveURL(/\/adotar\/perguntas\/?$/);
+  await page.getByText("Moro num apartamento. Posso adotar?").click();
+  await expect(page.getByText(/redes nas janelas/)).toBeVisible();
+  const jsonLd = await page.locator('script[type="application/ld+json"]').allTextContents();
+  expect(jsonLd.join()).toContain('"FAQPage"');
+});
+
+test("adotar: 'Com crianças' shows only cats known to be good with children", async ({ page }) => {
+  await page.goto("/adotar");
+  const list = page.locator(".cat-filter__list");
+  await page.getByRole("button", { name: /^Com crianças/ }).click();
+  await expect(list.getByRole("link", { name: "Tobias" })).toBeVisible();
+  await expect(list.getByRole("link", { name: "Carvão" })).toBeHidden();
+});
+
 test("home: the cats looking for a home are one swipe away, with a link to all of them", async ({ page }) => {
   await page.goto("/");
   const rail = page.getByRole("region", { name: "Procuram família" });
@@ -628,4 +653,18 @@ test.describe("avisos de gatos novos", () => {
     const results = await new AxeBuilder({ page }).include("dialog").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
+});
+
+test("dates: cats show how long they have waited, news and happy endings show when", async ({ page }) => {
+  await page.goto("/adotar");
+  await expect(page.locator(".cat-card", { hasText: "Tobias" }).getByText(/^No gatil há \d+ anos?$/)).toBeVisible();
+  await page.goto("/adotar/tobias");
+  await expect(page.locator("dl.facts")).toContainText("No gatil desde");
+  await expect(page.locator("dl.facts div", { hasText: "No gatil desde" }).locator("dd")).toHaveText(/^abril de 2023 \(há \d+ anos?\)$/);
+  await expect(page.locator("dl.facts div", { hasText: "Para adoção desde" }).locator("dd")).toHaveText("2 de junho de 2023");
+  await page.goto("/noticias");
+  await expect(page.locator("time[datetime]").first()).toHaveText(/^\d{1,2} de [a-zç]+ de \d{4}$/);
+  await expect(page.getByText(/^Quando: .*novembro/)).toBeVisible();
+  await page.goto("/finais-felizes");
+  await expect(page.getByText(/Adotada a 14 de setembro de 2026, depois de \d+ anos? no gatil/)).toBeVisible();
 });

@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { careNotificationPrefsSchema, careTaskSchema, type CareNotificationPrefs, type CareTask } from "@gn/domain";
 import { appointmentSchema, careAlertSchema, catCareSchema, doseSchema, medicationSchema, visitNoteSchema, type Appointment, type CareAlert, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
-import { fosterApplicationSchema, fosterApplicationStatus, fosterPlacementSchema, shiftSchema, sponsorshipSchema, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
+import { fosterApplicationSchema, fosterApplicationStatus, fosterPlacementSchema, shiftSchema, sponsorLetterSchema, sponsorshipSchema, type FosterPlacement, type Shift, type SponsorLetter, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
 import { itemDonationSchema, itemDonationStatus, productSchema, seedShopSettings, shopOrderSchema, shopSettingsSchema, shopSpendingSchema, type Product, type ShopOrder, type ShopSettings, type ShopSpending, type StoredItemDonation } from "@gn/domain";
 import { z } from "zod";
 import { catAlertSentSchema, catAlertSubscriberSchema, type CatAlertSent, type CatAlertSubscriber } from "@gn/domain";
@@ -151,6 +151,15 @@ export class PrismaContentRepository implements ContentRepository {
     const data = { catSlug: x.catSlug, active: x.active, data: x as object };
     await this.db.sponsorship.upsert({ where: { id: x.id }, create: { id: x.id, ...data }, update: data });
     return x;
+  }
+  async listSponsorLetters(catSlug?: string) {
+    const rows = await this.db.sponsorLetter.findMany({ where: catSlug ? { catSlug } : undefined, orderBy: { createdAt: "desc" } });
+    return rows.map((r) => sponsorLetterSchema.parse(r.data));
+  }
+  async saveSponsorLetter(l: SponsorLetter) {
+    const data = { catSlug: l.catSlug, createdAt: new Date(l.createdAt), data: l as object };
+    await this.db.sponsorLetter.upsert({ where: { id: l.id }, create: { id: l.id, ...data }, update: data });
+    return l;
   }
 
   async listProducts() { return (await this.db.product.findMany()).map((r) => productSchema.parse(r.data)); }

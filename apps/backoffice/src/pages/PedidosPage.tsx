@@ -35,7 +35,7 @@ export function PedidosPage() {
           <table className="table">
             <thead><tr><th scope="col">Pedido a</th><th scope="col">Pessoa</th><th scope="col">Gato</th><th scope="col">Por mês</th><th scope="col">Mensagem</th></tr></thead>
             <tbody>
-              {sponsors.data?.filter((s) => s.pending).map((s) => (
+              {sponsors.data?.filter((s) => s.pending && s.debit?.status !== "a-configurar").map((s) => (
                 <tr key={s.id}><td>{s.startDate}</td><td><strong>{s.sponsorName}</strong><br />{s.email}{s.phone ? <><br />{s.phone}</> : null}</td><td>{s.catSlug}</td><td>{s.monthlyAmount.toLocaleString("pt-PT", { style: "currency", currency: "EUR" })}</td><td>{s.message ?? "—"}</td></tr>
               ))}
             </tbody>

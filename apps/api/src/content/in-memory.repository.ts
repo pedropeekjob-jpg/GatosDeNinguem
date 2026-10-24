@@ -1,5 +1,5 @@
 import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CareNotificationPrefs, type CareTask, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
-import { seedFosterApplications, seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
+import { seedFosterApplications, seedFosterPlacements, seedShifts, seedSponsorLetters, seedSponsorships, type FosterPlacement, type Shift, type SponsorLetter, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
 import type { CatAlertSent, CatAlertSubscriber } from "@gn/domain";
 import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Promotion, type Redirect, type SeoSettings } from "@gn/domain";
 import { seedItemDonations, seedProducts, seedShopOrders, seedShopSettings, seedShopSpending, type Product, type ShopOrder, type ShopSettings, type ShopSpending, type StoredItemDonation } from "@gn/domain";
@@ -21,6 +21,7 @@ export class InMemoryContentRepository implements ContentRepository {
   private placements = new Map<string, FosterPlacement>(seedFosterPlacements.map((x) => [x.id, structuredClone(x)]));
   private fosterApplications = new Map<string, StoredFosterApplication>(seedFosterApplications.map((x) => [x.id, structuredClone(x)]));
   private sponsorships = new Map<string, Sponsorship>(seedSponsorships.map((x) => [x.id, structuredClone(x)]));
+  private letters = new Map<string, SponsorLetter>(seedSponsorLetters.map((x) => [x.id, structuredClone(x)]));
   private impact: Impact = clone(seedImpact);
   private newsletter = new Map<string, NewsletterSignup & { subscribedAt: string }>();
   private care = new Map<string, CatCare>(seedCatCare.map((x) => [x.catId, structuredClone(x)]));
@@ -111,6 +112,10 @@ export class InMemoryContentRepository implements ContentRepository {
   async saveFosterApplication(x: StoredFosterApplication) { this.fosterApplications.set(x.id, clone(x)); return clone(x); }
   async listSponsorships() { return [...this.sponsorships.values()].map(clone); }
   async saveSponsorship(x: Sponsorship) { this.sponsorships.set(x.id, clone(x)); return clone(x); }
+  async listSponsorLetters(catSlug?: string) {
+    return [...this.letters.values()].filter((l) => !catSlug || l.catSlug === catSlug).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(clone);
+  }
+  async saveSponsorLetter(l: SponsorLetter) { this.letters.set(l.id, clone(l)); return clone(l); }
 
   async listProducts() { return [...this.products.values()].map(clone); }
   async getProduct(id: string) { const x = this.products.get(id); return x && clone(x); }

@@ -5,6 +5,7 @@ import {
   breadcrumbJsonLd,
   buildRobotsTxt,
   buildSitemapXml,
+  faqJsonLd,
   findRedirect,
   organizationJsonLd,
   resolveSeo,
@@ -55,6 +56,12 @@ describe("JSON-LD", () => {
       { name: "Adotar", path: "/adotar" },
     ]);
     expect(crumbs.itemListElement[1]).toMatchObject({ position: 2, item: "https://gatosdeninguem.pt/adotar" });
+  });
+
+  it("builds FAQ structured data with one question per entry", () => {
+    const faq = faqJsonLd([{ q: "Quanto custa?", a: "Explicamos ao telefone." }]);
+    expect(faq["@type"]).toBe("FAQPage");
+    expect(faq.mainEntity[0]).toMatchObject({ "@type": "Question", name: "Quanto custa?", acceptedAnswer: { text: "Explicamos ao telefone." } });
   });
 });
 
