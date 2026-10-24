@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { fosterCanHostLabel, fosterHowLongLabel, type FosterApplication } from "@gn/domain";
 import { Button, Checkbox, ChoiceList, Notice, NextStep, TextArea, TextField } from "@gn/ui";
 import { submitForm } from "@/lib/submit";
+import { PrivacyHint } from "@/components/forms/PrivacyHint";
 
 const options = <K extends string>(labels: Record<K, string>) => (Object.keys(labels) as K[]).map((value) => ({ value, label: labels[value] }));
 
@@ -65,7 +66,7 @@ export function FosterForm() {
         <label htmlFor="website_url">Não preencher</label>
         <input id="website_url" tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
       </div>
-      <Checkbox id="consentimento" label="Aceito que a associação me contacte sobre ser família temporária" hint="Usamos os seus dados apenas para isto." checked={consent} onChange={setConsent} />
+      <Checkbox id="consentimento" label="Tenho 18 anos ou mais e aceito que a associação me contacte sobre ser família temporária" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
       <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Enviar pedido"}</Button>
     </form>

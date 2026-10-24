@@ -435,12 +435,12 @@ function Accounts({ today }: { today: Date }) {
   );
 }
 
-function Settings({ initial }: { initial: { mbwayPhone?: string; iban: string; pickup: string; shipping: string } }) {
+function Settings({ initial }: { initial: { mbwayPhone?: string; iban: string; pickup: string; shipping: string; vatNote?: string } }) {
   const api = useApi();
   const qc = useQueryClient();
-  const [s, setS] = useState({ ...initial, mbwayPhone: initial.mbwayPhone ?? "" });
+  const [s, setS] = useState({ ...initial, mbwayPhone: initial.mbwayPhone ?? "", vatNote: initial.vatNote ?? "" });
   const save = useMutation({
-    mutationFn: () => api.saveShopSettings({ ...s, mbwayPhone: s.mbwayPhone.trim() || undefined }),
+    mutationFn: () => api.saveShopSettings({ ...s, mbwayPhone: s.mbwayPhone.trim() || undefined, vatNote: s.vatNote.trim() || undefined }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["shop-summary"] }),
   });
   return (
@@ -451,6 +451,7 @@ function Settings({ initial }: { initial: { mbwayPhone?: string; iban: string; p
       <TextField id="d-iban" label="IBAN para transferências" value={s.iban} onChange={(e) => setS({ ...s, iban: e.target.value })} />
       <TextArea id="d-levantar" label="Onde e quando levantar" rows={2} value={s.pickup} onChange={(e) => setS({ ...s, pickup: e.target.value })} />
       <TextArea id="d-correio" label="Envios pelo correio" rows={2} value={s.shipping} onChange={(e) => setS({ ...s, shipping: e.target.value })} />
+      <TextField id="d-iva" label="IVA nos preços" hint="Aparece ao lado de cada preço. Peça ao contabilista: por exemplo «IVA incluído» ou «Isento de IVA (artigo 53.º do CIVA)»." value={s.vatNote} onChange={(e) => setS({ ...s, vatNote: e.target.value })} />
       {save.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(save.error)}</Notice> : null}
       {save.isSuccess ? <p role="status">Guardado</p> : null}
       <div><Button type="submit" disabled={save.isPending}>Guardar</Button></div>
