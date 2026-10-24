@@ -37,7 +37,7 @@ export default async function DonatePage() {
       <Section heading="Outras formas de doar">
         <Grid min="16rem">
           <Card title="Apadrinhar um gato" href="/apadrinhar"><p>Um valor por mês para a comida e o veterinário de um gato. Recebe fotografias e notícias dele.</p></Card>
-          <Card title="Ser Amigo da associação" href="/ajudar#amigo"><p>24 euros por ano, com 10% a 15% de desconto nos parceiros.</p></Card>
+          <Card title="Ser Amigo da associação" href="/ajudar/amigo"><p>24 euros por ano, com 10% a 15% de desconto nos parceiros.</p></Card>
           <Card title="Comprar na loja solidária" href="/loja"><p>T-shirts, canecas e calendários. Também pode doar coisas para vender.</p></Card>
           <Card title="Doar comida e mantas" href="#bens"><p>Areia, ração e mantas, entregues no gatil.</p></Card>
         </Grid>
@@ -48,7 +48,7 @@ export default async function DonatePage() {
           <div className="gn-stack gn-stack--m">
             <h2>Doar comida e mantas</h2>
             <p>Aceitamos areia, ração seca, ração húmida para gatinhos e mantas. Entregue no gatil aos sábados de manhã.</p>
-            <div className="action-row"><Button href="/adotar" variant="secondary">Conhecer os gatos que ajuda</Button></div>
+            <div className="action-row"><Button href="/loja#doar-artigos" variant="secondary">Doar artigos para a loja solidária</Button></div>
           </div>
         </Container>
       </section>

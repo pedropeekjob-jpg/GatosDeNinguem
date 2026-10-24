@@ -11,7 +11,7 @@ main { display: block; }
 .home-hero__text { display: grid; gap: 0.75rem; }
 .home-hero__text h1 { font-size: clamp(1.625rem, 4.4vw, 2.75rem); }
 .home-actions { display: grid; gap: 0.6rem; grid-template-columns: 1fr 1fr; padding-top: 0.25rem; }
-/* Phones already have "Encontrei um gato" at the top of the screen; repeating it would push the welcome off the first screen. */
+/* Phones keep the welcome inside the first screen, so "Encontrei um gato" waits in the footer there. */
 .home-actions .gn-btn--urgent { display: none; }
 @media (min-width: 60rem) {
   .home-top:not(.home-top--plain) .home-top__over {
