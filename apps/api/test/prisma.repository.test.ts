@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.promotion.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.promotion.deleteMany(), db.product.deleteMany(), db.shopOrder.deleteMany(), db.shopSpending.deleteMany(), db.itemDonation.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());
@@ -76,6 +76,16 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     expect((await repo.listAppointments()).map((a) => a.id)).toEqual(["con-1", "con-2"]);
     expect((await repo.listVisitNotes("cat-4"))[0]?.text).toContain("Comeu tudo");
     expect((await repo.listCareAlerts({ since: "2026-10-21T00:00:00.000Z" })).map((a) => a.id)).toEqual(["al-3", "al-2"]);
+  });
+
+  it("keeps the shop: articles with stock, orders by newest, spending and offered articles", async () => {
+    const caneca = (await repo.getProductBySlug("caneca-gato-a-piscar-o-olho"))!;
+    await repo.saveProducts([{ ...caneca, stock: 7 }]);
+    expect((await repo.getProduct(caneca.id))?.stock).toBe(7);
+    expect((await repo.listShopOrders())[0]?.code).toBe("L-7K3Q");
+    expect((await repo.listShopSpending()).map((s) => s.id)).toEqual(["gasto-2", "gasto-1"]);
+    expect((await repo.listItemDonations())[0]?.status).toBe("nova");
+    expect((await repo.getShopSettings()).iban).toMatch(/^PT50/);
   });
 
   it("lists and removes newsletter subscribers, and stores promotions by event", async () => {

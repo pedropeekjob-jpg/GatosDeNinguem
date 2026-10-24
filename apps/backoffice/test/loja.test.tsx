@@ -1,0 +1,127 @@
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { describe, expect, it } from "vitest";
+import axe from "axe-core";
+import { Shell } from "../src/App";
+import { fakeApi } from "./fakeApi";
+
+const today = new Date("2026-11-02T09:30:00.000Z");
+
+function renderAt(path: string, api = fakeApi(today)) {
+  const utils = render(
+    <MemoryRouter initialEntries={[path]}>
+      <Shell api={api} today={today} />
+    </MemoryRouter>,
+  );
+  return { ...utils, api };
+}
+
+async function axeViolations(container: Element) {
+  const r = await axe.run(container, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
+  return r.violations.map((v) => v.id);
+}
+
+describe("Loja: pedidos", () => {
+  it("shows orders to handle, marks one paid and then delivered", async () => {
+    const user = userEvent.setup();
+    const { container, api } = renderAt("/loja");
+    const order = await screen.findByRole("article", { name: "Pedido L-7K3Q" });
+    expect(within(order).getByText("À espera de pagamento")).toBeInTheDocument();
+    expect(within(order).getByText(/2 × Caneca/)).toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+
+    await user.click(within(order).getByRole("button", { name: "Marcar como pago (L-7K3Q)" }));
+    expect(api.updateOrder).toHaveBeenCalledWith("enc-1", { status: "pago" });
+    const paid = await screen.findByRole("article", { name: "Pedido L-7K3Q" });
+    expect(await within(paid).findByText("Pago, por entregar")).toBeInTheDocument();
+    await user.click(within(paid).getByRole("button", { name: "Marcar como entregue (L-7K3Q)" }));
+    // Delivered orders leave the "Por tratar" list.
+    await screen.findByRole("button", { name: "Por tratar (1)" });
+    expect(screen.queryByRole("article", { name: "Pedido L-7K3Q" })).not.toBeInTheDocument();
+  });
+
+  it("asks before cancelling", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/loja");
+    const order = await screen.findByRole("article", { name: "Pedido L-M4TS" });
+    await user.click(within(order).getByRole("button", { name: "Cancelar pedido L-M4TS" }));
+    expect(api.updateOrder).not.toHaveBeenCalled();
+    await user.click(within(order).getByRole("button", { name: "Sim, cancelar o pedido L-M4TS" }));
+    expect(api.updateOrder).toHaveBeenCalledWith("enc-2", { status: "cancelado" });
+  });
+
+  it("records a sale at a stand", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/loja");
+    await user.click(await screen.findByRole("button", { name: "Registar venda na banca" }));
+    await user.selectOptions(await screen.findByLabelText("Artigo"), "art-tshirt");
+    await user.selectOptions(screen.getByLabelText("Tamanho"), "M");
+    await user.clear(screen.getByLabelText("Quantidade"));
+    await user.type(screen.getByLabelText("Quantidade"), "2");
+    await user.click(screen.getByRole("button", { name: "Juntar à venda" }));
+    expect(screen.getByText(/Total 30\s€/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Registar venda" }));
+    expect(api.sellInPerson).toHaveBeenCalledWith([{ productId: "art-tshirt", variant: "M", quantity: 2 }]);
+  });
+});
+
+describe("Loja: artigos", () => {
+  it("adds an article with sizes and shows how much goes to the cats", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/loja");
+    await user.click(await screen.findByRole("tab", { name: "Artigos" }));
+    await user.click(await screen.findByRole("button", { name: "Adicionar artigo" }));
+    await user.type(screen.getByLabelText("Nome"), "Sweatshirt amarela");
+    await user.upload(screen.getByLabelText("Escolher fotografias para adicionar"), new File(["x"], "foto.jpg", { type: "image/jpeg" }));
+    await screen.findByLabelText("Descrição da fotografia 1");
+    await user.type(screen.getByLabelText("Preço de venda (euros)"), "25");
+    await user.type(screen.getByLabelText(/Quanto custou/), "11,50");
+    expect(screen.getByText(/13,50\s€/)).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Tem tamanhos ou cores"));
+    await user.click(screen.getByRole("button", { name: "Juntar opção" }));
+    await user.type(screen.getByLabelText("Opção 1"), "M");
+    await user.clear(screen.getByLabelText("Quantos há (opção 1)"));
+    await user.type(screen.getByLabelText("Quantos há (opção 1)"), "5");
+    await user.click(screen.getByRole("button", { name: "Guardar artigo" }));
+    expect(api.createProduct).toHaveBeenCalledWith(expect.objectContaining({
+      slug: "sweatshirt-amarela", priceCents: 2500, costCents: 1150, variants: [{ label: "M", stock: 5 }], stock: 0, active: true,
+    }));
+    expect(await screen.findByRole("button", { name: "Editar Sweatshirt amarela" })).toBeInTheDocument();
+  });
+});
+
+describe("Loja: doações de artigos", () => {
+  it("accepts an offer, marks it received and puts it on sale as donated", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/loja");
+    await user.click(await screen.findByRole("tab", { name: "Doações de artigos" }));
+    const offer = await screen.findByRole("article", { name: "Oferta de Inês Faria" });
+    await user.click(within(offer).getByRole("button", { name: "Aceitar (oferta de Inês Faria)" }));
+    await user.click(await within(offer).findByRole("button", { name: "Já recebemos (oferta de Inês Faria)" }));
+    await user.click(await within(offer).findByRole("button", { name: "Pôr à venda (oferta de Inês Faria)" }));
+    expect(await screen.findByText("A partir de uma doação")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Foi oferecido à loja/)).toBeChecked();
+    expect(screen.getByLabelText(/^Descrição$/)).toHaveValue("Caixa com 10 livros infantis e 2 puzzles completos");
+    expect(api.createProduct).not.toHaveBeenCalled();
+  });
+});
+
+describe("Loja: contas", () => {
+  it("shows the year's numbers, adds what the money paid for and saves the MB WAY number", async () => {
+    const user = userEvent.setup();
+    const { api, container } = renderAt("/loja");
+    await user.click(await screen.findByRole("tab", { name: "Contas e transparência" }));
+    expect((await screen.findAllByText("Vacinas da Estrela e do Tobias", { exact: false })).length).toBeGreaterThan(0);
+    await user.type(screen.getByLabelText("Valor (euros)"), "24");
+    await user.type(screen.getByLabelText("Em quê"), "Areia para o Paquito");
+    await user.click(screen.getByRole("button", { name: "Juntar gasto" }));
+    expect(api.addSpending).toHaveBeenCalledWith({ date: "2026-11-02", description: "Areia para o Paquito", amountCents: 2400 });
+    expect((await screen.findAllByText("Areia para o Paquito", { exact: false })).length).toBeGreaterThan(0);
+
+    await user.type(screen.getByLabelText("Número MB WAY da associação"), "912 345 678");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(api.saveShopSettings).toHaveBeenCalledWith(expect.objectContaining({ mbwayPhone: "912 345 678" }));
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});

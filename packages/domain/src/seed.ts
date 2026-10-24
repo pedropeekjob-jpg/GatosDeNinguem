@@ -355,6 +355,14 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
     updatedAt: now,
   },
   {
+    id: "page-loja",
+    path: "/loja",
+    heading: "Loja solidária",
+    intro: "T-shirts, canecas, calendários e peças feitas à mão. Cada compra paga comida, vacinas e tratamentos aos gatos do gatil.",
+    seo: {},
+    updatedAt: now,
+  },
+  {
     id: "page-parceiros",
     path: "/parceiros",
     heading: "Parceiros",

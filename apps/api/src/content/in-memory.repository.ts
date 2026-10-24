@@ -1,6 +1,7 @@
 import { seedAppointments, seedCareAlerts, seedCatCare, seedDoses, seedMedications, seedVisitNotes, type Appointment, type CareAlert, type CareNotificationPrefs, type CareTask, type CatCare, type Dose, type Medication, type VisitNote } from "@gn/domain";
 import { seedFosterApplications, seedFosterPlacements, seedShifts, seedSponsorships, type FosterPlacement, type Shift, type Sponsorship, type StoredFosterApplication } from "@gn/domain";
 import { seedCats, seedImpact, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings, type Cat, type Impact, type NewsletterSignup, type Page, type Partner, type Post, type Promotion, type Redirect, type SeoSettings } from "@gn/domain";
+import { seedItemDonations, seedProducts, seedShopOrders, seedShopSettings, seedShopSpending, type Product, type ShopOrder, type ShopSettings, type ShopSpending, type StoredItemDonation } from "@gn/domain";
 import type { ContentRepository, StoredAdoptionInterest, StoredPartnerApplication } from "./repository";
 
 const clone = <T>(v: T): T => structuredClone(v);
@@ -29,6 +30,11 @@ export class InMemoryContentRepository implements ContentRepository {
   private alerts = new Map<string, CareAlert>(seedCareAlerts.map((x) => [x.id, structuredClone(x)]));
   private tasks = new Map<string, CareTask>();
   private carePrefs = new Map<string, CareNotificationPrefs>();
+  private products = new Map<string, Product>(seedProducts.map((x) => [x.id, structuredClone(x)]));
+  private orders = new Map<string, ShopOrder>(seedShopOrders.map((x) => [x.id, structuredClone(x)]));
+  private spending = new Map<string, ShopSpending>(seedShopSpending.map((x) => [x.id, structuredClone(x)]));
+  private itemDonations = new Map<string, StoredItemDonation>(seedItemDonations.map((x) => [x.id, structuredClone(x)]));
+  private shopSettings: ShopSettings = clone(seedShopSettings);
   private promotions = new Map<string, Promotion>();
 
   constructor(seed = { cats: seedCats, pages: seedPages, posts: seedPosts, redirects: seedRedirects, settings: seedSeoSettings, partners: seedPartners }) {
@@ -90,6 +96,21 @@ export class InMemoryContentRepository implements ContentRepository {
   async saveFosterApplication(x: StoredFosterApplication) { this.fosterApplications.set(x.id, clone(x)); return clone(x); }
   async listSponsorships() { return [...this.sponsorships.values()].map(clone); }
   async saveSponsorship(x: Sponsorship) { this.sponsorships.set(x.id, clone(x)); return clone(x); }
+
+  async listProducts() { return [...this.products.values()].map(clone); }
+  async getProduct(id: string) { const x = this.products.get(id); return x && clone(x); }
+  async getProductBySlug(slug: string) { const x = [...this.products.values()].find((p) => p.slug === slug); return x && clone(x); }
+  async saveProducts(products: Product[]) { products.forEach((x) => this.products.set(x.id, clone(x))); }
+  async listShopOrders() { return [...this.orders.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(clone); }
+  async getShopOrder(id: string) { const x = this.orders.get(id); return x && clone(x); }
+  async saveShopOrder(o: ShopOrder) { this.orders.set(o.id, clone(o)); return clone(o); }
+  async listShopSpending() { return [...this.spending.values()].sort((a, b) => b.date.localeCompare(a.date)).map(clone); }
+  async saveShopSpending(x: ShopSpending) { this.spending.set(x.id, clone(x)); return clone(x); }
+  async deleteShopSpending(id: string) { this.spending.delete(id); }
+  async listItemDonations() { return [...this.itemDonations.values()].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt)).map(clone); }
+  async saveItemDonation(x: StoredItemDonation) { this.itemDonations.set(x.id, clone(x)); return clone(x); }
+  async getShopSettings() { return clone(this.shopSettings); }
+  async saveShopSettings(x: ShopSettings) { this.shopSettings = clone(x); return clone(x); }
 
   async getSeoSettings() { return clone(this.settings); }
   async saveSeoSettings(settings: SeoSettings) { this.settings = clone(settings); return clone(settings); }

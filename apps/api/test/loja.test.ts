@@ -1,0 +1,129 @@
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { NestFastifyApplication } from "@nestjs/platform-fastify";
+import { createApp } from "../src/app";
+import { InMemoryContentRepository } from "../src/content/in-memory.repository";
+
+const TOKEN = "test-admin-token";
+const auth = { authorization: `Bearer ${TOKEN}` };
+let app: NestFastifyApplication;
+const refreshed: string[] = [];
+
+beforeAll(async () => {
+  app = await createApp({
+    repository: new InMemoryContentRepository(), adminToken: TOKEN, logger: false, now: () => new Date("2026-11-01T09:00:00.000Z"),
+    onContentChanged: async (what) => { refreshed.push(what.type); },
+  });
+  await app.init();
+  await app.getHttpAdapter().getInstance().ready();
+});
+afterAll(async () => app.close());
+
+const req = (method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE", url: string, payload?: object, admin = false) =>
+  app.inject({ method, url, payload, headers: admin ? auth : undefined });
+const buyer = { name: "Helena Castro", phone: "912 000 011", delivery: "levantar", payment: "mbway", consent: true };
+
+describe("public shop", () => {
+  it("lists articles on sale with price, cost and stock, so everyone sees where the money goes", async () => {
+    const res = await req("GET", "/loja/artigos");
+    const caneca = res.json().find((p: { slug: string }) => p.slug === "caneca-gato-a-piscar-o-olho");
+    expect(caneca).toMatchObject({ priceCents: 900, costCents: 350, stock: 12 });
+  });
+
+  it("shows how much the shop raised this year and what it paid for", async () => {
+    const res = await req("GET", "/loja/resumo");
+    expect(res.json().transparency).toMatchObject({ year: 2026, salesCents: 11100, spentCents: 6800 });
+    expect(res.json().settings.iban).toMatch(/^PT50/);
+  });
+
+  it("reserves articles, answers with a code and how to pay, and takes them out of stock", async () => {
+    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-tshirt", variant: "L", quantity: 2 }, { productId: "art-caneca", quantity: 1 }] });
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ totalCents: 3900, payment: "mbway", code: expect.stringMatching(/^L-/) });
+    expect(res.json().settings.pickup).toBeTruthy();
+    const tshirt = (await req("GET", "/loja/artigos/t-shirt-gatos-de-ninguem")).json();
+    expect(tshirt.variants.find((v: { label: string }) => v.label === "L").stock).toBe(2);
+    expect(refreshed).toContain("loja");
+    const orders = (await req("GET", "/loja/gestao/pedidos", undefined, true)).json();
+    expect(orders[0]).toMatchObject({ name: "Helena Castro", status: "novo", totalCents: 3900 });
+  });
+
+  it("explains when an article ran out", async () => {
+    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-saco", quantity: 5 }] });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().message).toBe("Só há 2 de Saco de pano «Adote, não compre». Diminua a quantidade, por favor.");
+  });
+
+  it("checks the form and ignores spam bots", async () => {
+    const bad = await req("POST", "/loja/pedidos", { items: [] });
+    expect(bad.statusCode).toBe(400);
+    const bot = await req("POST", "/loja/pedidos", { website_url: "http://spam", items: [{ productId: "art-caneca", quantity: 10 }] });
+    expect(bot.statusCode).toBe(201);
+    expect((await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock).toBe(11);
+  });
+
+  it("takes offers of articles to sell", async () => {
+    const res = await req("POST", "/loja/doacoes", { what: "Três camisolas de lã, como novas", category: "roupa", condition: "como-novo", handover: "recolha", name: "Rosa", phone: "915000000", town: "Areosa", consent: true });
+    expect(res.statusCode).toBe(201);
+    const list = (await req("GET", "/loja/gestao/doacoes", undefined, true)).json();
+    expect(list[0]).toMatchObject({ name: "Rosa", status: "nova", handover: "recolha" });
+    const accepted = await req("PATCH", `/loja/gestao/doacoes/${list[0].id}`, { status: "aceite" }, true);
+    expect(accepted.json().status).toBe("aceite");
+  });
+
+  it("hides articles the team took off sale", async () => {
+    await req("PATCH", "/loja/gestao/artigos/art-livro", { active: false }, true);
+    expect((await req("GET", "/loja/artigos/livro-gatos-de-viana")).statusCode).toBe(404);
+    expect((await req("GET", "/loja/artigos")).json().some((p: { id: string }) => p.id === "art-livro")).toBe(false);
+  });
+});
+
+describe("back office", () => {
+  it("requires the admin token", async () => {
+    expect((await req("GET", "/loja/gestao/pedidos")).statusCode).toBe(401);
+    expect((await req("POST", "/loja/gestao/artigos", {})).statusCode).toBe(401);
+  });
+
+  it("adds an article and refuses a cost above the price", async () => {
+    const article = { slug: "iman-gato", name: "Íman de frigorífico", category: "casa", priceCents: 300, costCents: 50, photos: [{ url: "/loja/caneca.svg", alt: "Íman com um gato" }], stock: 20 };
+    const res = await req("POST", "/loja/gestao/artigos", article, true);
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ active: true, donated: false, variants: [] });
+    expect((await req("POST", "/loja/gestao/artigos", article, true)).statusCode).toBe(409);
+    const bad = await req("POST", "/loja/gestao/artigos", { ...article, slug: "outro", costCents: 400 }, true);
+    expect(bad.statusCode).toBe(400);
+  });
+
+  it("marks an order paid, then cancels another and puts its articles back", async () => {
+    const paid = await req("PATCH", "/loja/gestao/pedidos/enc-1", { status: "pago", teamNote: "MB WAY recebido" }, true);
+    expect(paid.json()).toMatchObject({ status: "pago", paidAt: "2026-11-01T09:00:00.000Z", teamNote: "MB WAY recebido" });
+
+    const before = (await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock;
+    const placed = (await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-caneca", quantity: 3 }] })).json();
+    const order = (await req("GET", "/loja/gestao/pedidos", undefined, true)).json().find((o: { code: string }) => o.code === placed.code);
+    await req("PATCH", `/loja/gestao/pedidos/${order.id}`, { status: "cancelado" }, true);
+    expect((await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock).toBe(before);
+    const revive = await req("PATCH", `/loja/gestao/pedidos/${order.id}`, { status: "pago" }, true);
+    expect(revive.statusCode).toBe(409);
+  });
+
+  it("records a sale at a stand, which counts in the year's total", async () => {
+    const before = (await req("GET", "/loja/resumo")).json().transparency.salesCents;
+    const res = await req("POST", "/loja/gestao/pedidos", { items: [{ productId: "art-calendario", quantity: 2 }] }, true);
+    expect(res.json()).toMatchObject({ status: "entregue", inPerson: true, totalCents: 2000 });
+    expect((await req("GET", "/loja/resumo")).json().transparency.salesCents).toBe(before + 2000);
+  });
+
+  it("adds and removes what the money paid for", async () => {
+    const added = await req("POST", "/loja/gestao/gastos", { date: "2026-10-30", description: "Areia para o contentor Paquito", amountCents: 2400 }, true);
+    expect(added.statusCode).toBe(201);
+    expect((await req("GET", "/loja/resumo")).json().transparency.spending[0].description).toBe("Areia para o contentor Paquito");
+    await req("DELETE", `/loja/gestao/gastos/${added.json().id}`, undefined, true);
+    expect((await req("GET", "/loja/resumo")).json().transparency.spentCents).toBe(6800);
+  });
+
+  it("saves the MB WAY number", async () => {
+    const res = await req("PUT", "/loja/gestao/definicoes", { mbwayPhone: "912 345 678", iban: "PT50 0045 1436 4033 0203 2321 6", pickup: "No gatil aos sábados.", shipping: "Por CTT." }, true);
+    expect(res.json().mbwayPhone).toBe("912 345 678");
+    expect((await req("GET", "/loja/resumo")).json().settings.mbwayPhone).toBe("912 345 678");
+  });
+});

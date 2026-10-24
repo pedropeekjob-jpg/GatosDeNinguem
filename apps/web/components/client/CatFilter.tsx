@@ -5,7 +5,7 @@ export type CatFilterOption = { value: string; label: string; count: number };
 
 /** Quick filter chips over a list of cats. Each item carries data-f="femea senior …"; the list hides what doesn't match.
  *  Without JavaScript nothing is hidden. */
-export function CatFilter({ options, total, children }: { options: CatFilterOption[]; total: number; children: ReactNode }) {
+export function CatFilter({ options, total, noun = "gatos", children }: { options: CatFilterOption[]; total: number; noun?: string; children: ReactNode }) {
   const [value, setValue] = useState("");
   const shown = value ? options.find((o) => o.value === value)?.count ?? total : total;
   const chips = [{ value: "", label: "Todos", count: total }, ...options.filter((o) => o.count > 0)];
@@ -18,7 +18,7 @@ export function CatFilter({ options, total, children }: { options: CatFilterOpti
           </button>
         ))}
       </div>
-      <p className="gn-sr-only" aria-live="polite">{value ? `A mostrar ${shown} de ${total} gatos` : ""}</p>
+      <p className="gn-sr-only" aria-live="polite">{value ? `A mostrar ${shown} de ${total} ${noun}` : ""}</p>
       <div className="cat-filter__list" data-filtro={value || undefined}>{children}</div>
     </div>
   );

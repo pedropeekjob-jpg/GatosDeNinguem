@@ -9,4 +9,6 @@ export * from "./patinhas";
 export * from "./seed-patinhas";
 export * from "./cuidados";
 export * from "./voluntario";
+export * from "./loja";
+export * from "./seed-loja";
 export * from "./promocao";

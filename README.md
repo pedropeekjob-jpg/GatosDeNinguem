@@ -42,6 +42,10 @@ pnpm dev                                         # web :3000, api :4000, back of
 
 Without `DATABASE_URL` the API runs on in-memory demo content; without `API_URL` the site does too.
 
+## Loja solidária
+
+`/loja` sells the association's articles. Orders reserve the stock and say how to pay (MB WAY, bank transfer or on pickup); nothing is charged on the site yet. The team confirms payments, records sales at stands, adds what the money paid for (shown publicly) and handles offers of donated articles in the back office (Loja). The MB WAY number is set there. Online payment (MB WAY, Multibanco, card) can be added later through a payment provider, at the point where an order is placed.
+
 ## Online demo (GitHub Pages)
 
 `.github/workflows/pages.yml` publishes a static demo of the public site on every push to `main`. It uses the example content, and forms check what you type but send nothing. Turn it on once in **Settings → Pages → Source: GitHub Actions**. To build it locally: `BASE_PATH=/GatosDeNinguem pnpm --filter @gn/web export:pages` (output in `apps/web/out`).
