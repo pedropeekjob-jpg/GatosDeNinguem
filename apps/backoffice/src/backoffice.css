@@ -82,3 +82,9 @@ details summary { cursor: pointer; font-weight: 650; min-height: var(--gn-target
 /* Loja */
 .order-lines { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; }
 .order-lines li { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.bo-plain { border: 0; margin: 0; padding: 0; min-width: 0; }
+/* The team menu has many entries: on wide screens it wraps instead of pushing "Sair" off the page. */
+@media (min-width: 64rem) {
+  .gn-header .gn-nav { min-width: 0; flex: 1 1 auto; }
+  .gn-header .gn-nav__list { flex-wrap: wrap; justify-content: center; }
+}

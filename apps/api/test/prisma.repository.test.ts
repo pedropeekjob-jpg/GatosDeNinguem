@@ -14,7 +14,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
   const repo = new PrismaContentRepository(db);
 
   beforeAll(async () => {
-    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.product.deleteMany(), db.shopOrder.deleteMany(), db.shopSpending.deleteMany(), db.itemDonation.deleteMany()]);
+    await db.$transaction([db.cat.deleteMany(), db.page.deleteMany(), db.post.deleteMany(), db.partner.deleteMany(), db.partnerApplication.deleteMany(), db.redirect.deleteMany(), db.setting.deleteMany(), db.adoptionInterest.deleteMany(), db.newsletterSignup.deleteMany(), db.shift.deleteMany(), db.fosterPlacement.deleteMany(), db.fosterApplication.deleteMany(), db.sponsorship.deleteMany(), db.badge.deleteMany(), db.challenge.deleteMany(), db.catCare.deleteMany(), db.medication.deleteMany(), db.medicationDose.deleteMany(), db.vetAppointment.deleteMany(), db.visitNote.deleteMany(), db.careAlert.deleteMany(), db.promotion.deleteMany(), db.product.deleteMany(), db.shopOrder.deleteMany(), db.shopSpending.deleteMany(), db.itemDonation.deleteMany()]);
     await seedDatabase(db);
   });
   afterAll(async () => db.$disconnect());
@@ -86,5 +86,19 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     expect((await repo.listShopSpending()).map((s) => s.id)).toEqual(["gasto-2", "gasto-1"]);
     expect((await repo.listItemDonations())[0]?.status).toBe("nova");
     expect((await repo.getShopSettings()).iban).toMatch(/^PT50/);
+  });
+
+  it("lists and removes newsletter subscribers, and stores promotions by event", async () => {
+    await repo.saveNewsletterSignup({ email: "sair@b.pt", interests: ["eventos"], consent: true, subscribedAt: new Date().toISOString() });
+    expect((await repo.listNewsletterSignups()).some((s) => s.email === "sair@b.pt")).toBe(true);
+    await repo.deleteNewsletterSignup("SAIR@b.pt");
+    expect((await repo.listNewsletterSignups()).some((s) => s.email === "sair@b.pt")).toBe(false);
+
+    const at = new Date().toISOString();
+    const promo = { id: "pr-1", postId: "post-2", postTitle: "Open Day", postSlug: "open-day-novembro", eventStartsAt: "2026-11-15T10:00:00.000Z", scheduledFor: "2026-11-08T10:00:00.000Z", status: "rascunho" as const, channels: ["email" as const], text: "Olá", emailSubject: "Olá", emailBody: "Olá", edited: false, results: {}, createdAt: at, updatedAt: at };
+    await repo.savePromotion(promo);
+    await repo.savePromotion({ ...promo, status: "aprovada" });
+    expect((await repo.getPromotionByPost("post-2"))?.status).toBe("aprovada");
+    expect((await repo.listPromotions()).length).toBe(1);
   });
 });

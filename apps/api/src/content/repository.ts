@@ -1,7 +1,7 @@
 import type { Appointment, CareAlert, CareNotificationPrefs, CareTask, CatCare, Dose, Medication, VisitNote } from "@gn/domain";
 import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } from "@gn/domain";
 import type { Product, ShopOrder, ShopSettings, ShopSpending, StoredItemDonation } from "@gn/domain";
-import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Redirect, SeoSettings } from "@gn/domain";
+import type { AdoptionInterest, Cat, Impact, NewsletterSignup, Page, Partner, PartnerApplication, Post, Promotion, Redirect, SeoSettings } from "@gn/domain";
 
 export type StoredAdoptionInterest = AdoptionInterest & { id: string; receivedAt: string };
 export type StoredPartnerApplication = PartnerApplication & { id: string; receivedAt: string };
@@ -35,6 +35,15 @@ export interface ContentRepository {
   getImpact(): Promise<Impact>;
   saveImpact(impact: Impact): Promise<Impact>;
   saveNewsletterSignup(signup: NewsletterSignup & { subscribedAt: string }): Promise<void>;
+  listNewsletterSignups(): Promise<(NewsletterSignup & { subscribedAt: string })[]>;
+  /** Unsubscribe. Unknown addresses are ignored. */
+  deleteNewsletterSignup(email: string): Promise<void>;
+
+  /** Event promotions (social posts and email a week before), soonest event first. */
+  listPromotions(): Promise<Promotion[]>;
+  getPromotion(id: string): Promise<Promotion | undefined>;
+  getPromotionByPost(postId: string): Promise<Promotion | undefined>;
+  savePromotion(p: Promotion): Promise<Promotion>;
 
   listShifts(range?: { from?: string; to?: string }): Promise<Shift[]>;
   getShift(id: string): Promise<Shift | undefined>;

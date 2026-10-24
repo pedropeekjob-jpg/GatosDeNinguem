@@ -48,6 +48,10 @@ main { display: block; }
 .action-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .article { display: grid; gap: var(--gn-space-m); max-width: 44rem; }
 .article img { border-radius: var(--gn-radius); }
+.event-facts { display: flex; flex-wrap: wrap; gap: var(--gn-space-s) var(--gn-space-l); margin: 0; padding: var(--gn-space-m); background: var(--gn-surface); border-radius: var(--gn-radius); box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); }
+.event-facts dt { font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.event-facts dd { margin: 0; font-weight: 650; }
+.event-facts dd::first-letter { text-transform: uppercase; }
 .help-list { display: grid; gap: var(--gn-space-m); }
 .site-footer { background: var(--gn-sand); color: var(--gn-ink); padding-block: var(--gn-space-xl) var(--gn-space-l); margin-top: var(--gn-space-xl); }
 .site-footer__brand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gn-space-m) var(--gn-space-l); padding-bottom: var(--gn-space-l); margin-bottom: var(--gn-space-l); border-bottom: 1px solid var(--gn-line); }

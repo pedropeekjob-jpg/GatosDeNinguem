@@ -18,6 +18,7 @@ The GitHub Pages demo keeps working as before; it is separate.
 3. Render asks for the values it cannot make up:
    - `ADMIN_TOKEN`: the back office password, at least 16 characters.
    - `RESEND_API_KEY` and `LOGIN_EMAIL_FROM`: optional. Leave them empty and sign-in codes only show in the API's **Logs**.
+   - `META_PAGE_ID`, `META_IG_USER_ID`, `META_PAGE_TOKEN`: optional, for event promotion on Facebook and Instagram. Leave them empty unless you want this test environment to publish on the real accounts (see [promocao-eventos.md](promocao-eventos.md)).
 4. **Apply**. The first deploy takes about 10 minutes; the site waits for the API to be up before it builds.
 5. Check each service's address on its page in Render. If one differs from the table above (Render adds a suffix when a name is taken), change the addresses in `render.yaml` and merge.
 

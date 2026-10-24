@@ -61,6 +61,18 @@ model NewsletterSignup {
   subscribedAt DateTime
 }
 
+// Social posts, stories and the newsletter email sent a week before each event.
+model Promotion {
+  id            String   @id
+  postId        String   @unique
+  status        String
+  scheduledFor  DateTime
+  eventStartsAt DateTime
+  data          Json
+
+  @@index([status, scheduledFor])
+}
+
 model Shift {
   id       String   @id
   type     String

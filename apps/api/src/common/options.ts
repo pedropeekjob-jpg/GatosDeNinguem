@@ -1,4 +1,4 @@
-import type { Account, CareAlert, Contact } from "@gn/domain";
+import type { Account, CareAlert, Contact, PromotionChannel } from "@gn/domain";
 import type { ContentRepository } from "../content/repository";
 import type { PhotoStore } from "../media/photo-store";
 import type { PatinhasRepository } from "../patinhas/repository";
@@ -11,6 +11,12 @@ export type ApiOptions = {
   sendLoginCode?: (to: Contact, code: string) => Promise<void>;
   /** Tells volunteers about a help request or its resolution (SMS, email, push…). Each person's mutes are already applied. */
   notifyVolunteers?: (to: Account[], alert: CareAlert) => Promise<void>;
+  /** Publishes event promotions, one function per channel that is set up (Meta Graph API, Resend…). */
+  promotionPublishers?: Partial<Record<PromotionChannel, PromotionPublisher>>;
+  /** Public address of the site, used in links in promotions and emails (default: https://gatosdeninguem.pt). */
+  siteUrl?: string;
+  /** Signs newsletter unsubscribe links (default: the admin token). */
+  unsubscribeSecret?: string;
   /** Demo only: returns the sign-in code in the response so it can be shown on screen. */
   exposeLoginCodes?: boolean;
   /** Bearer token for back office writes. Replaced by per-user login in a later phase. */
@@ -28,5 +34,17 @@ export type ApiOptions = {
   /** Public address of this API, used in uploaded photo URLs (default: from the request). */
   publicUrl?: string;
 };
+
+/** What a channel receives to publish. Photo and links are absolute addresses. */
+export type PromotionMessage = {
+  text: string;
+  imageUrl?: string;
+  link: string;
+  emailSubject: string;
+  emailBody: string;
+  /** Email only: who gets it, each with their own unsubscribe link. */
+  recipients: { email: string; unsubscribeUrl: string }[];
+};
+export type PromotionPublisher = (message: PromotionMessage) => Promise<{ externalId?: string; detail?: string }>;
 
 export const API_OPTIONS = Symbol("ApiOptions");
