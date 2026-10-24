@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/doar", "/ajudar/voluntariado", "/ajudar/amigo", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/doar", "/ajudar/voluntariado", "/ajudar/amigo", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -438,6 +438,31 @@ test("adotar: filter chips narrow the list, and the heart on a photo saves the c
   await expect(list.getByRole("link", { name: "Carvão" })).toBeVisible();
   await list.getByRole("button", { name: "Guardar Tobias" }).click();
   await expect(list.getByRole("button", { name: "Tobias está nos favoritos" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("adotar: a cat's page shows all its photos, what it goes home with, and other cats, never a dead end", async ({ page }) => {
+  await page.goto("/adotar/tobias");
+  const gallery = page.getByRole("region", { name: "Fotografias do Tobias" });
+  await expect(gallery.getByText("1 / 2")).toBeVisible();
+  await gallery.getByRole("button", { name: "Fotografia seguinte" }).click();
+  await expect(gallery.getByText("2 / 2")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Vai para casa com" })).toBeVisible();
+  const others = page.getByRole("region", { name: "Também procuram família" }).or(page.locator("section", { has: page.getByRole("heading", { name: "Também procuram família" }) }));
+  await expect(others.getByRole("heading", { level: 3 })).toHaveCount(3);
+  await page.getByRole("link", { name: "Perguntas sobre adotar" }).click();
+  await expect(page).toHaveURL(/\/adotar\/perguntas\/?$/);
+  await page.getByText("Moro num apartamento. Posso adotar?").click();
+  await expect(page.getByText(/redes nas janelas/)).toBeVisible();
+  const jsonLd = await page.locator('script[type="application/ld+json"]').allTextContents();
+  expect(jsonLd.join()).toContain('"FAQPage"');
+});
+
+test("adotar: 'Com crianças' shows only cats known to be good with children", async ({ page }) => {
+  await page.goto("/adotar");
+  const list = page.locator(".cat-filter__list");
+  await page.getByRole("button", { name: /^Com crianças/ }).click();
+  await expect(list.getByRole("link", { name: "Tobias" })).toBeVisible();
+  await expect(list.getByRole("link", { name: "Carvão" })).toBeHidden();
 });
 
 test("home: the cats looking for a home are one swipe away, with a link to all of them", async ({ page }) => {
