@@ -1,18 +1,17 @@
 /**
  * The association's public details, used in the footer and the legal pages.
- * Sources: NIF from the commercial registry (Iberinform), email from the
- * CIM Alto Minho list of animal associations. The gatil's exact street is not
- * public yet: until the association confirms it, we show the parish only.
+ * NIF from the commercial registry (Iberinform); gatil address and email
+ * given by the association on 2026-10-24.
  */
 export const association = {
   name: "Associação Gatos de Ninguém",
   nif: "513283307",
-  email: "gatos.de.ninguem@hotmail.com",
+  email: "gatosdeninguemvc@gmail.com",
   gatil: {
     label: "Gatil Gatos de Ninguém",
-    lines: ["Santa Marta de Portuzelo", "Viana do Castelo"],
+    lines: ["Rua dos Lentos, 6", "4925-070 Santa Marta de Portuzelo", "Viana do Castelo"],
     visits: "Visitas só com marcação",
-    mapUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Santa Marta de Portuzelo, Viana do Castelo"),
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Rua dos Lentos 6, 4925-070 Santa Marta de Portuzelo, Viana do Castelo"),
   },
 } as const;
 

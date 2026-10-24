@@ -27,7 +27,7 @@ export function Footer() {
           <div className="gn-stack gn-stack--s">
             <h2 className="site-footer__title">Onde estamos</h2>
             <address className="site-footer__address">
-              <span>{gatil.label}, {gatil.lines.join(", ")}.</span>
+              <span>{gatil.lines.join(", ")}.</span>
               <span className="site-footer__small">{gatil.visits}.</span>
               <span className="site-footer__inline">
                 <a href={gatil.mapUrl} rel="noopener" target="_blank">Ver no mapa<span className="gn-sr-only"> (abre o Google Maps)</span></a>
