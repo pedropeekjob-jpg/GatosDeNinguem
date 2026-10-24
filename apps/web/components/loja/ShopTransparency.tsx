@@ -18,7 +18,7 @@ export function ShopTransparency({ summary }: { summary: Summary }) {
           <ul className="spending">
             {summary.spending.map((s) => (
               <li key={s.id}>
-                <span><span className="spending__date">{day(s.date)}</span> {s.description}</span>
+                <span><time className="spending__date" dateTime={s.date}>{day(s.date)}</time> {s.description}</span>
                 <strong>{euros(s.amountCents)}</strong>
               </li>
             ))}

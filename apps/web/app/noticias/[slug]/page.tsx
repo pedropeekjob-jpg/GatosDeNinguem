@@ -5,7 +5,7 @@ import { Badge, Button, Container, ShareBar } from "@gn/ui";
 import { JsonLd } from "@/components/JsonLd";
 import { PageHero } from "@/components/PageHero";
 import { getPost, getSeoSettings, listPosts } from "@/lib/content";
-import { formatDate } from "@/lib/format";
+import { When } from "@/components/When";
 import { buildMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -55,7 +55,7 @@ export default async function PostPage({ params }: Props) {
       <PageHero heading={post.title} crumbs={[{ href: "/", label: "Início" }, { href: "/noticias", label: "Notícias" }, { label: post.title }]}>
         <div className="action-row">
           <Badge tone={post.category === "urgente" ? "error" : "info"}>{postCategoryLabel[post.category]}</Badge>
-          <span className="muted">Publicado a <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time></span>
+          <span className="muted">Publicado a <When iso={post.publishedAt} /></span>
         </div>
       </PageHero>
       <Container>

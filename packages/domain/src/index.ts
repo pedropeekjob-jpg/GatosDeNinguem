@@ -1,5 +1,6 @@
 export * from "./seo-fields";
 export * from "./content";
+export * from "./adocao";
 export * from "./seed";
 export * from "./matching";
 export * from "./help";
@@ -12,3 +13,6 @@ export * from "./voluntario";
 export * from "./loja";
 export * from "./seed-loja";
 export * from "./promocao";
+export * from "./padrinhos";
+export * from "./datas";
+export * from "./legal";

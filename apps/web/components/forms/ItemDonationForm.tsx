@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { itemConditionLabel, itemHandoverLabel, type ItemDonation } from "@gn/domain";
 import { Button, Checkbox, ChoiceList, Notice, NextStep, TextArea, TextField } from "@gn/ui";
 import { submitForm } from "@/lib/submit";
+import { PrivacyHint } from "@/components/forms/PrivacyHint";
 
 /** "Quero doar artigos para a loja": what, in what state, how it gets to us, and a contact. */
 export function ItemDonationForm() {
@@ -47,7 +48,7 @@ export function ItemDonationForm() {
         <label htmlFor="doar-website_url">Não preencher</label>
         <input id="doar-website_url" tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
       </div>
-      <Checkbox id="doar-consentimento" label="Aceito que a associação me contacte sobre esta oferta" hint="Usamos os seus dados apenas para isto." checked={consent} onChange={setConsent} />
+      <Checkbox id="doar-consentimento" label="Aceito que a associação me contacte sobre esta oferta" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
       <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Enviar oferta"}</Button>
     </form>

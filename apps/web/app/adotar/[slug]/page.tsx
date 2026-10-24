@@ -1,13 +1,17 @@
 import { notFound } from "next/navigation";
-import { ageLabel, statusLabel } from "@gn/domain";
+import { adoptionSteps, ageLabel, goesHomeWith, similarCats, statusLabel } from "@gn/domain";
 import { breadcrumbJsonLd } from "@gn/seo";
-import { Badge, Container, Notice, ShareBar } from "@gn/ui";
+import { Badge, Button, Carousel, Container, Grid, Notice, Section, ShareBar } from "@gn/ui";
+import { AdoptionSteps } from "@/components/AdoptionSteps";
+import { CatCard } from "@/components/CatCard";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
 import { FormModal } from "@/components/client/FormModal";
 import { AdoptionInterestForm } from "@/components/forms/AdoptionInterestForm";
 import { SponsorForm } from "@/components/forms/SponsorForm";
 import { JsonLd } from "@/components/JsonLd";
 import { PageHero } from "@/components/PageHero";
+import { TimeAgo } from "@/components/client/TimeAgo";
+import { When } from "@/components/When";
 import { getCat, getSeoSettings, listCats } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
@@ -31,10 +35,12 @@ const yesNo = (v: boolean | undefined) => (v === undefined ? "Ainda não sabemos
 export default async function CatPage({ params }: Props) {
   const cat = await getCat((await params).slug);
   if (!cat) notFound();
-  const settings = await getSeoSettings();
+  const [settings, available] = await Promise.all([getSeoSettings(), listCats("para-adocao").catch(() => [])]);
+  const others = similarCats(cat, available);
   const url = `${settings.siteUrl}/adotar/${cat.slug}`;
   const photo = cat.photos[0]!;
   const pronoun = cat.sex === "femea" ? "a" : "o";
+  const renderedAt = new Date().toISOString();
 
   return (
     <>
@@ -46,7 +52,13 @@ export default async function CatPage({ params }: Props) {
       </PageHero>
       <Container>
         <div className="cat-profile">
-          <img className="cat-profile__photo" src={photo.url} alt={photo.alt} width={800} height={600} />
+          {cat.photos.length > 1 ? (
+            <div className="cat-profile__gallery">
+              <Carousel slides={cat.photos.map((p) => ({ src: p.url, alt: p.alt }))} label={`Fotografias d${pronoun} ${cat.name}`} />
+            </div>
+          ) : (
+            <img className="cat-profile__photo" src={photo.url} alt={photo.alt} width={800} height={600} />
+          )}
           <div className="gn-stack gn-stack--m">
             <p className="gn-lead">{cat.summary}</p>
             {cat.status === "para-adocao" ? (
@@ -71,6 +83,9 @@ export default async function CatPage({ params }: Props) {
             <dl className="facts">
               <div><dt>Idade</dt><dd>{ageLabel(cat.ageYears)}</dd></div>
               <div><dt>Sexo</dt><dd>{cat.sex === "femea" ? "Fêmea" : "Macho"}</dd></div>
+              {cat.arrivedAt ? <div><dt>No gatil desde</dt><dd><When iso={cat.arrivedAt} format="month" />{cat.status !== "adotado" ? <> (<TimeAgo iso={cat.arrivedAt} renderedAt={renderedAt} />)</> : null}</dd></div> : null}
+              {cat.listedAt && cat.status !== "adotado" ? <div><dt>Para adoção desde</dt><dd><When iso={cat.listedAt} /></dd></div> : null}
+              {cat.status === "adotado" && cat.adoptedAt ? <div><dt>Adotad{pronoun} a</dt><dd><When iso={cat.adoptedAt} /></dd></div> : null}
               <div><dt>Feitio</dt><dd>{cat.traits.join(", ") || "A conhecer"}</dd></div>
               <div><dt>Dá-se bem com crianças</dt><dd>{yesNo(cat.goodWithKids)}</dd></div>
               <div><dt>Dá-se bem com gatos</dt><dd>{yesNo(cat.goodWithCats)}</dd></div>
@@ -82,6 +97,24 @@ export default async function CatPage({ params }: Props) {
             {cat.specialNeeds ? <Notice tone="warning" title="Cuidados especiais">{cat.specialNeeds}. A associação explica tudo e ajuda nos primeiros tempos.</Notice> : null}
             <h2>A história d{pronoun} {cat.name}</h2>
             <p>{cat.story}</p>
+            {cat.status !== "adotado" ? (
+              <>
+                <div className="goes-home">
+                  <h2>Vai para casa com</h2>
+                  <ul className="goes-home__list">
+                    {goesHomeWith(cat).map((item) => (
+                      <li key={item.label} className={item.done ? "is-done" : "is-missing"}>
+                        <span className="goes-home__mark" aria-hidden="true">{item.done ? "✓" : "·"}</span>
+                        <span>{item.label}{item.done ? "" : <span className="goes-home__note">: ainda não, falamos consigo sobre isto</span>}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <h2>Como funciona a adoção</h2>
+                <AdoptionSteps steps={adoptionSteps} />
+                <p><a href="/adotar/perguntas">Perguntas sobre adotar</a>: apartamento, crianças, outros animais, custos.</p>
+              </>
+            ) : null}
             {cat.status !== "adotado" ? (
               <Notice tone="info" title={`Não pode adotar? Pode apadrinhar ${pronoun} ${cat.name}`}>
                 <p>A partir de 5 euros por mês ajuda a pagar a comida e o veterinário, e recebe notícias.</p>
@@ -98,10 +131,17 @@ export default async function CatPage({ params }: Props) {
                 </div>
               </Notice>
             ) : null}
+            <p className="small muted">Ficha atualizada a <When iso={cat.updatedAt} />.</p>
             <ShareBar url={url} text={cat.status === "adotado" ? `${cat.name} encontrou família!` : `Conheça ${pronoun} ${cat.name}, procura família em Viana do Castelo`} label={`Partilhar ${pronoun} ${cat.name}`} />
           </div>
         </div>
       </Container>
+      {others.length > 0 ? (
+        <Section heading="Também procuram família" intro={cat.status === "adotado" ? `${cat.name} já tem casa. Estes gatos ainda esperam.` : undefined}>
+          <Grid>{others.map((c) => <CatCard key={c.id} cat={c} />)}</Grid>
+          <div className="action-row"><Button href="/adotar" variant="secondary">Ver todos os gatos</Button></div>
+        </Section>
+      ) : null}
       <JsonLd data={[breadcrumbJsonLd(settings, [{ name: "Início", path: "/" }, { name: "Adotar", path: "/adotar" }, { name: cat.name, path: `/adotar/${cat.slug}` }]), ...(cat.seo.jsonLd ?? [])]} />
     </>
   );

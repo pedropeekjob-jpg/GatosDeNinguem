@@ -5,7 +5,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import { seedAppointments, seedCareAlerts, seedCatCare, seedMedications, seedVisitNotes } from "@gn/domain";
-import { seedCats, seedFosterPlacements, seedImpact, seedShifts, seedSponsorships, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings } from "@gn/domain";
+import { seedCats, seedFosterPlacements, seedImpact, seedShifts, seedSponsorLetters, seedSponsorships, seedPages, seedPartners, seedPosts, seedRedirects, seedSeoSettings } from "@gn/domain";
 import { seedBadges, seedChallenges } from "@gn/domain";
 import { seedItemDonations, seedProducts, seedShopOrders, seedShopSettings, seedShopSpending } from "@gn/domain";
 import { PrismaContentRepository } from "./content/prisma.repository";
@@ -23,6 +23,7 @@ export async function seedDatabase(db: PrismaClient) {
   await repo.saveShifts(seedShifts);
   for (const p of seedFosterPlacements) await repo.saveFosterPlacement(p);
   for (const sp of seedSponsorships) await repo.saveSponsorship(sp);
+  for (const l of seedSponsorLetters) await repo.saveSponsorLetter(l);
   // Patinhas: example badges and monthly challenges. Points rules use the defaults until edited.
   const patinhas = new PrismaPatinhasRepository(db);
   for (const b of seedBadges) await patinhas.saveBadge(b);

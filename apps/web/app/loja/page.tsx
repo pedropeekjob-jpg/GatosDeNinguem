@@ -1,4 +1,4 @@
-import { acceptedDonations, productCategoryLabel, stockOf, type ProductCategory } from "@gn/domain";
+import { acceptedDonations, productCategoryLabel, stockOf, WITHDRAWAL_DAYS, type ProductCategory } from "@gn/domain";
 import { Container, Grid, Section } from "@gn/ui";
 import { CatFilter } from "@/components/client/CatFilter";
 import { FormModal } from "@/components/client/FormModal";
@@ -47,6 +47,7 @@ export default async function ShopPage() {
           <li><span><strong>Pague</strong> por MB WAY, transferência ou quando levantar. Dizemos-lhe como no fim do pedido.</span></li>
           <li><span><strong>Levante</strong> no gatil ou numa banca da associação, ou receba pelo correio.</span></li>
         </ol>
+        <p className="small">Tem {WITHDRAWAL_DAYS} dias para desistir depois de receber. Leia as <a href="/loja/condicoes">condições da loja</a>.</p>
       </Section>
 
       <Section id="para-onde-vai" heading="Para onde vai o dinheiro" intro="Mostramos o que cada artigo custou a fazer e em que gastamos o que a loja rende.">

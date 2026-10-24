@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fosterApplicationStatusLabel, fosterCanHostLabel, fosterHowLongLabel, freeSpots, shiftTypeLabel, type ShiftType } from "@gn/domain";
-import { AnimatedLogo, Badge, Button, Checkbox, ChoiceList, Notice, TextField } from "@gn/ui";
+import { debitStatusLabel, debitStatusTone, fosterApplicationStatusLabel, fosterCanHostLabel, fosterHowLongLabel, freeSpots, shiftTypeLabel, type ShiftType } from "@gn/domain";
+import { AnimatedLogo, Badge, Button, Checkbox, ChoiceList, Notice, TextArea, TextField } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
+import { AuthorField, useAuthor } from "../lib/equipa";
+import { preparePhoto } from "../lib/photos";
 import { addDays, dayLabel, lisbonDate, lisbonToUtc, timeLabel, weekRange, weekStart } from "../lib/dates";
 import type { Shift, Sponsorship, StoredFosterApplication } from "../lib/types";
 
@@ -275,15 +277,18 @@ function Sponsors() {
     mutationFn: ({ needsUpdate: _n, pending: _p, ...s }: Sponsorship & { needsUpdate: boolean }) => api.saveSponsorship({ ...s, active: true, startDate: lisbonDate(new Date().toISOString()) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sponsors"] }),
   });
-  const asked = list.data?.filter((s) => s.pending) ?? [];
+  // Requests waiting for the godparent to finish the debit on the bank page need nothing from the team yet.
+  const asked = list.data?.filter((s) => s.pending && s.debit?.status !== "a-configurar") ?? [];
+  const waitingDebit = list.data?.filter((s) => s.pending && s.debit?.status === "a-configurar") ?? [];
   const due = list.data?.filter((s) => s.needsUpdate) ?? [];
-  const euros = (n: number) => n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
+  const failed = list.data?.filter((s) => s.active && s.debit?.status === "falhou") ?? [];
+  const sponsoredCats = [...new Set(list.data?.filter((s) => s.active).map((s) => s.catSlug) ?? [])];
   return (
     <div className="gn-stack gn-stack--m">
       {asked.length > 0 ? (
         <section className="gn-stack gn-stack--s" aria-labelledby="pedidos-padrinhos">
           <h2 id="pedidos-padrinhos">{asked.length === 1 ? "1 pedido novo de apadrinhamento" : `${asked.length} pedidos novos de apadrinhamento`}</h2>
-          <p className="small muted">Pedidos feitos no site. Contacte a pessoa para combinar a contribuição e confirme quando estiver tudo certo.</p>
+          <p className="small muted">Pedidos feitos no site para pagar por transferência ou MB WAY. Contacte a pessoa para combinar a contribuição e confirme quando estiver tudo certo. Quem escolhe débito direto fica ativo sozinho.</p>
           <ul className="gn-stack gn-stack--s">
             {asked.map((s) => (
               <li key={s.id} className="gn-card"><div className="gn-card__body gn-stack gn-stack--s">
@@ -299,22 +304,78 @@ function Sponsors() {
           {confirm.error ? <Notice tone="error" title="Não foi confirmado">{errorMessage(confirm.error)}</Notice> : null}
         </section>
       ) : null}
-      {due.length > 0 ? <Notice tone="warning" title={`${due.length} ${due.length === 1 ? "padrinho espera" : "padrinhos esperam"} notícias`}>Envie uma fotografia ou novidade do gato este mês.</Notice> : null}
+      {failed.length > 0 ? (
+        <Notice tone="warning" title={failed.length === 1 ? "1 débito falhou" : `${failed.length} débitos falharam`}>
+          O banco volta a tentar. Se continuar, ligue à pessoa: {failed.map((s) => `${s.sponsorName} (${s.catSlug})`).join(", ")}.
+        </Notice>
+      ) : null}
+      {due.length > 0 ? <Notice tone="warning" title={`${due.length} ${due.length === 1 ? "padrinho espera" : "padrinhos esperam"} notícias`}>Escreva uma novidade, com fotografia, abaixo. Chega a todos os padrinhos do gato.</Notice> : null}
       <div className="table-wrap">
         <table className="table">
-          <thead><tr><th scope="col">Padrinho</th><th scope="col">Gato</th><th scope="col">Por mês</th><th scope="col">Últimas notícias</th></tr></thead>
+          <thead><tr><th scope="col">Padrinho</th><th scope="col">Gato</th><th scope="col">Por mês</th><th scope="col">Pagamento</th><th scope="col">Últimas notícias</th></tr></thead>
           <tbody>
-            {list.data?.filter((s) => !s.pending).map((s) => (
+            {list.data?.filter((s) => !s.pending || s.debit?.status === "a-configurar").map((s) => (
               <tr key={s.id}>
                 <td>{s.sponsorName}{s.email ? <><br /><span className="small muted">{s.email}</span></> : null}</td>
                 <td>{s.catSlug}</td>
                 <td>{euros(s.monthlyAmount)}</td>
-                <td>{s.needsUpdate ? <Badge tone="warning">Enviar notícias</Badge> : s.lastUpdateSentAt}</td>
+                <td>
+                  {s.debit ? <Badge tone={debitStatusTone[s.debit.status]}>{debitStatusLabel[s.debit.status]}</Badge> : s.active ? "Transferência ou MB WAY" : "Terminado"}
+                  {s.debit && s.debit.paidCents > 0 ? <><br /><span className="small muted">{euros(s.debit.paidCents / 100)} recebidos</span></> : null}
+                </td>
+                <td>{!s.active ? "—" : s.needsUpdate ? <Badge tone="warning">Enviar notícias</Badge> : s.lastUpdateSentAt}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {waitingDebit.length > 0 ? <p className="small muted">{waitingDebit.length === 1 ? "1 pessoa ainda não terminou" : `${waitingDebit.length} pessoas ainda não terminaram`} o débito na página do banco. Ficam ativas sozinhas quando terminarem.</p> : null}
+      {sponsoredCats.length > 0 ? <WriteLetter cats={sponsoredCats} due={new Set(due.map((s) => s.catSlug))} /> : null}
     </div>
+  );
+}
+
+const euros = (n: number) => n.toLocaleString("pt-PT", { style: "currency", currency: "EUR" });
+
+/** "Escrever novidade": a short letter, with a photo if there is one, to every godparent of a cat. */
+function WriteLetter({ cats, due }: { cats: string[]; due: Set<string> }) {
+  const api = useApi();
+  const qc = useQueryClient();
+  const [author] = useAuthor();
+  const [catSlug, setCatSlug] = useState(cats.find((c) => due.has(c)) ?? cats[0]!);
+  const [text, setText] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string>();
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>();
+  const send = useMutation({
+    mutationFn: () => api.sendSponsorLetter({ catSlug, text, ...(photoUrl ? { photoUrl } : {}), by: author! }),
+    onSuccess: () => { setText(""); setPhotoUrl(undefined); void qc.invalidateQueries({ queryKey: ["sponsors"] }); },
+  });
+  async function upload(file: File | undefined) {
+    if (!file) return;
+    setUploading(true);
+    setUploadError(undefined);
+    try { setPhotoUrl((await api.uploadPhoto(await preparePhoto(file))).url); } catch (e) { setUploadError(errorMessage(e)); } finally { setUploading(false); }
+  }
+  return (
+    <section className="gn-stack gn-stack--s" aria-labelledby="escrever-novidade">
+      <h2 id="escrever-novidade">Escrever novidade aos padrinhos</h2>
+      <p className="small muted">Aparece na área pessoal de cada padrinho do gato e segue por email a quem o pediu. Mudanças de sítio, consultas e medicação já lhes chegam sozinhas.</p>
+      <form className="gn-stack gn-stack--s" onSubmit={(e) => { e.preventDefault(); send.mutate(); }}>
+        <ChoiceList name="carta-gato" legend="Gato" value={catSlug} onChange={setCatSlug} options={cats.map((c) => ({ value: c, label: due.has(c) ? `${c} (espera notícias)` : c }))} />
+        <TextArea id="carta-texto" label="Novidade" hint="Duas ou três frases chegam: como está, o que fez, uma coisa de que gosta." value={text} onChange={(e) => setText(e.target.value)} />
+        <label className="gn-field__label" htmlFor="carta-foto">Fotografia (opcional)</label>
+        <input id="carta-foto" type="file" accept="image/*" onChange={(e) => void upload(e.target.files?.[0])} />
+        {uploading ? <p className="small" role="status">A carregar a fotografia…</p> : null}
+        {uploadError ? <p className="gn-field__error">{uploadError}</p> : null}
+        {photoUrl ? <p className="small">Fotografia pronta. <Button variant="quiet" onClick={() => setPhotoUrl(undefined)}>Tirar</Button></p> : null}
+        <AuthorField id="carta-autor" />
+        <div className="action-row">
+          <Button type="submit" disabled={send.isPending || uploading || !author || text.trim().length < 10}>{send.isPending ? "A enviar…" : "Enviar aos padrinhos"}</Button>
+        </div>
+      </form>
+      {send.data ? <Notice tone="success" title="Enviada">Chegou a {send.data.sponsors === 1 ? "1 padrinho" : `${send.data.sponsors} padrinhos`} (por email a {send.data.emailed}).</Notice> : null}
+      {send.error ? <Notice tone="error" title="Não foi enviada">{errorMessage(send.error)}</Notice> : null}
+    </section>
   );
 }
