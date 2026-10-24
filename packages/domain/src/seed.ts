@@ -213,7 +213,7 @@ export const seedImpact: Impact = {
   adoptionsThisYear: 37,
   sterilizationsThisYear: 212,
   volunteers: 25,
-  campaign: { title: "Esterilizações de outubro na Meadela", current: 18, goal: 30, unit: "gatos", href: "/ajudar/doar" },
+  campaign: { title: "Esterilizações de outubro na Meadela", current: 18, goal: 30, unit: "gatos", href: "/doar" },
   updatedAt: now,
 };
 
@@ -250,7 +250,7 @@ export const seedPosts: Post[] = [
     summary: "Graças aos vossos donativos, esterilizámos 18 gatos da colónia da Meadela este mês. Faltam 12 para a meta.",
     body: "A esterilização é a forma mais eficaz de controlar as colónias de rua. Cada esterilização custa cerca de 35 euros. Ajude-nos a chegar aos 30.",
     publishedAt: "2026-10-08T09:00:00.000Z",
-    cta: { label: "Doar para a campanha", href: "/ajudar/doar" },
+    cta: { label: "Doar para a campanha", href: "/doar" },
     seo: {},
     updatedAt: now,
   },
@@ -326,6 +326,14 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
     heading: "Como posso ajudar?",
     intro: "Escolha a forma que lhe for mais fácil. Todas fazem diferença.",
     seo: {},
+    updatedAt: now,
+  },
+  {
+    id: "page-doar",
+    path: "/doar",
+    heading: "Fazer um donativo",
+    intro: "Os donativos pagam a comida, as vacinas, as esterilizações e o veterinário dos gatos do gatil. Qualquer valor ajuda.",
+    seo: { title: "Fazer um donativo aos Gatos de Ninguém, Viana do Castelo" },
     updatedAt: now,
   },
   {

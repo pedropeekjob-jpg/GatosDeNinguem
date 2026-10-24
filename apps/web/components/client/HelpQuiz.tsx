@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { recommendHelp, type HelpAnswers } from "@gn/domain";
 import { Button, Card, ChoiceList, Grid, NextStep, StepWizard } from "@gn/ui";
 import { contaClient, readSignedIn } from "@/lib/conta";
+import { features } from "@/lib/features";
 
 /** Finishing the quiz counts once for Patinhas when signed in; otherwise a gentle invitation. */
 function QuizPatinhas() {
@@ -12,7 +13,7 @@ function QuizPatinhas() {
     void contaClient().finishQuiz().then((r) => setResult(r.counted ? "ganhou" : null));
   }, []);
   if (result === "ganhou") return <p className="small" role="status">Ganhou 10 Patinhas por fazer o questionário.</p>;
-  if (result === "convite") return <p className="small muted">Sabia que cada ajuda dá Patinhas, que pode trocar nos parceiros? <a href="/patinhas">Saiba como</a>.</p>;
+  if (result === "convite") return <p className="small muted">Sabia que cada ajuda dá Patinhas{features.trocas ? ", que pode trocar nos parceiros" : ""}? <a href="/patinhas">Saiba como</a>.</p>;
   return null;
 }
 
@@ -50,7 +51,7 @@ export function HelpQuiz() {
   const [answers, setAnswers] = useState<Partial<HelpAnswers>>({});
 
   if (step >= questions.length) {
-    const { main, alternatives } = recommendHelp(answers as HelpAnswers);
+    const { main, alternatives } = recommendHelp(answers as HelpAnswers, { amigo: features.amigo });
     return (
       <div className="gn-stack gn-stack--m">
         <NextStep
@@ -63,7 +64,7 @@ export function HelpQuiz() {
           }
         >
           <p>{main.description}</p>
-          <QuizPatinhas />
+          {features.patinhas ? <QuizPatinhas /> : null}
         </NextStep>
         {alternatives.length > 0 ? (
           <>

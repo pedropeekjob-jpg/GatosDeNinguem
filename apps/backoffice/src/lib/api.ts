@@ -1,5 +1,7 @@
 import { createContext, useContext } from "react";
 import { alertasHttp, type AlertasApi } from "./alertasApi";
+import { useQuery } from "@tanstack/react-query";
+import { noFeatures, type FeatureFlags } from "@gn/domain";
 import { cuidadosHttp, type CuidadosApi } from "./cuidadosApi";
 import { lojaHttp, type LojaApi } from "./lojaApi";
 import { patinhasHttp, type PatinhasApi } from "./patinhasApi";
@@ -14,6 +16,8 @@ export type PromotionChannelInfo = { channel: PromotionChannel; label: string; r
 
 /** Everything the back office can ask the API. Tests pass a fake implementation. */
 export interface Api extends PatinhasApi, CuidadosApi, LojaApi, AlertasApi {
+  /** Optional parts switched on in the API (FEATURES setting). */
+  features(): Promise<FeatureFlags>;
   shifts(range: { from: string; to: string }): Promise<Shift[]>;
   createShift(input: ShiftInput): Promise<Shift>;
   createWeekly(rule: WeeklyRule): Promise<{ created: number }>;
@@ -120,6 +124,7 @@ export function httpApi(baseUrl: string, token: string): Api {
     redirects: () => call("GET", "/seo/redirects"),
     addRedirect: (r) => call("POST", "/seo/redirects", r),
     deleteRedirect: (id) => call("DELETE", `/seo/redirects/${id}`),
+    features: () => call("GET", "/features"),
     ...patinhasHttp(call),
     ...cuidadosHttp(call),
     ...lojaHttp(call),
@@ -139,4 +144,11 @@ export function errorMessage(err: unknown): string {
   // fetch reports a lost connection as a TypeError; other errors carry a message written for people.
   if (err instanceof Error && !(err instanceof TypeError)) return err.message;
   return "Não foi possível falar com o servidor. Verifique a ligação.";
+}
+
+/** What is switched on. Everything counts as off until the API answers, so nothing appears and then vanishes. */
+export function useFeatures(): { features: FeatureFlags; loaded: boolean } {
+  const api = useApi();
+  const q = useQuery({ queryKey: ["features"], queryFn: () => api.features(), staleTime: Infinity });
+  return { features: q.data ?? noFeatures, loaded: q.isSuccess };
 }

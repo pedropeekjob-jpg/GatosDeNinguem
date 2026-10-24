@@ -4,6 +4,7 @@ import { FormModal } from "@/components/client/FormModal";
 import { PartnerApplicationForm } from "@/components/forms/PartnerApplicationForm";
 import { PageHero } from "@/components/PageHero";
 import { getPage, listPartners } from "@/lib/content";
+import { features } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -12,9 +13,10 @@ export async function generateMetadata() {
 }
 
 const withPatinhas = (perk: Perk) =>
-  perk.patinhasCost ? [{ label: "Com Patinhas", value: [`${perk.patinhasCost} Patinhas`, perk.minLevel ? `a partir do nível ${perk.minLevel}` : null].filter(Boolean).join(", ") }] : [];
+  features.trocas && perk.patinhasCost ? [{ label: "Com Patinhas", value: [`${perk.patinhasCost} Patinhas`, perk.minLevel ? `a partir do nível ${perk.minLevel}` : null].filter(Boolean).join(", ") }] : [];
 
-const audience: Record<Perk["audience"], string> = { amigos: "Para Amigos da associação", voluntarios: "Para voluntários", todos: "Para todos" };
+// While Ser Amigo is not offered, its discounts are described simply as the partner's offer.
+const audience: Record<Perk["audience"], string> = { amigos: features.amigo ? "Para Amigos da associação" : "Vantagem", voluntarios: "Para voluntários", todos: "Para todos" };
 
 export default async function PartnersPage() {
   const [page, partners] = await Promise.all([getPage("/parceiros"), listPartners()]);
@@ -38,7 +40,10 @@ export default async function PartnersPage() {
             </Card>
           ))}
         </Grid>
-        <p className="small muted">Para usar uma vantagem, mostre o seu cartão de Amigo ou diga que vem da parte da Gatos de Ninguém. Também pode trocar <a href="/patinhas">Patinhas</a> por vantagens na <a href="/conta">sua conta</a>.</p>
+        <p className="small muted">
+          Para usar uma vantagem, {features.amigo ? "mostre o seu cartão de Amigo ou " : ""}diga que vem da parte da Gatos de Ninguém.
+          {features.trocas ? <> Também pode trocar <a href="/patinhas">Patinhas</a> por vantagens na <a href="/conta">sua conta</a>.</> : null}
+        </p>
       </Section>
       <section id="seja-parceiro" className="gn-section gn-section--soft">
         <Container narrow>

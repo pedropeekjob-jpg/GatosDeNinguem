@@ -1,7 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { parseFeatures } from "@gn/domain";
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/doar", "/ajudar/voluntariado", "/ajudar/amigo", "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies"];
+// The same FEATURES setting the site was built with. CI runs the journeys twice: all off, and all on.
+const features = parseFeatures(process.env.FEATURES);
+
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/doar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/voluntariado", ...(features.amigo ? ["/ajudar/amigo"] : []), "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -25,9 +29,11 @@ test.describe("every page", () => {
 
 test("main navigation is always visible (no hidden menu)", async ({ page }) => {
   await page.goto("/");
-  for (const name of ["Início", "Adotar", "Ajudar", "Notícias", "Sobre nós"]) {
+  for (const name of ["Início", "Adotar", "Doar", "Ajudar", "Notícias"]) {
     await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name })).toBeVisible();
   }
+  // Phones keep five tabs; "Sobre nós" is in the top menu on wide screens and always in the footer.
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Sobre nós" })).toBeVisible();
   // "Encontrei um gato" left the header but is still one tap away in the footer.
   await expect(page.getByRole("banner").getByRole("link", { name: "Encontrei um gato" })).toHaveCount(0);
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "Encontrei um gato" })).toBeVisible();
@@ -127,9 +133,9 @@ test("descobrir: answer questions, see a match with reasons, save a cat", async 
 test("Ajudar: each button opens its own page, and old #links still land there", async ({ page }) => {
   const buttons = [
     ["Apadrinhar", /\/apadrinhar$/, /^Apadrinhar um gato$/],
-    ["Fazer um donativo", /\/ajudar\/doar$/, /^Fazer um donativo$/],
+    ["Fazer um donativo", /\/doar$/, /^Fazer um donativo$/],
     ["Ser voluntário", /\/ajudar\/voluntariado$/, /^Ser voluntário$/],
-    ["Ser Amigo", /\/ajudar\/amigo$/, /^Ser Amigo da associação$/],
+    ...(features.amigo ? [["Ser Amigo", /\/ajudar\/amigo$/, /^Ser Amigo da associação$/] as const] : []),
   ] as const;
   for (const [name, url, heading] of buttons) {
     await page.goto("/ajudar");
@@ -138,7 +144,7 @@ test("Ajudar: each button opens its own page, and old #links still land there", 
     await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
   }
   await page.goto("/ajudar#doar");
-  await expect(page).toHaveURL(/\/ajudar\/doar$/);
+  await expect(page).toHaveURL(/\/doar$/);
   await expect(page.getByText("PT50 0045 1436 4033 0203 2321 6")).toBeVisible();
 });
 
@@ -225,7 +231,7 @@ test("home: opens on the shelter's real photos, with the welcome and main button
   // Nothing to scroll for: the title and the two main buttons are on screen, clear of the phone tab bar.
   await expect(page.getByRole("heading", { level: 1 })).toBeInViewport({ ratio: 1 });
   const tabBarTop = await page.locator(".gn-nav").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
-  for (const name of ["Quero adotar", "Quero ajudar"]) {
+  for (const name of ["Quero adotar", "Quero doar"]) {
     const button = page.locator(".home-actions").getByRole("link", { name });
     await expect(button).toBeInViewport({ ratio: 1 });
     expect((await button.boundingBox())!.y + (await button.boundingBox())!.height).toBeLessThanOrEqual(tabBarTop);
@@ -241,7 +247,7 @@ test("home: opens on the shelter's real photos, with the welcome and main button
 });
 
 test.describe("contas e Patinhas", () => {
-  for (const path of ["/patinhas", "/conta"]) {
+  for (const path of features.patinhas ? ["/patinhas", "/conta"] : ["/conta"]) {
     test(`${path} is accessible and has SEO basics`, async ({ page }) => {
       await page.goto(path);
       await expect(page.locator("h1")).toHaveCount(1);
@@ -254,6 +260,7 @@ test.describe("contas e Patinhas", () => {
   }
 
   test("create an account with just a name and a code, and earn welcome Patinhas", async ({ page }) => {
+    test.skip(!features.patinhas, "Patinhas desligadas");
     await page.goto("/conta");
     await page.getByLabel("Email ou telemóvel").fill("maria@exemplo.pt");
     await page.getByRole("button", { name: "Continuar" }).click();
@@ -274,6 +281,7 @@ test.describe("contas e Patinhas", () => {
   });
 
   test("a helper swaps Patinhas for a partner perk and gets a code", async ({ page }) => {
+    test.skip(!features.trocas, "Trocas desligadas");
     await page.goto("/conta");
     await page.getByLabel("Email ou telemóvel").fill("912 000 001");
     await page.getByRole("button", { name: "Continuar" }).click();
@@ -289,6 +297,7 @@ test.describe("contas e Patinhas", () => {
   });
 
   test("finishing the help quiz while signed in counts once", async ({ page }) => {
+    test.skip(!features.patinhas, "Patinhas desligadas");
     await page.goto("/conta");
     await page.getByLabel("Email ou telemóvel").fill("913000002");
     await page.getByRole("button", { name: "Continuar" }).click();
@@ -400,16 +409,32 @@ test.describe("no gatil: the volunteer's shift", () => {
   });
 });
 
-test("home: Patinhas are explained above the fold, with a link to how they work", async ({ page }) => {
+test("home: adopting and donating come first, and Patinhas (when on) are still explained further down", async ({ page }) => {
+  await page.goto("/");
+  // Order on the page: the cats waiting for a home, then how to donate, then the Patinhas.
+  const selectors = [".cat-rail", ".donate-band", ...(features.patinhas ? [".patinhas-teaser"] : [])];
+  const tops = await page.evaluate((list) => list.map((sel) => document.querySelector(sel)!.getBoundingClientRect().top), selectors);
+  expect(tops).toEqual([...tops].sort((a, b) => a - b));
+  const donate = page.getByRole("region", { name: "Não pode adotar? Pode doar." });
+  await expect(donate.getByRole("link", { name: "Apadrinhar um gato" })).toHaveAttribute("href", "/apadrinhar");
+  await page.getByRole("link", { name: "Outras formas de ajudar" }).click();
+  await expect(page).toHaveURL(/\/ajudar\/?$/);
+  if (!features.patinhas) return;
   await page.goto("/");
   const teaser = page.getByRole("complementary", { name: "Cada ajuda vale Patinhas" });
-  // Whole card in the first screen, clear of the phone tab bar.
-  await expect(teaser).toBeInViewport({ ratio: 1 });
-  const tabBarTop = await page.locator(".gn-nav").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
-  const box = (await teaser.boundingBox())!;
-  expect(box.y + box.height).toBeLessThanOrEqual(tabBarTop);
+  await teaser.scrollIntoViewIfNeeded();
   await teaser.getByRole("link", { name: "Como funcionam as Patinhas" }).click();
   await expect(page).toHaveURL(/\/patinhas\/?$/);
+});
+
+test("donate: from the home page to the bank details, ready to copy", async ({ page }) => {
+  await page.goto("/");
+  await page.locator(".home-actions").getByRole("link", { name: "Quero doar" }).click();
+  await expect(page).toHaveURL(/\/doar\/?$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Fazer um donativo");
+  await expect(page.getByText("PT50 0045 1436 4033 0203 2321 6")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Apadrinhar um gato" })).toBeVisible();
+  await expect(page.locator("header nav").getByRole("link", { name: "Doar", exact: true })).toHaveAttribute("aria-current", "page");
 });
 
 test("menu links change page inside the app, without a reload or a loader flash", async ({ page }) => {
@@ -417,7 +442,7 @@ test("menu links change page inside the app, without a reload or a loader flash"
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await page.evaluate(() => { (window as unknown as { __same: boolean }).__same = true; });
-  for (const name of ["Adotar", "Sobre nós", "Início"]) {
+  for (const name of ["Adotar", "Doar", "Início"]) {
     await page.locator("header nav").getByRole("link", { name, exact: true }).click();
     await expect(page.locator("header nav").getByRole("link", { name, exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.locator("main h1")).toBeVisible();
@@ -515,6 +540,7 @@ test("footer: social networks are logos with their names for screen readers", as
   const footer = page.getByRole("contentinfo");
   await expect(footer.getByRole("link", { name: "Facebook" })).toBeVisible();
   await expect(footer.getByRole("link", { name: "Instagram" })).toBeVisible();
+  await expect(footer.getByRole("link", { name: "TikTok" })).toBeVisible();
   await expect(footer.getByText("Facebook", { exact: true })).toHaveCount(0);
 });
 
@@ -651,6 +677,58 @@ test.describe("avisos de gatos novos", () => {
     await dialog.getByRole("button", { name: "Avisem-me" }).click();
     await expect(dialog.getByText("Falta só confirmar")).toBeVisible();
     const results = await new AxeBuilder({ page }).include("dialog").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+});
+
+test.describe("switched off: Patinhas, swaps and Ser Amigo", () => {
+  test.skip(features.patinhas || features.amigo, "Só quando estão desligadas");
+
+  test("no Patinhas or Ser Amigo anywhere on the public pages", async ({ page, request }) => {
+    await page.goto("/");
+    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.getByText("Cada ajuda vale Patinhas")).toHaveCount(0);
+    expect(await (await request.get("/sitemap.xml")).text()).not.toContain("/patinhas");
+    // Old links to the Patinhas page land on the ways to help.
+    expect((await request.get("/patinhas", { maxRedirects: 0 })).status()).toBe(307);
+    await page.goto("/patinhas");
+    await expect(page).toHaveURL(/\/ajudar\/?$/);
+    await expect(page.getByRole("link", { name: /Ser Amigo/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Ganhar Patinhas/ })).toHaveCount(0);
+    expect((await request.get("/ajudar/amigo", { maxRedirects: 0 })).status()).toBe(307);
+    await page.goto("/parceiros");
+    await expect(page.getByText(/Patinhas|cartão de Amigo/)).toHaveCount(0);
+    await page.goto("/doar");
+    await expect(page.getByRole("link", { name: /Ser Amigo/ })).toHaveCount(0);
+  });
+
+  test("the help quiz never suggests Ser Amigo", async ({ page }) => {
+    await page.goto("/ajudar");
+    const quiz = page.locator("section", { hasText: "Não sabe por onde começar?" });
+    await quiz.getByText("Algumas horas").click();
+    await quiz.getByRole("button", { name: "Continuar" }).click();
+    await quiz.getByText("Um pouco").click();
+    await quiz.getByRole("button", { name: "Continuar" }).click();
+    await quiz.getByText("Não", { exact: true }).click();
+    await quiz.getByRole("button", { name: "Ver sugestão" }).click();
+    await expect(quiz.getByText("A nossa sugestão: Fazer um turno no gatil")).toBeVisible();
+    await expect(quiz.getByText(/Ser Amigo|Patinhas/)).toHaveCount(0);
+  });
+
+  test("an account still works, without points, levels or swaps", async ({ page }) => {
+    await page.goto("/conta");
+    await page.getByLabel("Email ou telemóvel").fill("rita@exemplo.pt");
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await page.getByLabel("O seu nome").fill("Rita Sousa");
+    await page.getByText("Aceito que a associação guarde o meu nome e contacto para a minha conta").click();
+    await page.getByRole("button", { name: "Enviar o código" }).click();
+    const code = (await page.getByText(/Demonstração: o código é/).textContent())!.match(/\d{6}/)![0];
+    await page.getByLabel("Código").fill(code);
+    await page.getByRole("button", { name: "Criar a minha conta" }).click();
+    await expect(page.getByText("Bem-vindo, Rita!")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Olá, Rita!" })).toBeVisible();
+    await expect(page.getByText(/Patinhas|Nível|Medalhas|Trocar/)).toHaveCount(0);
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });

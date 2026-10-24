@@ -4,9 +4,9 @@ import type { ContentRepository } from "./content/repository";
 import type { PhotoStore } from "./media/photo-store";
 import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/repository";
 import { stripeSepaDebit } from "./padrinhos/debit";
-import { metaPublishers, resendNewsletterPublisher } from "./promocao/publishers";
+import { metaPublishers, resendNewsletterPublisher, tiktokPublisher } from "./promocao/publishers";
 import { PromotionService } from "./promocao/promotion.service";
-import { lisbonNow, lisbonToUtc, type Account, type CareAlert, type Contact, type PushSubscriptionJson } from "@gn/domain";
+import { formatFeatures, lisbonNow, lisbonToUtc, parseFeatures, type Account, type CareAlert, type Contact, type PushSubscriptionJson } from "@gn/domain";
 import type { OutgoingEmail, PushNotification } from "./common/options";
 
 async function repositories(): Promise<{ repository: ContentRepository; patinhas: PatinhasRepository; photoStore?: PhotoStore }> {
@@ -128,7 +128,10 @@ function promotionPublishers() {
   const meta = token ? metaPublishers({ pageId: process.env.META_PAGE_ID, igUserId: process.env.META_IG_USER_ID, pageToken: token, graphVersion: process.env.META_GRAPH_VERSION }) : {};
   const key = process.env.RESEND_API_KEY;
   const from = process.env.NEWSLETTER_EMAIL_FROM ?? process.env.LOGIN_EMAIL_FROM ?? "Gatos de Ninguém <novidades@gatosdeninguem.pt>";
-  return { ...meta, ...(key ? { email: resendNewsletterPublisher({ apiKey: key, from }) } : {}) };
+  const tiktok = process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET && process.env.TIKTOK_REFRESH_TOKEN
+    ? { tiktok: tiktokPublisher({ clientKey: process.env.TIKTOK_CLIENT_KEY, clientSecret: process.env.TIKTOK_CLIENT_SECRET, refreshToken: process.env.TIKTOK_REFRESH_TOKEN, privacyLevel: process.env.TIKTOK_PRIVACY_LEVEL }) }
+    : {};
+  return { ...meta, ...tiktok, ...(key ? { email: resendNewsletterPublisher({ apiKey: key, from }) } : {}) };
 }
 
 /** Plain-text emails through Resend's batch endpoint (100 per call). Without RESEND_API_KEY the API runs without email. */
@@ -174,8 +177,13 @@ async function pushSender() {
 const adminToken = process.env.ADMIN_TOKEN;
 if (!adminToken || adminToken.length < 16) throw new Error("Set ADMIN_TOKEN (16+ characters) before starting the API.");
 
+// Optional parts, all off unless named, e.g. FEATURES=patinhas,trocas,amigo (see docs/funcionalidades.md).
+const features = parseFeatures(process.env.FEATURES);
+console.log(`Features switched on: ${formatFeatures(features) || "none"}`);
+
 const options = {
   ...(await repositories()),
+  features,
   sendLoginCode,
   // Demo without a database: the code is shown on screen so anyone can try signing in.
   exposeLoginCodes: !process.env.DATABASE_URL,

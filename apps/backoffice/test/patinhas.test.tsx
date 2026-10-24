@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import axe from "axe-core";
 import { Shell } from "../src/App";
+import { noFeatures } from "@gn/domain";
 import { fakeApi } from "./fakeApi";
 
 const today = new Date("2026-11-02T09:00:00.000Z");
@@ -103,5 +104,23 @@ describe("Patinhas", () => {
     await user.click(within(shop).getByRole("button", { name: /Guardar/ }));
     expect(await within(shop).findByText("Guardado")).toBeInTheDocument();
     expect(api.updatePartner).toHaveBeenCalledWith("partner-2", { perks: [expect.objectContaining({ id: "racao-15", patinhasCost: 120, minLevel: 3 })] });
+  });
+});
+
+describe("Patinhas switched off", () => {
+  it("leaves Patinhas out of the menu and explains how to switch them on", async () => {
+    renderPatinhas(fakeApi(today, noFeatures));
+    expect(await screen.findByRole("heading", { name: "Patinhas" })).toBeInTheDocument();
+    expect(await screen.findByText("As Patinhas estão desligadas")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Patinhas" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Pessoas" })).not.toBeInTheDocument();
+  });
+
+  it("with Patinhas on but swaps off, hides the swaps and partner perks", async () => {
+    renderPatinhas(fakeApi(today, { patinhas: true, trocas: false, amigo: false }));
+    expect(await screen.findByRole("tab", { name: "Pessoas" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Patinhas" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Trocas" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Vantagens" })).not.toBeInTheDocument();
   });
 });

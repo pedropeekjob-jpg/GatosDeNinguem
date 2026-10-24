@@ -5,7 +5,7 @@ export { Container, Grid, Section, Stack, StatTile } from "./components/Layout";
 export { Notice, ProgressMeter } from "./components/Feedback";
 export { Checkbox, ChoiceList, TextArea, TextField, type Choice } from "./components/Form";
 export { Breadcrumbs, SiteHeader, type NavItem } from "./components/Navigation";
-export { IconHand, IconHeart, IconHome, IconNews, IconPaw } from "./components/icons";
+export { IconGift, IconHand, IconHeart, IconHome, IconNews, IconPaw } from "./components/icons";
 export { AnimatedLogo } from "./components/AnimatedLogo";
 export { Carousel, type CarouselSlide } from "./components/Carousel";
 export { StepWizard } from "./components/StepWizard";

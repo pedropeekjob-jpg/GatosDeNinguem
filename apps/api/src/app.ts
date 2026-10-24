@@ -1,10 +1,11 @@
 import "reflect-metadata";
-import { Controller, Get, Module, type DynamicModule } from "@nestjs/common";
+import { Controller, Get, Inject, Module, type DynamicModule } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
 import { AlertasController, AlertasGestaoController } from "./alertas/alertas.controller";
 import { CatAlertService } from "./alertas/cat-alert.service";
 import { AdminGuard } from "./common/admin.guard";
+import { featuresOf } from "./common/feature.guard";
 import { API_OPTIONS, type ApiOptions } from "./common/options";
 import { AdoptionsController } from "./content/adoptions.controller";
 import { CatsController } from "./content/cats.controller";
@@ -34,6 +35,14 @@ class HealthController {
   health() { return { ok: true }; }
 }
 
+/** Which optional parts are switched on, so the back office and the site show only those. */
+@Controller("features")
+class FeaturesController {
+  constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {}
+  @Get()
+  features() { return featuresOf(this.options); }
+}
+
 @Module({})
 class AppModule {
   static register(options: ApiOptions): DynamicModule {
@@ -41,7 +50,7 @@ class AppModule {
     const sponsors = new SponsorService(options);
     return {
       module: AppModule,
-      controllers: [HealthController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController, AlertasController, AlertasGestaoController],
+      controllers: [HealthController, FeaturesController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController, AlertasController, AlertasGestaoController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, accounts) },

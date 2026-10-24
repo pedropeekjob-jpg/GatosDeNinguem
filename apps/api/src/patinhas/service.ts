@@ -29,6 +29,7 @@ import {
   type SignInVerify,
 } from "@gn/domain";
 import { createHash, randomBytes, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
+import { featuresOf } from "../common/feature.guard";
 import type { ApiOptions } from "../common/options";
 import type { PatinhasRepository } from "./repository";
 
@@ -46,6 +47,7 @@ export class PatinhasService {
   constructor(private readonly options: ApiOptions, readonly repo: PatinhasRepository) {}
   private get content() { return this.options.repository; }
   private now() { return this.options.now?.() ?? new Date(); }
+  get features() { return featuresOf(this.options); }
 
   // ----- signing in -----
 
@@ -123,6 +125,8 @@ export class PatinhasService {
 
   /** Records a verified action. Returns the reason in plain words when it does not count. */
   async give(accountId: string, action: EarnAction, extra: { quantity?: number; sourceId?: string; note?: string; by?: PatinhasEntry["by"]; at?: Date } = {}) {
+    // While Patinhas are switched off nothing is counted, as if every way to earn were off.
+    if (!this.features.patinhas) return { ok: false as const, error: "regra-inativa" as const };
     const result = award(await this.repo.getRules(), await this.repo.listEntries({ accountId }), {
       id: randomUUID(),
       accountId,
@@ -173,7 +177,9 @@ export class PatinhasService {
       this.content.listPartners(),
       this.repo.listRedemptions({ accountId: account.id }),
     ]);
-    return { account, ...buildPainel({ ledger, rules, badges, challenges, communityEntries, partners, redemptions, now }) };
+    const painel = buildPainel({ ledger, rules, badges, challenges, communityEntries, partners, redemptions, now });
+    // The site shows only what is switched on; perks are not even sent while swaps are off.
+    return { account, features: this.features, ...painel, perks: this.features.trocas ? painel.perks : [] };
   }
 
   async redeem(account: Account, partnerId: string, perkId: string): Promise<Redemption> {
