@@ -30,7 +30,6 @@ export default async function PrivacyPage() {
           <p>Só pedimos os dados de que precisamos para o ajudar a ajudar os gatos. Nunca vendemos os seus dados.</p>
           <ul className="gn-stack gn-stack--s">
             <li><strong>Pedidos de adoção, apadrinhamento e família temporária:</strong> nome, contactos, localidade e o que nos conta sobre a sua casa, para avaliarmos o pedido e falarmos consigo.</li>
-            <li><strong>Apadrinhamento por débito direto:</strong> nome, email e o IBAN que indica na página segura da Stripe, para cobrar a contribuição mensal. O IBAN fica só na Stripe: nós vemos apenas se o débito está ativo e quanto foi recebido. As novidades do gato por email só seguem se as pediu.</li>
             <li><strong>Turnos de voluntariado:</strong> nome e telemóvel, para organizarmos os turnos no gatil e o avisarmos de alterações.</li>
             <li><strong>Conta e Patinhas:</strong> nome, email ou telemóvel e as ajudas que regista, para mostrar as suas Patinhas e vantagens. O seu nome só aparece no mural se o autorizar.</li>
             <li><strong>Loja solidária e oferta de artigos:</strong> nome, contactos e o pedido, para combinarmos o pagamento e a entrega.</li>
@@ -57,12 +56,6 @@ export default async function PrivacyPage() {
           <p>
             Apenas os gestores e voluntários da associação que precisam dos dados para o seu pedido.
             Usamos alguns prestadores de serviços que tratam dados por nossa conta, com as garantias do RGPD: o alojamento do site e da base de dados e o serviço de envio de emails.
-          </p>
-          <p>
-            Os débitos diretos dos padrinhos são feitos pela Stripe (Stripe Payments Europe, Ltd.), para executar o apadrinhamento.
-            A Stripe pode transferir dados para os Estados Unidos; essa transferência está coberta pelo EU-US Data Privacy Framework e pelas cláusulas contratuais-tipo do acordo de tratamento de dados da Stripe.
-          </p>
-          <p>
             Se nos indicar o NIF para recibo, este é comunicado à Autoridade Tributária, como manda a lei.
           </p>
 
