@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { firstName, monthLabel, type EarnAction } from "@gn/domain";
 import { Badge, Button, Checkbox, Notice, ProgressMeter, TextField } from "@gn/ui";
 import { contaClient, type MeuPainel } from "@/lib/conta";
+import { AfilhadosResumo } from "./Afilhados";
 import { GatilResumo } from "./NoGatil";
 
 const n = new Intl.NumberFormat("pt-PT");
@@ -27,6 +28,7 @@ export function Painel({ painel, welcome, onChange, onSignedOut }: { painel: Meu
       ) : null}
 
       <GatilResumo />
+      <AfilhadosResumo />
 
       <section className="painel__resumo" aria-labelledby="painel-ola">
         <h2 id="painel-ola">Olá, {firstName(account.name)}!</h2>

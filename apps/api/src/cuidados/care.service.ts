@@ -22,7 +22,7 @@ const OPEN: CareTask["status"][] = ["aberta", "aceite"];
 
 /** Care rules shared by the back office (managers) and the volunteers' own area on the site. */
 export class CareService {
-  constructor(private readonly options: ApiOptions, private readonly accounts: PatinhasRepository) {}
+  constructor(private readonly options: ApiOptions, private readonly accounts: PatinhasRepository, private readonly onAlert?: (alert: CareAlert) => Promise<void>) {}
   get repo() { return this.options.repository; }
   now() { return this.options.now?.() ?? new Date(); }
   today() { return lisbonNow(this.now()).date; }
@@ -40,7 +40,9 @@ export class CareService {
   }
 
   async raise(cat: Pick<Cat, "id" | "name">, draft: CareAlertDraft, by: Author, taskId?: string): Promise<CareAlert> {
-    return this.repo.saveCareAlert({ ...draft, id: randomUUID(), catId: cat.id, catName: cat.name, by, createdAt: this.now().toISOString(), taskId });
+    const alert = await this.repo.saveCareAlert({ ...draft, id: randomUUID(), catId: cat.id, catName: cat.name, by, createdAt: this.now().toISOString(), taskId });
+    await this.onAlert?.(alert).catch((err) => console.error("Could not tell the godparents", err));
+    return alert;
   }
 
   /** Every dose due on a day, which cat, where it is, who gave it, and any help request about it. */
