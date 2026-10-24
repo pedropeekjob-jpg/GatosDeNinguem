@@ -6,7 +6,7 @@ Algumas partes do site já estão feitas mas ainda não estão a ser usadas. Fic
 | ---------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `patinhas` | Ganhar Patinhas: pontos, níveis, medalhas, desafios do mês e mural de agradecimentos.                  | Não aparecem no início, em Ajudar, na conta nem na gestão. `/patinhas` leva a `/ajudar`. Nada conta pontos.        |
 | `trocas`   | Trocar Patinhas por vantagens nos parceiros (com código para mostrar na loja). Só funciona com `patinhas`. | Sem "Trocar nos parceiros" na conta e na página das Patinhas; na gestão, sem os separadores Trocas e Vantagens.    |
-| `amigo`    | "Ser Amigo da associação": a quota anual com descontos nos parceiros.                                   | Sem o cartão e a secção em Ajudar, o questionário nunca o sugere, e os parceiros não falam do cartão de Amigo.     |
+| `amigo`    | "Ser Amigo da associação": a quota anual com descontos nos parceiros.                                   | Sem o botão em Ajudar, `/ajudar/amigo` leva a `/ajudar`, o questionário nunca o sugere, e os parceiros não falam do cartão de Amigo.     |
 
 As contas continuam a funcionar com tudo desligado: os voluntários entram, veem os turnos, os gatos a cuidar e as notificações.
 

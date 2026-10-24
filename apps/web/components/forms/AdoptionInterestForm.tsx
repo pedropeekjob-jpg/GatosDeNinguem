@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from "react";
 import { Button, Checkbox, ChoiceList, Notice, NextStep, TextArea, TextField } from "@gn/ui";
 import { submitForm } from "@/lib/submit";
+import { PrivacyHint } from "@/components/forms/PrivacyHint";
 
 export function AdoptionInterestForm({ catSlug, catName }: { catSlug: string; catName: string }) {
   const [form, setForm] = useState({ name: "", phone: "", email: "", town: "", bestTime: "qualquer", message: "", website_url: "" });
@@ -61,7 +62,7 @@ export function AdoptionInterestForm({ catSlug, catName }: { catSlug: string; ca
         <label htmlFor="website_url">Não preencher</label>
         <input id="website_url" tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
       </div>
-      <Checkbox id="consentimento" label="Aceito que a associação me contacte sobre esta adoção" hint="Usamos os seus dados apenas para isto." checked={consent} onChange={setConsent} />
+      <Checkbox id="consentimento" label="Tenho 18 anos ou mais e aceito que a associação me contacte sobre esta adoção" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
       <Button type="submit" disabled={state === "sending"} block>{state === "sending" ? "A enviar…" : "Enviar pedido"}</Button>
     </form>

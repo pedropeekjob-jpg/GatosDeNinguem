@@ -9,6 +9,7 @@ export const features = parseFeatures(process.env.NEXT_PUBLIC_FEATURES);
 /** Pages that wait for a switch, and where their old links go meanwhile. */
 const featurePages: { path: string; feature: keyof FeatureFlags; to: string }[] = [
   { path: "/patinhas", feature: "patinhas", to: "/ajudar" },
+  { path: "/ajudar/amigo", feature: "amigo", to: "/ajudar" },
 ];
 
 /** Where to send a visitor who asks for a page that is switched off (none when it is on). */
