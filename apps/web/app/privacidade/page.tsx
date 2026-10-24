@@ -11,6 +11,13 @@ export async function generateMetadata() {
   return buildMetadata({ path: "/privacidade", title: page.heading, description: page.intro, overrides: page.seo });
 }
 
+/** Who processes personal data for the association. Keep in step with the services the code uses (art. 13.º RGPD). */
+const processors = [
+  { name: "Render", where: "alojamento na UE, empresa dos EUA", what: "aloja o site, a API e a base de dados." },
+  { name: "Resend", where: "EUA", what: "envia os emails: códigos de entrada, newsletter e novidades dos afilhados." },
+  { name: "Stripe", where: "Irlanda e EUA", what: "recebe o IBAN e trata o mandato e os débitos diretos do apadrinhamento." },
+];
+
 export default async function PrivacyPage() {
   const page = await getPage("/privacidade");
   const mail = `mailto:${association.email}`;
@@ -39,6 +46,7 @@ export default async function PrivacyPage() {
             )}
             <li><strong>Loja solidária e oferta de artigos:</strong> nome, contactos e o pedido, para combinarmos o pagamento e a entrega.</li>
             <li><strong>Pedidos de parceria:</strong> nome da empresa, pessoa de contacto e contactos.</li>
+            <li><strong>Débito direto do apadrinhamento:</strong> nome, email e o estado de cada débito. O IBAN é escrito na página segura do prestador de pagamentos e não fica no nosso site.</li>
             <li><strong>Newsletter:</strong> o seu email, para enviarmos novidades. Pode cancelar em qualquer email.</li>
             <li><strong>Finais felizes:</strong> o nome e a localidade de quem adotou só são publicados com autorização expressa.</li>
           </ul>
@@ -60,7 +68,16 @@ export default async function PrivacyPage() {
           <h2>Quem mais tem acesso</h2>
           <p>
             Apenas os gestores e voluntários da associação que precisam dos dados para o seu pedido.
-            Usamos alguns prestadores de serviços que tratam dados por nossa conta, com as garantias do RGPD: o alojamento do site e da base de dados e o serviço de envio de emails.
+            Usamos alguns prestadores de serviços que tratam dados por nossa conta, com contrato e as garantias do RGPD:
+          </p>
+          <ul className="gn-stack gn-stack--s">
+            {processors.map((p) => (
+              <li key={p.name}><strong>{p.name}</strong> ({p.where}): {p.what}</li>
+            ))}
+          </ul>
+          <p>
+            Quando um prestador trata dados fora da União Europeia, a transferência está protegida pelo Quadro de Privacidade de Dados UE-EUA
+            ou pelas cláusulas contratuais-tipo aprovadas pela Comissão Europeia.
             Se nos indicar o NIF para recibo, este é comunicado à Autoridade Tributária, como manda a lei.
           </p>
 

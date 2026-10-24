@@ -21,7 +21,7 @@ export default async function HelpPage() {
         <Grid>
           <Card title="Adotar" href="/adotar"><p>Dê uma casa para sempre a um gato.</p></Card>
           <Card title="Apadrinhar" href="/apadrinhar"><p>Ajude um gato todos os meses e receba notícias dele.</p></Card>
-          <Card title="Fazer um donativo" href="/ajudar/doar"><p>Qualquer valor ajuda. 35 euros pagam uma esterilização.</p></Card>
+          <Card title="Fazer um donativo" href="/doar"><p>Qualquer valor ajuda. 35 euros pagam uma esterilização.</p></Card>
           <Card title="Ser voluntário" href="/ajudar/voluntariado"><p>Limpeza, transporte ao veterinário e eventos.</p></Card>
           <Card title="Família temporária" href="/ajudar/familia-temporaria"><p>Acolha um gato por umas semanas.</p></Card>
           <Card title="Comprar na loja solidária" href="/loja"><p>T-shirts, canecas e calendários. Também pode doar coisas para vender.</p></Card>

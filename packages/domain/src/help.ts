@@ -13,7 +13,7 @@ export type HelpAction = {
 
 export const helpActions: Record<HelpAction["id"], HelpAction> = {
   partilhar: { id: "partilhar", title: "Partilhar um gato", description: "Partilhe um gato no WhatsApp ou Facebook. Muitas adoções começam assim.", href: "/adotar" },
-  doar: { id: "doar", title: "Fazer um donativo", description: "Qualquer valor ajuda a pagar comida e veterinário. 35 euros pagam uma esterilização.", href: "/ajudar/doar" },
+  doar: { id: "doar", title: "Fazer um donativo", description: "Qualquer valor ajuda a pagar comida e veterinário. 35 euros pagam uma esterilização.", href: "/doar" },
   apadrinhar: { id: "apadrinhar", title: "Apadrinhar um gato", description: "A partir de 5 euros por mês, recebe notícias do seu afilhado.", href: "/apadrinhar" },
   amigo: { id: "amigo", title: "Ser Amigo da associação", description: "24 euros por ano e descontos nos nossos parceiros.", href: "/ajudar/amigo" },
   voluntariado: { id: "voluntariado", title: "Fazer um turno no gatil", description: "Duas horas a limpar, alimentar e dar mimos. Não precisa de experiência.", href: "/ajudar/voluntariado" },
