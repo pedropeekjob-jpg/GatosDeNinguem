@@ -2,6 +2,9 @@ import { AnimatedLogo, Container } from "@gn/ui";
 import { association } from "@/lib/association";
 import { NewsletterForm } from "./forms/NewsletterForm";
 
+/** Provisional: the association has no TikTok account yet. Change it here once the account exists. */
+const TIKTOK_URL = "https://www.tiktok.com/@gatosdeninguem";
+
 /** Kept short on purpose: everything here also lives on its own page, so the footer only points the way. */
 export function Footer() {
   const { gatil } = association;
@@ -44,6 +47,11 @@ export function Footer() {
               <li>
                 <a href="https://www.instagram.com/gatosdeninguem/" rel="noopener" aria-label="Instagram" title="Instagram">
                   <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none" /></svg>
+                </a>
+              </li>
+              <li>
+                <a href={TIKTOK_URL} rel="noopener" aria-label="TikTok" title="TikTok">
+                  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M16.6 3h-3.1v12.3a2.7 2.7 0 1 1-2.7-2.7c.3 0 .5 0 .8.1V9.5a5.9 5.9 0 1 0 5 5.8V9.1a7.6 7.6 0 0 0 4.4 1.4V7.4A4.4 4.4 0 0 1 16.6 3z" fill="currentColor" /></svg>
                 </a>
               </li>
             </ul>

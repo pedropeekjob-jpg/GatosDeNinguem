@@ -4,7 +4,7 @@ import type { ContentRepository } from "./content/repository";
 import type { PhotoStore } from "./media/photo-store";
 import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/repository";
 import { stripeSepaDebit } from "./padrinhos/debit";
-import { metaPublishers, resendNewsletterPublisher } from "./promocao/publishers";
+import { metaPublishers, resendNewsletterPublisher, tiktokPublisher } from "./promocao/publishers";
 import { PromotionService } from "./promocao/promotion.service";
 import { formatFeatures, lisbonNow, lisbonToUtc, parseFeatures, type Account, type CareAlert, type Contact } from "@gn/domain";
 
@@ -127,7 +127,10 @@ function promotionPublishers() {
   const meta = token ? metaPublishers({ pageId: process.env.META_PAGE_ID, igUserId: process.env.META_IG_USER_ID, pageToken: token, graphVersion: process.env.META_GRAPH_VERSION }) : {};
   const key = process.env.RESEND_API_KEY;
   const from = process.env.NEWSLETTER_EMAIL_FROM ?? process.env.LOGIN_EMAIL_FROM ?? "Gatos de Ninguém <novidades@gatosdeninguem.pt>";
-  return { ...meta, ...(key ? { email: resendNewsletterPublisher({ apiKey: key, from }) } : {}) };
+  const tiktok = process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET && process.env.TIKTOK_REFRESH_TOKEN
+    ? { tiktok: tiktokPublisher({ clientKey: process.env.TIKTOK_CLIENT_KEY, clientSecret: process.env.TIKTOK_CLIENT_SECRET, refreshToken: process.env.TIKTOK_REFRESH_TOKEN, privacyLevel: process.env.TIKTOK_PRIVACY_LEVEL }) }
+    : {};
+  return { ...meta, ...tiktok, ...(key ? { email: resendNewsletterPublisher({ apiKey: key, from }) } : {}) };
 }
 
 const adminToken = process.env.ADMIN_TOKEN;

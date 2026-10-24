@@ -10,6 +10,7 @@ const tone: Record<PromotionStatus, Tone> = { rascunho: "warning", aprovada: "in
 const services: { name: string; channels: PromotionChannel[] }[] = [
   { name: "Facebook", channels: ["facebook-post", "facebook-story"] },
   { name: "Instagram", channels: ["instagram-post", "instagram-story"] },
+  { name: "TikTok", channels: ["tiktok"] },
   { name: "email", channels: ["email"] },
 ];
 const list_ = (names: string[]) => (names.length > 1 ? `${names.slice(0, -1).join(", ")} e ${names.at(-1)}` : names[0] ?? "");

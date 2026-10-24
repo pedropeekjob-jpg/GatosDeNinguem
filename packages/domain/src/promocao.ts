@@ -6,7 +6,7 @@ import type { NewsletterSignup, Post, PostEvent } from "./content";
  * get a post and/or story and newsletter subscribers get an email. A draft is made as soon as
  * the event is saved; a manager reviews it once and it goes out on its own on the day.
  */
-export const promotionChannelSchema = z.enum(["facebook-post", "facebook-story", "instagram-post", "instagram-story", "email"]);
+export const promotionChannelSchema = z.enum(["facebook-post", "facebook-story", "instagram-post", "instagram-story", "tiktok", "email"]);
 export type PromotionChannel = z.infer<typeof promotionChannelSchema>;
 export const promotionChannels = promotionChannelSchema.options;
 
@@ -15,6 +15,7 @@ export const promotionChannelLabel: Record<PromotionChannel, string> = {
   "facebook-story": "Story no Facebook",
   "instagram-post": "Publicação no Instagram",
   "instagram-story": "Story no Instagram",
+  tiktok: "Publicação no TikTok",
   email: "Email aos subscritores",
 };
 
@@ -229,6 +230,7 @@ export function channelProblem(p: Pick<Promotion, "imageUrl">, channel: Promotio
   if (channel === "email" || channel === "facebook-post") return undefined;
   if (!p.imageUrl) return "Precisa de uma fotografia.";
   if (channel.startsWith("instagram") && !isJpeg(p.imageUrl)) return "A Instagram só aceita fotografias JPG. Carregue a fotografia aqui na promoção.";
+  if (channel === "tiktok" && !isJpeg(p.imageUrl) && !/\.webp($|\?)/i.test(p.imageUrl)) return "O TikTok só aceita fotografias JPG ou WebP. Carregue a fotografia aqui na promoção.";
   return undefined;
 }
 

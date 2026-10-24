@@ -26,6 +26,7 @@ const NOT_SET_UP: Record<PromotionChannel, string> = {
   "facebook-story": "O Facebook ainda não está ligado ao site.",
   "instagram-post": "A Instagram ainda não está ligada ao site.",
   "instagram-story": "A Instagram ainda não está ligada ao site.",
+  tiktok: "O TikTok ainda não está ligado ao site.",
   email: "O envio de emails ainda não está ligado ao site.",
 };
 
@@ -66,6 +67,8 @@ export class PromotionService {
     const ctx = { siteUrl: this.siteUrl, now: this.now() };
     if (!current) {
       const draft = draftPromotion(post, { ...ctx, id: randomUUID() });
+      // The association has no TikTok account yet: it joins the defaults once it is connected.
+      if (draft && this.options.promotionPublishers?.tiktok) draft.channels = [...draft.channels.filter((c) => c !== "email"), "tiktok", "email"];
       if (draft) await this.repo.savePromotion(draft);
       return;
     }

@@ -540,6 +540,7 @@ test("footer: social networks are logos with their names for screen readers", as
   const footer = page.getByRole("contentinfo");
   await expect(footer.getByRole("link", { name: "Facebook" })).toBeVisible();
   await expect(footer.getByRole("link", { name: "Instagram" })).toBeVisible();
+  await expect(footer.getByRole("link", { name: "TikTok" })).toBeVisible();
   await expect(footer.getByText("Facebook", { exact: true })).toHaveCount(0);
 });
 
