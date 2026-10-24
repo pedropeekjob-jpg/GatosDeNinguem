@@ -407,6 +407,22 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
     seo: {},
     updatedAt: now,
   },
+  {
+    id: "page-privacidade",
+    path: "/privacidade",
+    heading: "Política de privacidade",
+    intro: "Como a associação trata os seus dados pessoais, para que os usa e como pode exercer os seus direitos (RGPD).",
+    seo: {},
+    updatedAt: now,
+  },
+  {
+    id: "page-cookies",
+    path: "/cookies",
+    heading: "Política de cookies",
+    intro: "Este site usa apenas o essencial para funcionar. Não usamos cookies de publicidade nem de estatísticas.",
+    seo: {},
+    updatedAt: now,
+  },
 ];
 
 export const seedPages: Page[] = seedPageInputs.map((p) => pageSchema.parse(p));
