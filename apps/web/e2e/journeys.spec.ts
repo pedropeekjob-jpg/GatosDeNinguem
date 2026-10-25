@@ -655,6 +655,15 @@ test.describe("avisos de gatos novos", () => {
     await expect(dialog).toBeHidden();
   });
 
+  test("?avisos=agora shows the window at once, to try it, without remembering the answer", async ({ page }) => {
+    await page.goto("/sobre?avisos=agora");
+    const dialog = page.getByRole("dialog", { name: "Quer saber quando chegam gatos novos?" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Agora não" }).click();
+    await expect(dialog).toBeHidden();
+    expect(await page.evaluate(() => localStorage.getItem("gn-avisos-gatos"))).toBeNull();
+  });
+
   test("never interrupts an emergency", async ({ page }) => {
     await page.clock.install();
     await page.goto("/");

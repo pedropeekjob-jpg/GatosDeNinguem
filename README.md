@@ -48,7 +48,7 @@ Without `DATABASE_URL` the API runs on in-memory demo content; without `API_URL`
 
 ## Avisos de gatos novos
 
-Visitors ask to be told when a cat is put up for adoption: a window offers it once (never on the first page at once, never on SOS, forms or the shop, and not again for two months after "Agora não"), and Adotar has a button for it. Email needs a click on a confirmation link before anything is sent; unconfirmed sign-ups are dropped after 7 days, and every alert has a one-click unsubscribe. Where the browser allows and the VAPID keys are set, people can choose notifications on their device instead. The alert goes out by itself the first time a cat is saved as "Para adoção"; managers see who asked and what was sent in the back office (Avisos). Uses the same `RESEND_API_KEY` as sign-in codes.
+Visitors ask to be told when a cat is put up for adoption: a window offers it once (never on the first page at once, never on SOS, forms or the shop, and not again for two months after "Agora não"), and Adotar has a button for it. Email needs a click on a confirmation link before anything is sent; unconfirmed sign-ups are dropped after 7 days, and every alert has a one-click unsubscribe. Where the browser allows and the VAPID keys are set, people can choose notifications on their device instead. The alert goes out by itself the first time a cat is saved as "Para adoção"; managers see who asked and what was sent in the back office (Avisos). To see the window straight away on any site (test environment, GitHub Pages demo), add `?avisos=agora` to the address; the demo banner links to it, and in the static demo the confirmation email is simulated on screen. Uses the same `RESEND_API_KEY` as sign-in codes.
 
 ## Online demo (GitHub Pages)
 

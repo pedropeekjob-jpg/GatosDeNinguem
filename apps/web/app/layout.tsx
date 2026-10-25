@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Header />
         {process.env.NEXT_PUBLIC_STATIC_DEMO === "1" ? (
           <p className="demo-banner" role="note">
-            <strong>Versão de demonstração.</strong> Os gatos e as notícias são exemplos e os formulários não enviam dados.
+            <strong>Versão de demonstração.</strong> Os gatos e as notícias são exemplos e os formulários não enviam dados. <a href="/adotar?avisos=agora" rel="external">Ver o aviso de gatos novos</a>
           </p>
         ) : null}
         <main id="conteudo" tabIndex={-1}>{children}</main>
