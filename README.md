@@ -48,7 +48,9 @@ Without `DATABASE_URL` the API runs on in-memory demo content; without `API_URL`
 
 ## Avisos de gatos novos
 
-Visitors ask to be told when a cat is put up for adoption: a window offers it once (never on the first page at once, never on SOS, forms or the shop, and not again for two months after "Agora não"), and Adotar has a button for it. Email needs a click on a confirmation link before anything is sent; unconfirmed sign-ups are dropped after 7 days, and every alert has a one-click unsubscribe. Where the browser allows and the VAPID keys are set, people can choose notifications on their device instead. The alert goes out by itself the first time a cat is saved as "Para adoção"; managers see who asked and what was sent in the back office (Avisos). To see the window straight away on any site (test environment, GitHub Pages demo), add `?avisos=agora` to the address; the demo banner links to it, and in the static demo the confirmation email is simulated on screen. Uses the same `RESEND_API_KEY` as sign-in codes.
+When a cat is put up for adoption, visitors see it in a pop-up (photo, name, age, short description and a link to its page) during its first 30 days, once per visitor (opening its page also counts), at most one pop-up per visit, a few seconds after a page opens, and never on SOS, forms or the shop. Seen cats are kept in the browser only. To see it straight away on any site (test environment, GitHub Pages demo), add `?avisos=agora` to the address; the demo banner links to it.
+
+People can also ask for an email when cats arrive (button on Adotar, and a link in the pop-up). Email needs a click on a confirmation link before anything is sent; unconfirmed sign-ups are dropped after 7 days, and every alert has a one-click unsubscribe. Where the browser allows and the VAPID keys are set, people can choose notifications on their device instead. The email goes out by itself the first time a cat is saved as "Para adoção"; managers see who asked and what was sent in the back office (Avisos). Uses the same `RESEND_API_KEY` as sign-in codes. In the static demo the confirmation email is simulated on screen.
 
 ## Online demo (GitHub Pages)
 

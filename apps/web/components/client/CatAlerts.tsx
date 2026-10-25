@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import { usePathname } from "next/navigation";
-import { alertAgeGroupLabel, alertAgeGroups, describeAlertFilters, noAlertFilters, type AlertAgeGroup, type CatAlertFilters } from "@gn/domain";
+import { ageLabel, alertAgeGroupLabel, alertAgeGroups, describeAlertFilters, unseenNewCats, noAlertFilters, type AlertAgeGroup, type CatAlertFilters } from "@gn/domain";
 import { Button, Checkbox, Modal, Notice, TextField } from "@gn/ui";
-import { pushSetup, rememberAlerts, shouldOfferAlerts, signUpForAlerts, subscribeThisDevice } from "@/lib/alertas";
+import { markCatSeen, pushSetup, seenCats, signUpForAlerts, subscribeThisDevice } from "@/lib/alertas";
 import { PrivacyHint } from "../forms/PrivacyHint";
 import { useModalHistory } from "./FormModal";
 
@@ -18,7 +18,7 @@ function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () =>
 }
 
 /** Email sign-up with optional preferences, and notifications on this device where the browser allows them. */
-export function CatAlertForm({ onDone, onLater }: { onDone: () => void; onLater?: () => void }) {
+export function CatAlertForm() {
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [filters, setFilters] = useState<CatAlertFilters>(noAlertFilters);
@@ -37,7 +37,7 @@ export function CatAlertForm({ onDone, onLater }: { onDone: () => void; onLater?
     if (result.ok) {
       setDemoLink(result.demoConfirmUrl);
       setState("email");
-      return onDone();
+      return;
     }
     setErrors(result.fieldErrors);
     setMessage(Object.keys(result.fieldErrors).length ? undefined : result.message);
@@ -50,7 +50,7 @@ export function CatAlertForm({ onDone, onLater }: { onDone: () => void; onLater?
     const result = await subscribeThisDevice(push.publicKey, filters);
     if (result.ok) {
       setState("push");
-      return onDone();
+      return;
     }
     setMessage(result.message);
     setState("idle");
@@ -131,7 +131,6 @@ export function CatAlertForm({ onDone, onLater }: { onDone: () => void; onLater?
           <Button type="button" variant="secondary" block disabled={state === "sending"} onClick={onPush}>Receber notificações neste aparelho</Button>
         </div>
       ) : null}
-      {onLater ? <button type="button" className="alert-later" onClick={onLater}>Agora não</button> : null}
     </form>
   );
 }
@@ -143,59 +142,83 @@ export function CatAlertButton({ label = "Avisem-me de gatos novos", variant = "
     <>
       <Button variant={variant} aria-haspopup="dialog" onClick={modal.show}>{label}</Button>
       <Modal open={modal.open} onClose={modal.hide} title={TITLE} intro={INTRO} sheet>
-        <CatAlertForm onDone={() => rememberAlerts("inscrito")} />
+        <CatAlertForm />
       </Modal>
     </>
   );
 }
 
-/** Pages where an offer would get in the way (emergencies, forms, the shop, the volunteers' area). */
-const QUIET = [/^\/sos/, /^\/conta/, /^\/loja/, /^\/patinhas/, /\/conhecer$/, /^\/adotar\/descobrir/, /^\/apadrinhar\//, /^\/ajudar\/(turnos|familia-temporaria)/];
-const VIEWS_KEY = "gn-paginas-vistas";
-/** `?avisos=agora` opens the window at once, on any page, without remembering the answer: to try it on test sites and the demo. */
+/** What the pop-up needs to show a cat. */
+export type NewCat = { slug: string; name: string; sex: "macho" | "femea"; ageYears: number; summary: string; status: "para-adocao"; listedAt?: string; photo: { url: string; alt: string } };
+
+/** Pages where a pop-up would get in the way (emergencies, forms, the shop, the volunteers' area). */
+const QUIET = [/^\/sos/, /^\/conta/, /^\/loja/, /^\/patinhas/, /\/conhecer$/, /^\/adotar\/descobrir/, /^\/apadrinhar\//, /^\/ajudar\/(turnos|familia-temporaria)/, /^\/privacidade/, /^\/cookies/];
+const SESSION_KEY = "gn-novo-gato-mostrado";
+/** `?avisos=agora` shows the newest cat at once, on any page, even if already seen: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("avisos") === "agora";
 
 /**
- * Offers the alerts once, politely: never on the first page someone opens, only after a while on a page
- * (or a minute on the first one), never over another window, never while they type, and never again after
- * "Agora não" (for two months) or once they have signed up.
- * Add `?avisos=agora` to any address to see it straight away.
+ * When a cat has just been put up for adoption (last 30 days) and this visitor has not seen it yet, a pop-up shows
+ * it: photo, name, age and a short description, with a link to its page. Each cat once per visitor (opening its
+ * page also counts), at most one pop-up per visit, a few seconds after the page opens, never over another window,
+ * while someone types, or on pages where it would get in the way. People can also ask for an email instead.
  */
-export function CatAlertPrompt() {
+export function NewCatPrompt({ cats }: { cats: NewCat[] }) {
   const pathname = usePathname();
-  const modal = useModalHistory();
-  const [offered, setOffered] = useState(false);
-  const [preview, setPreview] = useState(false);
+  const [cat, setCat] = useState<NewCat>();
+  const [more, setMore] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState<"cat" | "email">("cat");
 
   useEffect(() => {
-    if (!offered && isPreview()) {
-      setPreview(true);
-      setOffered(true);
-      modal.show();
-      return;
-    }
-    let views = 1;
-    try {
-      views = Number(sessionStorage.getItem(VIEWS_KEY) ?? "0") + 1;
-      sessionStorage.setItem(VIEWS_KEY, String(views));
-    } catch { /* private mode */ }
-    if (offered || !shouldOfferAlerts() || QUIET.some((r) => r.test(pathname))) return;
+    const own = pathname.match(/^\/adotar\/([^/]+)$/)?.[1];
+    if (own) markCatSeen(own);
+    if (cat) return;
+    const preview = isPreview();
+    let shownThisVisit = false;
+    try { shownThisVisit = sessionStorage.getItem(SESSION_KEY) === "1"; } catch { /* private mode */ }
+    if (!preview && (shownThisVisit || QUIET.some((r) => r.test(pathname)))) return;
+    const candidates = preview ? cats : unseenNewCats(cats, seenCats(), new Date()).filter((c) => c.slug !== own);
+    const first = candidates[0];
+    if (!first) return;
     const busy = () => !!document.querySelector("dialog[open]") || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "") || document.visibilityState !== "visible";
     let timer: ReturnType<typeof setTimeout>;
     const attempt = () => {
-      if (busy()) { timer = setTimeout(attempt, 10_000); return; }
-      setOffered(true);
-      modal.show();
+      if (busy()) { timer = setTimeout(attempt, 5_000); return; }
+      if (!preview) {
+        candidates.forEach((c) => markCatSeen(c.slug));
+        try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* private mode */ }
+      }
+      setCat(first);
+      setMore(candidates.length - 1);
+      setOpen(true);
     };
-    timer = setTimeout(attempt, views >= 2 ? 15_000 : 60_000);
+    timer = setTimeout(attempt, preview ? 300 : 4_000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, offered]);
+  }, [pathname]);
 
-  const later = () => { if (!preview) rememberAlerts("fechado"); modal.hide(); };
+  if (!cat) return null;
+  const close = () => setOpen(false);
+  const female = cat.sex === "femea";
   return (
-    <Modal open={modal.open} onClose={later} title={TITLE} intro={INTRO} sheet>
-      <CatAlertForm onDone={() => { if (!preview) rememberAlerts("inscrito"); }} onLater={later} />
+    <Modal open={open} onClose={close} title={view === "cat" ? `Nov${female ? "a" : "o"} para adoção: ${cat.name}` : TITLE} intro={view === "email" ? INTRO : undefined} sheet>
+      {view === "cat" ? (
+        <div className="new-cat gn-stack gn-stack--m">
+          <img className="new-cat__photo" src={cat.photo.url} alt={cat.photo.alt} />
+          <div className="gn-stack gn-stack--s">
+            <p className="new-cat__meta">{ageLabel(cat.ageYears)} · {female ? "Fêmea" : "Macho"}</p>
+            <p>{cat.summary}</p>
+          </div>
+          <div className="gn-stack gn-stack--s">
+            <Button href={`/adotar/${cat.slug}`} block onClick={close}>Conhecer {female ? "a" : "o"} {cat.name}</Button>
+            {more > 0 ? <Button href="/adotar" variant="secondary" block onClick={close}>Ver {more === 1 ? "o outro gato novo" : `os outros ${more} gatos novos`}</Button> : null}
+          </div>
+          <button type="button" className="alert-later" onClick={() => setView("email")}>Avisem-me por email quando chegarem outros</button>
+        </div>
+      ) : (
+        <CatAlertForm />
+      )}
     </Modal>
   );
 }

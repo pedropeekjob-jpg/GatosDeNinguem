@@ -632,44 +632,45 @@ test("shop: offer articles to sell", async ({ page }) => {
   await expect(dialog.getByText(/quando podemos ir buscar/)).toBeVisible();
 });
 
-test.describe("avisos de gatos novos", () => {
+test.describe("gato novo para adoção", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
+  const newest = "Nova para adoção: Mia";
 
-  test("the window waits: not on the first page at once, then once on the second page, and never again after 'Agora não'", async ({ page }) => {
-    await page.clock.install();
+  test("a cat put up for adoption recently pops up once, with its photo and a link to its page", async ({ page }) => {
+    await page.clock.install({ time: new Date("2026-10-10T12:00:00Z") });
     await page.goto("/");
-    const dialog = page.getByRole("dialog", { name: "Quer saber quando chegam gatos novos?" });
-    await page.clock.runFor(20_000);
-    await expect(dialog).toBeHidden();
-
-    await page.getByRole("link", { name: "Adotar" }).first().click();
-    await expect(page).toHaveURL(/\/adotar$/);
-    await page.clock.runFor(16_000);
+    const dialog = page.getByRole("dialog", { name: newest });
+    await page.clock.runFor(5_000);
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByLabel("O seu email", { exact: true })).toBeVisible();
-    await dialog.getByRole("button", { name: "Agora não" }).click();
+    await expect(dialog.getByRole("img")).toBeVisible();
+    await dialog.getByRole("link", { name: "Conhecer a Mia" }).click();
+    await expect(page).toHaveURL(/\/adotar\/mia$/);
     await expect(dialog).toBeHidden();
 
+    // Seen: not again on this visit or the next.
     await page.goto("/finais-felizes");
-    await page.clock.runFor(90_000);
-    await expect(dialog).toBeHidden();
-  });
-
-  test("?avisos=agora shows the window at once, to try it, without remembering the answer", async ({ page }) => {
-    await page.goto("/sobre?avisos=agora");
-    const dialog = page.getByRole("dialog", { name: "Quer saber quando chegam gatos novos?" });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Agora não" }).click();
-    await expect(dialog).toBeHidden();
-    expect(await page.evaluate(() => localStorage.getItem("gn-avisos-gatos"))).toBeNull();
+    await page.clock.runFor(10_000);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
   test("never interrupts an emergency", async ({ page }) => {
-    await page.clock.install();
-    await page.goto("/");
+    await page.clock.install({ time: new Date("2026-10-10T12:00:00Z") });
     await page.goto("/sos");
-    await page.clock.runFor(90_000);
+    await page.clock.runFor(10_000);
     await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+
+  test("?avisos=agora shows the newest cat at once, even when already seen, and can switch to email alerts", async ({ page }) => {
+    await page.goto("/sobre");
+    await page.evaluate(() => localStorage.setItem("gn-gatos-vistos", JSON.stringify(["*"])));
+    await page.goto("/sobre?avisos=agora");
+    const dialog = page.getByRole("dialog", { name: newest });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Avisem-me por email quando chegarem outros" }).click();
+    const email = page.getByRole("dialog", { name: "Quer saber quando chegam gatos novos?" });
+    await expect(email.getByLabel("O seu email", { exact: true })).toBeVisible();
+    const results = await new AxeBuilder({ page }).include("dialog").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 
   test("from Adotar: ask for alerts about kittens, with explicit consent", async ({ page }) => {
@@ -685,8 +686,6 @@ test.describe("avisos de gatos novos", () => {
     await dialog.getByLabel("Aceito receber estes avisos por email").check();
     await dialog.getByRole("button", { name: "Avisem-me" }).click();
     await expect(dialog.getByText("Falta só confirmar")).toBeVisible();
-    const results = await new AxeBuilder({ page }).include("dialog").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
-    expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });
 

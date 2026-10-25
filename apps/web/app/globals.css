@@ -534,3 +534,9 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .donate-band__inner > :first-child { grid-row: span 2; }
   .donate-band__actions { grid-template-columns: repeat(2, auto); justify-content: start; }
 }
+
+/* "New cat" pop-up: the photo first, like a card. */
+.new-cat__photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--gn-radius); background: var(--gn-sand); }
+.new-cat__meta { margin: 0; font-weight: 600; color: var(--gn-ink-soft); }
+.new-cat p { margin: 0; }
+@media (max-width: 47.99rem) { .new-cat__photo { aspect-ratio: 16 / 10; } }
