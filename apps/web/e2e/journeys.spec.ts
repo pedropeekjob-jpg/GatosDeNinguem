@@ -32,8 +32,13 @@ const phone = (info: { project: { name: string } }) => info.project.name.startsW
 /** Opens a page from the main menu: a tab or "Mais" on phones, a section of the top menu on wide screens. */
 async function openFromMenu(page: Page, phoneOnly: boolean, section: string, link: RegExp) {
   if (phoneOnly) {
-    await page.getByRole("navigation", { name: "Menu principal" }).getByRole("button", { name: "Mais" }).click();
-    await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: link }).click();
+    const menu = page.getByRole("dialog", { name: "Menu" });
+    // A tap before the page has finished loading its scripts does nothing yet: tap again, as a person would.
+    await expect(async () => {
+      if (!(await menu.isVisible())) await page.getByRole("navigation", { name: "Menu principal" }).getByRole("button", { name: "Mais" }).click({ timeout: 2000 });
+      await expect(menu).toBeVisible({ timeout: 2000 });
+    }).toPass();
+    await menu.getByRole("link", { name: link }).click();
   } else {
     const nav = page.getByRole("navigation", { name: "Menu principal" });
     await nav.getByRole("button", { name: new RegExp(`^${section}`) }).click();
