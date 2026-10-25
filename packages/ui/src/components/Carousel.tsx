@@ -88,6 +88,17 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6,
           ) : null}
         </div>
       ) : null}
+      {/* One dot per photo: shows there are more, and each can be tapped, so nobody has to know about swiping.
+          Shown where the arrows are hidden (opening photos on phones). */}
+      {count > 1 ? (
+        <div className="gn-carousel__dots">
+          {slides.map((s, i) => (
+            <button key={`${s.src}-${i}`} type="button" className="gn-carousel__dot" onClick={() => go(i)} aria-label={`Fotografia ${i + 1} de ${count}`} aria-current={i === index ? true : undefined}>
+              <span aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }

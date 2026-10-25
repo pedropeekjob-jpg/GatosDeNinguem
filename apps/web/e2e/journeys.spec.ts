@@ -290,8 +290,8 @@ test("home: opens on the shelter's real photos, with the welcome and main button
   const carousel = page.getByRole("region", { name: "Fotografias do gatil" });
   await expect(carousel).toBeVisible();
   const box = await carousel.boundingBox();
-  // Full width on wide screens; on phones a rounded picture inset a little from the edges.
-  expect(box!.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - (page.viewportSize()!.width < 960 ? 32 : 1));
+  // Full width, from edge to edge.
+  expect(box!.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
   expect(box!.y).toBeLessThan(120); // right under the header: the photos are the top of the page
   await expect(carousel.locator("img").first()).toHaveAttribute("src", /\/fotos\/.+\.webp$/);
   // Nothing to scroll for: the title and the two main buttons are on screen, clear of the phone tab bar.
@@ -302,12 +302,21 @@ test("home: opens on the shelter's real photos, with the welcome and main button
     await expect(button).toBeInViewport({ ratio: 1 });
     expect((await button.boundingBox())!.y + (await button.boundingBox())!.height).toBeLessThanOrEqual(tabBarTop);
   }
-  await expect(carousel.locator(".gn-carousel__count")).toHaveText("1 / 6");
-  await carousel.getByRole("button", { name: "Fotografia seguinte" }).click();
-  await expect(carousel.locator(".gn-carousel__count")).toHaveText("2 / 6");
-  // Phones show only the photo and two arrows; wide screens add the caption and the play button.
-  // People who ask for reduced motion never get autoplay, but can still start it.
+  // Phones show a big photo with a row of dots to tap (no arrows over the cats); wide screens show the arrows,
+  // the caption and the play button. People who ask for reduced motion never get autoplay, but can still start it.
   const phone = page.viewportSize()!.width < 960;
+  await expect(carousel.locator(".gn-carousel__count")).toHaveText("1 / 6");
+  if (phone) {
+    await expect(carousel.getByRole("button", { name: "Fotografia seguinte" })).toBeHidden();
+    await carousel.getByRole("button", { name: "Fotografia 2 de 6" }).click();
+    await expect(carousel.getByRole("button", { name: "Fotografia 2 de 6" })).toHaveAttribute("aria-current", "true");
+    // Most of the screen width and a good part of its height: a photo, not a strip.
+    expect(box!.height).toBeGreaterThan(page.viewportSize()!.height * 0.3);
+  } else {
+    await expect(carousel.getByRole("button", { name: "Fotografia 2 de 6" })).toBeHidden();
+    await carousel.getByRole("button", { name: "Fotografia seguinte" }).click();
+  }
+  await expect(carousel.locator(".gn-carousel__count")).toHaveText("2 / 6");
   await expect(carousel.getByRole("button", { name: "Passar automaticamente" })).toBeVisible({ visible: !phone });
   await expect(carousel.locator(".gn-carousel__slide.is-active .gn-carousel__caption")).toBeVisible({ visible: !phone });
 });
