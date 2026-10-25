@@ -156,11 +156,14 @@ const QUIET = [/^\/sos/, /^\/conta/, /^\/loja/, /^\/patinhas/, /\/conhecer$/, /^
 const SESSION_KEY = "gn-novo-gato-mostrado";
 /** `?avisos=agora` shows the newest cat at once, on any page, even if already seen: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("avisos") === "agora";
+/** Test sites (GitHub Pages demo, Render): the newest cat on every visit, seen or not, so the pop-up can be tried. */
+const TEST_SITE = process.env.NEXT_PUBLIC_NEW_CAT_POPUP === "teste";
+const DELAY_MS = 5_000;
 
 /**
  * When a cat has just been put up for adoption (last 30 days) and this visitor has not seen it yet, a pop-up shows
  * it: photo, name, age and a short description, with a link to its page. Each cat once per visitor (opening its
- * page also counts), at most one pop-up per visit, a few seconds after the page opens, never over another window,
+ * page also counts), at most one pop-up per visit, 5 seconds after entering the site, never over another window,
  * while someone types, or on pages where it would get in the way. People can also ask for an email instead.
  */
 export function NewCatPrompt({ cats }: { cats: NewCat[] }) {
@@ -178,7 +181,7 @@ export function NewCatPrompt({ cats }: { cats: NewCat[] }) {
     let shownThisVisit = false;
     try { shownThisVisit = sessionStorage.getItem(SESSION_KEY) === "1"; } catch { /* private mode */ }
     if (!preview && (shownThisVisit || QUIET.some((r) => r.test(pathname)))) return;
-    const candidates = preview ? cats : unseenNewCats(cats, seenCats(), new Date()).filter((c) => c.slug !== own);
+    const candidates = preview || TEST_SITE ? cats.filter((c) => c.slug !== own) : unseenNewCats(cats, seenCats(), new Date()).filter((c) => c.slug !== own);
     const first = candidates[0];
     if (!first) return;
     const busy = () => !!document.querySelector("dialog[open]") || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "") || document.visibilityState !== "visible";
@@ -193,7 +196,7 @@ export function NewCatPrompt({ cats }: { cats: NewCat[] }) {
       setMore(candidates.length - 1);
       setOpen(true);
     };
-    timer = setTimeout(attempt, preview ? 300 : 4_000);
+    timer = setTimeout(attempt, preview ? 300 : DELAY_MS);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
@@ -202,20 +205,26 @@ export function NewCatPrompt({ cats }: { cats: NewCat[] }) {
   const close = () => setOpen(false);
   const female = cat.sex === "femea";
   return (
-    <Modal open={open} onClose={close} title={view === "cat" ? `Nov${female ? "a" : "o"} para adoção: ${cat.name}` : TITLE} intro={view === "email" ? INTRO : undefined} sheet>
+    <Modal open={open} onClose={close} title={view === "cat" ? `Nov${female ? "a" : "o"} para adoção: ${cat.name}` : TITLE} intro={view === "email" ? INTRO : undefined} sheet bare={view === "cat"}>
       {view === "cat" ? (
-        <div className="new-cat gn-stack gn-stack--m">
-          <img className="new-cat__photo" src={cat.photo.url} alt={cat.photo.alt} />
-          <div className="gn-stack gn-stack--s">
-            <p className="new-cat__meta">{ageLabel(cat.ageYears)} · {female ? "Fêmea" : "Macho"}</p>
-            <p>{cat.summary}</p>
+        <article className="new-cat">
+          <div className="new-cat__media">
+            <img className="new-cat__photo" src={cat.photo.url} alt={cat.photo.alt} />
+            <span className="new-cat__badge">Nov{female ? "a" : "o"} para adoção</span>
           </div>
-          <div className="gn-stack gn-stack--s">
-            <Button href={`/adotar/${cat.slug}`} block onClick={close}>Conhecer {female ? "a" : "o"} {cat.name}</Button>
-            {more > 0 ? <Button href="/adotar" variant="secondary" block onClick={close}>Ver {more === 1 ? "o outro gato novo" : `os outros ${more} gatos novos`}</Button> : null}
+          <div className="new-cat__body">
+            <div>
+              <h2 className="new-cat__name">{cat.name}</h2>
+              <p className="new-cat__meta">{ageLabel(cat.ageYears)} · {female ? "Fêmea" : "Macho"}</p>
+            </div>
+            <p className="new-cat__summary">{cat.summary}</p>
+            <div className="new-cat__actions">
+              <Button href={`/adotar/${cat.slug}`} block onClick={close}>Conhecer {female ? "a" : "o"} {cat.name}</Button>
+              {more > 0 ? <Button href="/adotar" variant="secondary" block onClick={close}>Ver {more === 1 ? "o outro gato novo" : `os outros ${more} gatos novos`}</Button> : null}
+            </div>
+            <button type="button" className="alert-later" onClick={() => setView("email")}>Avisem-me por email quando chegarem outros</button>
           </div>
-          <button type="button" className="alert-later" onClick={() => setView("email")}>Avisem-me por email quando chegarem outros</button>
-        </div>
+        </article>
       ) : (
         <CatAlertForm />
       )}

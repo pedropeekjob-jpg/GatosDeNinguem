@@ -666,6 +666,8 @@ test.describe("gato novo para adoção", () => {
     await page.goto("/sobre?avisos=agora");
     const dialog = page.getByRole("dialog", { name: newest });
     await expect(dialog).toBeVisible();
+    const card = await new AxeBuilder({ page }).include("dialog").withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+    expect(card.violations.map((v) => v.id)).toEqual([]);
     await dialog.getByRole("button", { name: "Avisem-me por email quando chegarem outros" }).click();
     const email = page.getByRole("dialog", { name: "Quer saber quando chegam gatos novos?" });
     await expect(email.getByLabel("O seu email", { exact: true })).toBeVisible();

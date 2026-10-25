@@ -15,7 +15,7 @@ for (const p of serverOnly) if (existsSync(p)) renameSync(p, join(stash, p.repla
 
 let status = 1;
 try {
-  const env = { ...process.env, STATIC_EXPORT: "1", NEXT_PUBLIC_STATIC_DEMO: "1", NEXT_PUBLIC_BASE_PATH: base, API_URL: "", ALLOW_INDEXING: "false" };
+  const env = { ...process.env, STATIC_EXPORT: "1", NEXT_PUBLIC_STATIC_DEMO: "1", NEW_CAT_POPUP: "teste", NEXT_PUBLIC_BASE_PATH: base, API_URL: "", ALLOW_INDEXING: "false" };
   status = spawnSync("pnpm", ["exec", "next", "build"], { env, stdio: "inherit", shell: process.platform === "win32" }).status ?? 1;
 } finally {
   for (const p of serverOnly) {

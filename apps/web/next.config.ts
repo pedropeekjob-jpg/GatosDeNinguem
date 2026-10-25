@@ -9,7 +9,8 @@ const config: NextConfig = {
   // Workspace packages ship TypeScript source.
   // Without an API (the GitHub Pages demo, tests) accounts and Patinhas run in the browser on example data.
   // FEATURES switches on optional parts (patinhas, trocas, amigo); the same setting as the API's.
-  env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1", NEXT_PUBLIC_FEATURES: process.env.FEATURES ?? process.env.NEXT_PUBLIC_FEATURES ?? "" },
+  // NEW_CAT_POPUP=teste (test sites): the "new cat" pop-up opens on every visit, so it can be tried.
+  env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1", NEXT_PUBLIC_NEW_CAT_POPUP: process.env.NEW_CAT_POPUP ?? "", NEXT_PUBLIC_FEATURES: process.env.FEATURES ?? process.env.NEXT_PUBLIC_FEATURES ?? "" },
   transpilePackages: ["@gn/ui", "@gn/domain", "@gn/seo"],
   poweredByHeader: false,
   images: { unoptimized: true },

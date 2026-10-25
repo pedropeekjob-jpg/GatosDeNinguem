@@ -111,6 +111,10 @@ services:
       # A test environment: keep it out of Google.
       - key: ALLOW_INDEXING
         value: "false"
+      # Testing the "new cat" pop-up: it opens 5 seconds after entering, on every visit, with the newest cat.
+      # Remove on the real site, where each cat shows once per visitor.
+      - key: NEW_CAT_POPUP
+        value: teste
 
   - type: web
     name: gatosdeninguem-gestao
