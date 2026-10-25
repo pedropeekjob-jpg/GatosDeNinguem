@@ -334,13 +334,21 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-carousel__btn:active { transform: scale(.94); }
 .gn-carousel__btn:focus-visible { outline: 3px solid var(--gn-ink); outline-offset: 2px; }
 @media (hover: hover) { .gn-carousel__btn:hover { background: var(--gn-accent-soft); } }
-/* Opening photos of a page (home). Phones keep the photo short so the welcome below it fits the first screen. */
+/* Opening photos of a page (home). */
 .gn-carousel--hero .gn-carousel__slide { aspect-ratio: 16 / 9; max-height: 28vh; }
+/* Dots: only where the arrows are hidden (see the phone rules for the opening photos). */
+.gn-carousel__dots { display: none; }
 @media (max-width: 59.99rem) {
-  /* Phones: the photo only. No caption, counter or play button on top of it; two quiet arrows at its sides. */
-  .gn-carousel--hero :is(.gn-carousel__caption, .gn-carousel__count, .gn-carousel__btn--play) { display: none; }
-  .gn-carousel--hero .gn-carousel__controls { inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 0.5rem; border-radius: 0; background: none; backdrop-filter: none; box-shadow: none; pointer-events: none; }
-  .gn-carousel--hero .gn-carousel__btn { pointer-events: auto; background: rgb(255 255 255 / .82); box-shadow: 0 2px 10px rgb(0 0 0 / .18); }
+  /* Phones: a big photo from edge to edge (as tall as the screen allows while leaving room for the welcome and
+     its buttons below), nothing on top of it but a row of dots. No arrows covering the cats,
+     no caption, counter or play button. The page may lay the next block over its bottom edge (--gn-hero-overlap). */
+  .gn-carousel--hero .gn-carousel__slide { aspect-ratio: auto; height: clamp(13rem, 100vh - 25rem, 30rem); height: clamp(13rem, 100svh - 25rem, 30rem); max-height: none; }
+  .gn-carousel--hero :is(.gn-carousel__caption, .gn-carousel__controls) { display: none; }
+  .gn-carousel--hero .gn-carousel__dots { position: absolute; left: 0; right: 0; bottom: calc(var(--gn-hero-overlap, 0px) + 0.25rem); display: flex; justify-content: center; padding: 0 var(--gn-space-m); }
+  .gn-carousel__dot { display: grid; place-items: center; flex: 0 1 2rem; min-width: 1.25rem; height: 2.75rem; padding: 0; border: 0; background: none; cursor: pointer; }
+  .gn-carousel__dot span { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: rgb(255 255 255 / .62); box-shadow: 0 1px 4px rgb(0 0 0 / .35); transition: width .25s, background-color .25s; }
+  .gn-carousel__dot[aria-current="true"] span { width: 1.4rem; background: #fff; }
+  .gn-carousel__dot:focus-visible { outline: 3px solid #fff; outline-offset: -6px; border-radius: 999px; }
 }
 @media (min-width: 60rem) {
   .gn-carousel--hero .gn-carousel__slide { aspect-ratio: auto; height: clamp(22rem, 60vh, 46rem); max-height: none; }
@@ -363,11 +371,6 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-header--tabbar .gn-nav__link[aria-current="page"] { color: var(--gn-ink); }
   /* White page, white cards: a clear hairline and the faintest lift; the photo does the rest. */
   .gn-card { border-color: #dedad6; box-shadow: 0 1px 3px rgb(28 26 27 / .06); }
-  /* Opening photos: a rounded picture inset from the edges, like a card, rather than a full-bleed strip. */
-  .gn-carousel--hero { margin: 0.75rem 0.75rem 0; border-radius: var(--gn-radius); overflow: hidden; background: var(--gn-sand); }
-  /* The inset costs a little height: take it back from the photo so the Patinhas card still fits the first screen. */
-  .gn-carousel--hero .gn-carousel__slide { max-height: 25vh; }
-  .gn-carousel--hero .gn-carousel__btn { width: 2.75rem; height: 2.75rem; background: rgb(255 255 255 / .9); }
 }
 
 /* Modal: full screen on phones (like an app screen), a centred window on computers. */

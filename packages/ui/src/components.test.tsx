@@ -240,6 +240,16 @@ describe("Carousel", () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 
+  it("has a dot per photo that jumps straight to it", async () => {
+    const user = userEvent.setup();
+    render(<Carousel slides={slides} label="Fotografias do gatil" hero />);
+    expect(screen.getByRole("button", { name: "Fotografia 1 de 3" })).toHaveAttribute("aria-current", "true");
+    await user.click(screen.getByRole("button", { name: "Fotografia 3 de 3" }));
+    expect(screen.getByText("3 / 3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fotografia 3 de 3" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: "Fotografia 1 de 3" })).not.toHaveAttribute("aria-current");
+  });
+
   it("offers a pause button when it plays by itself", async () => {
     const user = userEvent.setup();
     render(<Carousel slides={slides} label="Fotografias do gatil" autoplay intervalSeconds={4} />);
