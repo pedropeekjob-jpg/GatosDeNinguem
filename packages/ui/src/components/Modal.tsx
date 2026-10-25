@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 /**
  * A window over the page: full screen on phones, centred on computers.
@@ -49,4 +49,26 @@ export function Modal({ open, onClose, title, intro, sheet, children }: { open: 
       ) : null}
     </dialog>
   );
+}
+
+/** Open/close state for a Modal where the phone's Back button closes the window instead of leaving the page. */
+export function useModalHistory() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onPop = () => setOpen(false);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [open]);
+  return {
+    open,
+    show: () => {
+      window.history.pushState({ ...window.history.state, gnModal: true }, "");
+      setOpen(true);
+    },
+    hide: () => {
+      if (window.history.state?.gnModal) window.history.back();
+      else setOpen(false);
+    },
+  };
 }

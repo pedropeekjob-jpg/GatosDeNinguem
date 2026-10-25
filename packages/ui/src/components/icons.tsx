@@ -23,3 +23,8 @@ export const IconNews = () => <Icon><rect x="3.5" y="4.5" width="17" height="15"
 export const IconPaw = () => (
   <Icon><ellipse cx="12" cy="16" rx="4.2" ry="3.5" /><circle cx="6" cy="11" r="1.7" /><circle cx="9.3" cy="6.8" r="1.7" /><circle cx="14.7" cy="6.8" r="1.7" /><circle cx="18" cy="11" r="1.7" /></Icon>
 );
+/** Three lines: the menu with every page. */
+export const IconMenu = () => <Icon><path d="M4 7h16M4 12h16M4 17h16" /></Icon>;
+/** A small arrow: down for a menu that opens, right for a link to another page. */
+export const IconChevronDown = () => <Icon><path d="m6.5 9.5 5.5 5.5 5.5-5.5" /></Icon>;
+export const IconChevronRight = () => <Icon><path d="m9.5 6.5 5.5 5.5-5.5 5.5" /></Icon>;

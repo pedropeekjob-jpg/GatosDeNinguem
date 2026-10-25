@@ -227,7 +227,44 @@ a:hover { text-decoration-thickness: 2.5px; }
 .gn-nav__count { min-width: 1.5rem; padding: 0 0.4rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-size: 0.875rem; font-weight: 700; line-height: 1.5rem; text-align: center; font-variant-numeric: tabular-nums; }
 .gn-icon { display: block; width: 1.5rem; height: 1.5rem; }
 /* Icons are for the phone tab bar; wide screens keep plain words. */
-.gn-header--tabbar .gn-nav__icon { display: none; }
+.gn-nav .gn-nav__icon { display: none; }
+.gn-tabbar { display: none; }
+
+/* A section of the top menu that opens its pages: a button that looks like the other menu items, with a small arrow. */
+.gn-nav__group { position: relative; }
+.gn-nav__toggle { font: inherit; font-weight: 600; border: 0; background: none; cursor: pointer; gap: 0.3rem; }
+.gn-nav__toggle.gn-nav__link--key { font-weight: 700; }
+.gn-nav__chevron { display: inline-flex; transition: transform 0.2s; }
+.gn-nav__chevron .gn-icon { width: 1.1rem; height: 1.1rem; }
+.gn-nav__toggle[aria-expanded="true"] { color: var(--gn-ink); background: var(--gn-accent-soft); }
+.gn-nav__toggle[aria-expanded="true"] .gn-nav__chevron { transform: rotate(180deg); }
+/* The section holding the current page carries the same yellow bar as a current link. */
+.gn-nav__link--here { color: var(--gn-ink); }
+.gn-nav__link--here::after { transform: none; height: 3px; background: var(--gn-accent-strong); }
+.gn-nav__toggle::after { right: 2.2rem; }
+.gn-subnav {
+  position: absolute; z-index: 50; top: calc(100% + 0.5rem); left: 50%; transform: translateX(-50%); width: 23rem; padding: 0.5rem;
+  background: var(--gn-surface); border: 1px solid var(--gn-line); border-radius: var(--gn-radius); box-shadow: 0 16px 44px rgb(28 26 27 / 0.14);
+}
+.gn-subnav[hidden] { display: none; }
+.gn-subnav__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+.gn-subnav__link {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-height: var(--gn-target); padding: 0.65rem 0.8rem;
+  color: var(--gn-ink); text-decoration: none; border-radius: var(--gn-radius-s); transition: background-color 0.18s;
+}
+.gn-subnav__link:focus-visible { background: var(--gn-accent-soft); }
+.gn-subnav__link[aria-current="page"] { background: var(--gn-accent-soft); }
+.gn-subnav__label { display: block; font-weight: 650; line-height: 1.3; }
+.gn-subnav__desc { display: block; margin-top: 0.1rem; font-size: var(--gn-text-s); line-height: 1.35; color: var(--gn-ink-soft); }
+.gn-subnav__arrow { flex: none; display: inline-flex; color: var(--gn-ink-soft); }
+.gn-subnav__arrow .gn-icon { width: 1.25rem; height: 1.25rem; }
+/* "Mais" on phones: every section as a headed list, one big row per page. */
+.gn-menu { display: grid; gap: var(--gn-space-m); }
+.gn-menu__group { display: grid; gap: 0.5rem; }
+.gn-menu__title { margin: 0; font-size: var(--gn-text-s); font-weight: 700; letter-spacing: 0.02em; color: var(--gn-ink-soft); }
+.gn-menu .gn-subnav__list { gap: 0; border: 1px solid #dedad6; border-radius: var(--gn-radius); overflow: hidden; }
+.gn-menu .gn-subnav__list li + li { border-top: 1px solid var(--gn-line); }
+.gn-menu .gn-subnav__link { min-height: 3.5rem; padding: 0.75rem 1rem; border-radius: 0; }
 
 @media (max-width: 63.99rem) {
   /* Without a tab bar (back office), the menu is one row under the logo that scrolls sideways. */
@@ -235,29 +272,29 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-nav { flex: 1 1 100%; border-top: 1px solid var(--gn-line); margin-inline: calc(-1 * max(1.25rem, env(safe-area-inset-left, 0px))); overflow-x: auto; scrollbar-width: none; }
   .gn-nav__list { padding-inline: max(0.5rem, env(safe-area-inset-left, 0px)); width: max-content; }
 
-  /* Tab bar: one compact row on top, the menu fixed to the bottom of the screen like a phone app. */
+  /* Tab bar: one compact row on top, the main pages fixed to the bottom of the screen like a phone app. */
   .gn-header--tabbar .gn-header__inner { flex-wrap: nowrap; }
-  .gn-header--tabbar .gn-nav {
-    position: fixed; z-index: 40; inset: auto 0 0 0; margin: 0; overflow: visible;
+  .gn-header--tabbar .gn-nav { display: none; }
+  .gn-tabbar {
+    display: block; position: fixed; z-index: 40; inset: auto 0 0 0;
     background: rgb(255 255 255 / 0.94); -webkit-backdrop-filter: saturate(1.6) blur(14px); backdrop-filter: saturate(1.6) blur(14px);
     border-top: 1px solid var(--gn-line); padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   }
-  .gn-header--tabbar .gn-nav__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); width: auto; max-width: 40rem; margin-inline: auto; padding: 0; gap: 0; }
-  .gn-header--tabbar .gn-nav__icon { display: inline-flex; }
-  .gn-header--tabbar .gn-nav__item--wide { display: none; }
-  .gn-header--tabbar .gn-nav__link {
-    position: relative; flex-direction: column; gap: 0.2rem; min-height: 4.25rem; padding: 0.55rem 0.15rem 0.5rem;
-    font-size: 0.8125rem; line-height: 1.15; white-space: normal; overflow-wrap: anywhere;
+  .gn-tabbar__list { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); max-width: 40rem; margin: 0 auto; padding: 0; gap: 0; }
+  .gn-tabbar .gn-nav__link {
+    position: relative; flex-direction: column; gap: 0.2rem; width: 100%; min-height: 4.25rem; padding: 0.55rem 0.15rem 0.5rem;
+    font: inherit; font-size: 0.8125rem; font-weight: 600; line-height: 1.15; white-space: normal; overflow-wrap: anywhere;
+    border: 0; border-radius: 0; background: none; cursor: pointer;
   }
-  .gn-header--tabbar .gn-nav__link[aria-current="page"] { text-decoration: none; font-weight: 700; }
-  .gn-header--tabbar .gn-nav__link { border-radius: 0; }
-  .gn-header--tabbar .gn-nav__link::after { left: 50%; right: auto; top: 0; bottom: auto; width: 2rem; height: 2px; margin-left: -1rem; }
-  .gn-header--tabbar .gn-nav__link .gn-icon { transition: transform 0.18s; }
-  .gn-header--tabbar .gn-nav__link[aria-current="page"] .gn-icon { stroke-width: 2.3; }
-  /* Current tab: its icon sits in a yellow pill, like a phone app. */
-  .gn-header--tabbar .gn-nav__icon { padding: 0.15rem 1rem; border-radius: 999px; transition: background-color 0.2s; }
-  .gn-header--tabbar .gn-nav__link[aria-current="page"] .gn-nav__icon { background: var(--gn-accent); }
-  .gn-header--tabbar .gn-nav__link[aria-current="page"]::after { transform: scaleX(0); }
+  .gn-tabbar .gn-nav__link--key { font-weight: 700; }
+  .gn-tabbar .gn-nav__link[aria-current="page"], .gn-tabbar .gn-nav__link--here { color: var(--gn-ink); text-decoration: none; font-weight: 700; }
+  .gn-tabbar .gn-nav__link::after { left: 50%; right: auto; top: 0; bottom: auto; width: 2rem; height: 2px; margin-left: -1rem; }
+  .gn-tabbar .gn-nav__link .gn-icon { transition: transform 0.18s; }
+  .gn-tabbar .gn-nav__link[aria-current="page"] .gn-icon, .gn-tabbar .gn-nav__link--here .gn-icon { stroke-width: 2.3; }
+  /* Current tab: its icon sits in a yellow pill, like a phone app. "Mais" gets it on every page it leads to. */
+  .gn-tabbar .gn-nav__icon { display: inline-flex; padding: 0.15rem 1rem; border-radius: 999px; transition: background-color 0.2s; }
+  .gn-tabbar .gn-nav__link[aria-current="page"] .gn-nav__icon, .gn-tabbar .gn-nav__link--here .gn-nav__icon { background: var(--gn-accent); }
+  .gn-tabbar .gn-nav__link[aria-current="page"]::after, .gn-tabbar .gn-nav__link--here::after { transform: scaleX(0); }
   .gn-header--tabbar .gn-btn--urgent { white-space: normal; line-height: 1.15; text-align: center; min-width: 0; }
   body:has(.gn-header--tabbar) { padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px)); }
 }
@@ -268,7 +305,7 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-header__tools { order: 2; }
   .gn-nav__list { justify-content: center; }
 }
-@media (max-width: 24rem) { .gn-header--tabbar .gn-nav__link { font-size: 0.875rem; white-space: nowrap; } }
+@media (max-width: 24rem) { .gn-tabbar .gn-nav__link { font-size: 0.875rem; white-space: nowrap; } }
 .gn-crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem; font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
 .gn-crumbs a { color: var(--gn-ink-soft); }
 .gn-crumbs li + li::before { content: "/"; margin-right: 0.3rem; color: var(--gn-line-strong); }
@@ -302,7 +339,8 @@ a:hover { text-decoration-thickness: 2.5px; }
 @media (hover: hover) {
   .gn-nav__link:hover { color: var(--gn-ink); background: var(--gn-accent-soft); }
   .gn-nav__link:hover::after { transform: none; }
-  .gn-header--tabbar .gn-nav__link:hover .gn-icon { transform: translateY(-2px); }
+  .gn-tabbar .gn-nav__link:hover .gn-icon { transform: translateY(-2px); }
+  .gn-subnav__link:hover { background: var(--gn-accent-soft); }
   .gn-header__brand:hover { opacity: 0.75; }
   .gn-btn--primary:hover { background: #000; border-color: #000; color: #fff; }
   .gn-section--ink .gn-btn--primary:hover { background: #fff; color: var(--gn-ink); }
@@ -366,9 +404,9 @@ a:hover { text-decoration-thickness: 2.5px; }
   .gn-btn--secondary { background: var(--gn-surface); border-color: var(--gn-ink); }
   .gn-header { border-bottom-color: transparent; box-shadow: 0 1px 0 rgb(28 26 27 / .06); }
   .gn-header .gn-btn--urgent { background: #fdecea; border-color: transparent; border-radius: 999px; padding-inline: 0.9rem; }
-  .gn-header--tabbar .gn-nav { border-top: 0; box-shadow: 0 -6px 24px rgb(28 26 27 / .08); }
-  .gn-header--tabbar .gn-nav__link { color: #6b6562; }
-  .gn-header--tabbar .gn-nav__link[aria-current="page"] { color: var(--gn-ink); }
+  .gn-tabbar { border-top: 0; box-shadow: 0 -6px 24px rgb(28 26 27 / .08); }
+  .gn-tabbar .gn-nav__link { color: #6b6562; }
+  .gn-tabbar .gn-nav__link[aria-current="page"], .gn-tabbar .gn-nav__link--here { color: var(--gn-ink); }
   /* White page, white cards: a clear hairline and the faintest lift; the photo does the rest. */
   .gn-card { border-color: #dedad6; box-shadow: 0 1px 3px rgb(28 26 27 / .06); }
 }

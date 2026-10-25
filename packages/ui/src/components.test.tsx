@@ -138,14 +138,67 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "Encontrei um gato" })).toBeInTheDocument();
   });
 
-  it("can show the menu as a phone tab bar with icons, keeping the words as link names", () => {
+  const sections = [
+    { href: "/adotar", label: "Adotar", children: [
+      { href: "/adotar", label: "Gatos para adoção", description: "Os gatos que procuram casa" },
+      { href: "/finais-felizes", label: "Finais felizes" },
+    ] },
+    { href: "/sobre", label: "Sobre nós", children: [{ href: "/sobre", label: "Quem somos" }, { href: "/noticias", label: "Notícias" }] },
+  ];
+
+  it("opens a section's pages on click, closes them with Esc and gives focus back", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<SiteHeader brand={<span>Marca</span>} homeHref="/" currentPath="/noticias" items={sections} />);
+    const button = screen.getByRole("button", { name: /^Sobre nós/ });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    // The links are in the page even while closed (search engines), only hidden.
+    expect(container.querySelector('a[href="/finais-felizes"]')).not.toBeNull();
+    expect(screen.queryByRole("link", { name: /Quem somos/ })).toBeNull();
+    // The section with the current page says so, and its link is marked as the current page.
+    expect(button).toHaveClass("gn-nav__link--here");
+    await user.click(button);
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: /Notícias/ })).toHaveAttribute("aria-current", "page");
+    await user.click(screen.getByRole("button", { name: /^Adotar/ }));
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("link", { name: /Gatos para adoção/ })).toHaveTextContent("Os gatos que procuram casa");
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("button", { name: /^Adotar/ })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /^Adotar/ })).toHaveFocus();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("works from the keyboard and closes on a click elsewhere", async () => {
+    const user = userEvent.setup();
+    render(<><SiteHeader brand={<span>Marca</span>} homeHref="/" currentPath="/" items={sections} /><p>Fora</p></>);
+    screen.getByRole("button", { name: /^Adotar/ }).focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: /^Adotar/ })).toHaveAttribute("aria-expanded", "true");
+    await user.tab();
+    expect(screen.getByRole("link", { name: /Gatos para adoção/ })).toHaveFocus();
+    await user.click(screen.getByText("Fora"));
+    expect(screen.getByRole("button", { name: /^Adotar/ })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("on phones, keeps a few tabs and puts every page under Mais", async () => {
+    const user = userEvent.setup();
     const { container } = render(
-      <SiteHeader brand={<span>Marca</span>} homeHref="/" currentPath="/" tabBar
-        items={[{ href: "/", label: "Início", icon: <svg /> }, { href: "/sobre", label: "Sobre nós", icon: <svg /> }]} />,
+      <SiteHeader brand={<span>Marca</span>} homeHref="/" currentPath="/noticias" items={sections}
+        tabs={[{ href: "/", label: "Início", icon: <svg /> }, { href: "/adotar", label: "Adotar", icon: <svg /> }]} />,
     );
     expect(container.querySelector("header")).toHaveClass("gn-header--tabbar");
-    expect(screen.getByRole("navigation", { name: "Menu principal" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Sobre nós" })).toBeInTheDocument();
+    const tabBar = container.querySelector(".gn-tabbar") as HTMLElement;
+    expect(tabBar.querySelectorAll("li")).toHaveLength(3);
+    const more = screen.getByRole("button", { name: "Mais" });
+    // On a page that has no tab of its own, "Mais" is the one lit.
+    expect(more).toHaveClass("gn-nav__link--here");
+    await user.click(more);
+    const menu = screen.getByRole("dialog", { name: "Menu" });
+    expect(menu).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sobre nós" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /Notícias/ }).some((a) => a.getAttribute("aria-current") === "page")).toBe(true);
+    await user.click(screen.getByRole("button", { name: /Fechar/ }));
+    expect(screen.getByRole("button", { name: "Mais" })).toHaveAttribute("aria-expanded", "false");
   });
 });
 

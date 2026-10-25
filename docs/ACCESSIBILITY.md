@@ -8,7 +8,8 @@ Many supporters are older and not comfortable with technology. These rules are e
 - High contrast (WCAG AA), links always underlined, plain Portuguese, no jargon.
 
 **Finding things**
-- Main menu always visible, never hidden behind a "hamburger". Five items at most. On phones it is a bar fixed to the bottom of the screen, each item an icon plus a word.
+- Main menu always visible, four sections at most (Adotar, Doar, Ajudar, Sobre nós); the logo leads home. On wide screens each section is a button that opens its pages on click, tap, Enter or Space (never on hover alone), each page with a one-line description; Esc, a click elsewhere or tabbing out closes it.
+- On phones the menu is a bar fixed to the bottom of the screen, each item an icon plus a word: Início, Adotar, Doar and "Mais". "Mais" opens every page, grouped by section, in a full-screen window that closes with "Fechar", Esc or the phone's Back button.
 - "Encontrei um gato" (emergency) button on every page.
 - Breadcrumbs ("Está aqui") on inner pages.
 
