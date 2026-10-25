@@ -27,18 +27,79 @@ test.describe("every page", () => {
   }
 });
 
-test("main navigation is always visible (no hidden menu)", async ({ page }) => {
-  await page.goto("/");
-  for (const name of ["Início", "Adotar", "Doar", "Ajudar", "Notícias"]) {
-    await expect(page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name })).toBeVisible();
+const phone = (info: { project: { name: string } }) => info.project.name.startsWith("telemovel");
+
+/** Opens a page from the main menu: a tab or "Mais" on phones, a section of the top menu on wide screens. */
+async function openFromMenu(page: Page, phoneOnly: boolean, section: string, link: RegExp) {
+  if (phoneOnly) {
+    await page.getByRole("navigation", { name: "Menu principal" }).getByRole("button", { name: "Mais" }).click();
+    await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: link }).click();
+  } else {
+    const nav = page.getByRole("navigation", { name: "Menu principal" });
+    await nav.getByRole("button", { name: new RegExp(`^${section}`) }).click();
+    await nav.getByRole("link", { name: link }).click();
   }
-  // Phones keep five tabs; "Sobre nós" is in the top menu on wide screens and always in the footer.
+}
+
+test("main navigation: four sections at most, always visible (no hidden menu)", async ({ page }, info) => {
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Menu principal" });
+  if (phone(info)) {
+    // Phones: three tabs and "Mais", which opens every other page.
+    for (const name of ["Início", "Adotar", "Doar"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+    await expect(nav.getByRole("button", { name: "Mais" })).toBeVisible();
+    await expect(nav.getByRole("listitem")).toHaveCount(4);
+  } else {
+    // Wide screens: four sections; the logo leads home.
+    for (const name of ["Adotar", "Doar", "Ajudar", "Sobre nós"]) await expect(nav.getByRole("button", { name: new RegExp(`^${name}`) })).toBeVisible();
+    await expect(nav.locator(":scope > ul > li")).toHaveCount(4);
+  }
+  // "Sobre nós" is always in the footer too.
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "Sobre nós" })).toBeVisible();
-  // "Encontrei um gato" left the header but is still one tap away in the footer.
+  // "Encontrei um gato" is not a button in the header, but stays one tap away in the footer.
   await expect(page.getByRole("banner").getByRole("link", { name: "Encontrei um gato" })).toHaveCount(0);
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "Encontrei um gato" })).toBeVisible();
   // The association's own logo leads home.
   await expect(page.getByRole("link", { name: "Gatos de Ninguém, página inicial" })).toBeVisible();
+});
+
+test("main navigation: every section's pages open from the menu, by mouse, touch or keyboard", async ({ page }, info) => {
+  await page.goto("/");
+  await openFromMenu(page, phone(info), "Sobre nós", /^Notícias/);
+  await expect(page).toHaveURL(/\/noticias\/?$/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  if (phone(info)) {
+    // A page without a tab of its own lights "Mais"; Back closes the menu instead of leaving the page.
+    const more = page.getByRole("navigation", { name: "Menu principal" }).getByRole("button", { name: "Mais" });
+    await expect(more).toHaveClass(/gn-nav__link--here/);
+    await more.click();
+    await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible();
+    await page.goBack();
+    await expect(page.getByRole("dialog", { name: "Menu" })).toBeHidden();
+    await expect(page).toHaveURL(/\/noticias\/?$/);
+    // Back from a page opened from "Mais" returns to where the visitor was.
+    await openFromMenu(page, true, "Ajudar", /^Família temporária/);
+    await expect(page).toHaveURL(/\/ajudar\/familia-temporaria\/?$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/noticias\/?$/);
+  } else {
+    const nav = page.getByRole("navigation", { name: "Menu principal" });
+    await expect(nav.getByRole("button", { name: /^Sobre nós/ })).toHaveClass(/gn-nav__link--here/);
+    // Keyboard: Enter opens, Tab walks the pages, Esc closes and returns to the section.
+    const help = nav.getByRole("button", { name: /^Ajudar/ });
+    await help.focus();
+    await page.keyboard.press("Enter");
+    await expect(help).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Tab");
+    await expect(nav.getByRole("link", { name: /^Todas as formas de ajudar/ })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(help).toHaveAttribute("aria-expanded", "false");
+    await expect(help).toBeFocused();
+    // A click elsewhere closes it too.
+    await help.click();
+    await page.mouse.click(10, 600);
+    await expect(help).toHaveAttribute("aria-expanded", "false");
+  }
 });
 
 test("touch targets are at least 44px tall", async ({ page }) => {
@@ -230,7 +291,7 @@ test("home: opens on the shelter's real photos, with the welcome and main button
   await expect(carousel.locator("img").first()).toHaveAttribute("src", /\/fotos\/.+\.webp$/);
   // Nothing to scroll for: the title and the two main buttons are on screen, clear of the phone tab bar.
   await expect(page.getByRole("heading", { level: 1 })).toBeInViewport({ ratio: 1 });
-  const tabBarTop = await page.locator(".gn-nav").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
+  const tabBarTop = await page.locator(".gn-tabbar").evaluate((n) => (getComputedStyle(n).position === "fixed" ? n.getBoundingClientRect().top : Infinity));
   for (const name of ["Quero adotar", "Quero doar"]) {
     const button = page.locator(".home-actions").getByRole("link", { name });
     await expect(button).toBeInViewport({ ratio: 1 });
@@ -427,24 +488,27 @@ test("home: adopting and donating come first, and Patinhas (when on) are still e
   await expect(page).toHaveURL(/\/patinhas\/?$/);
 });
 
-test("donate: from the home page to the bank details, ready to copy", async ({ page }) => {
+test("donate: from the home page to the bank details, ready to copy", async ({ page }, info) => {
   await page.goto("/");
   await page.locator(".home-actions").getByRole("link", { name: "Quero doar" }).click();
   await expect(page).toHaveURL(/\/doar\/?$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Fazer um donativo");
   await expect(page.getByText("PT50 0045 1436 4033 0203 2321 6")).toBeVisible();
   await expect(page.getByRole("link", { name: "Apadrinhar um gato" })).toBeVisible();
-  await expect(page.locator("header nav").getByRole("link", { name: "Doar", exact: true })).toHaveAttribute("aria-current", "page");
+  const nav = page.getByRole("navigation", { name: "Menu principal" });
+  if (phone(info)) await expect(nav.getByRole("link", { name: "Doar", exact: true })).toHaveAttribute("aria-current", "page");
+  else await expect(nav.getByRole("button", { name: /^Doar/ })).toHaveClass(/gn-nav__link--here/);
 });
 
-test("menu links change page inside the app, without a reload or a loader flash", async ({ page }) => {
+test("menu links change page inside the app, without a reload or a loader flash", async ({ page }, info) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await page.evaluate(() => { (window as unknown as { __same: boolean }).__same = true; });
-  for (const name of ["Adotar", "Doar", "Início"]) {
-    await page.locator("header nav").getByRole("link", { name, exact: true }).click();
-    await expect(page.locator("header nav").getByRole("link", { name, exact: true })).toHaveAttribute("aria-current", "page");
+  const steps: [string, RegExp, RegExp][] = [["Adotar", /^Gatos para adoção/, /\/adotar\/?$/], ["Doar", /^Fazer um donativo/, /\/doar\/?$/], ["Sobre nós", /^Quem somos/, /\/sobre\/?$/]];
+  for (const [section, link, url] of steps) {
+    await openFromMenu(page, phone(info), section, link);
+    await expect(page).toHaveURL(url);
     await expect(page.locator("main h1")).toBeVisible();
     await expect(page.locator(".route-loading")).toHaveCount(0);
   }
@@ -522,14 +586,13 @@ test("família temporária: from Ajudar to a sent request, with the cats that ne
   await expect(page.getByText("Obrigado! Vamos ligar-lhe.")).toBeVisible();
 });
 
-test("finais felizes: on the home page, on Adotar and, on wide screens, in the menu", async ({ page }, info) => {
+test("finais felizes: on the home page, on Adotar and in the menu", async ({ page }, info) => {
   await page.goto("/");
   const happy = page.getByRole("region", { name: "Finais felizes" });
   await expect(happy.getByText(/gatos? já encontr/)).toBeVisible();
   await expect(happy.getByRole("heading", { level: 3 }).first()).toBeVisible();
-  const menuLink = page.getByRole("navigation", { name: /principal|menu/i }).getByRole("link", { name: "Finais felizes" });
-  if (info.project.name.startsWith("telemovel")) await expect(menuLink).toBeHidden();
-  else await expect(menuLink).toBeVisible();
+  await openFromMenu(page, phone(info), "Adotar", /^Finais felizes/);
+  await expect(page).toHaveURL(/\/finais-felizes\/?$/);
   await page.goto("/adotar");
   await page.getByRole("link", { name: /já encontr.* família\. Ver os finais felizes/ }).click();
   await expect(page).toHaveURL(/\/finais-felizes\/?$/);
