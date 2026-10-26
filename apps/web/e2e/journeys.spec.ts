@@ -833,3 +833,14 @@ test("dates: cats show how long they have waited, news and happy endings show wh
   await page.goto("/finais-felizes");
   await expect(page.getByText(/Adotada a 14 de setembro de 2026, depois de \d+ anos? no gatil/)).toBeVisible();
 });
+
+test.describe("Quem somos", () => {
+  test("shows the faces behind the association, each with a name and a role", async ({ page }) => {
+    await page.goto("/sobre");
+    const team = page.getByRole("region", { name: "As caras por trás dos gatos" });
+    await expect(team.getByRole("listitem")).toHaveCount(6);
+    await expect(team.getByRole("img", { name: "Fotografia de Ana Ribeiro" })).toBeVisible();
+    await expect(team.getByRole("heading", { name: "Ana Ribeiro" })).toBeVisible();
+    await expect(team.getByText("Presidente")).toBeVisible();
+  });
+});
