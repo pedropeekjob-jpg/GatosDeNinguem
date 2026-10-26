@@ -20,8 +20,11 @@ export function ParallaxLogo() {
     const update = () => {
       frame = 0;
       // Centred when the section is centred on screen; drifts at a third of the scroll speed either side.
+      // Never further than the free space above or below it, so the whole cat stays inside the block.
       const r = box.getBoundingClientRect();
-      el.style.setProperty("--parallax", `${Math.round((window.innerHeight / 2 - (r.top + r.height / 2)) * 0.3)}px`);
+      const room = Math.max(0, (r.height - el.offsetHeight) / 2);
+      const shift = (window.innerHeight / 2 - (r.top + r.height / 2)) * 0.3;
+      el.style.setProperty("--parallax", `${Math.round(Math.max(-room, Math.min(room, shift)))}px`);
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();

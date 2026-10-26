@@ -574,6 +574,10 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 /* Sobre nós: the animated logo as a faint backdrop behind "A nossa missão" and "O nosso percurso", scrolling slower
  *  than the text (parallax, see ParallaxLogo). */
 .story { position: relative; isolation: isolate; overflow: clip; padding-block: var(--gn-space-l); }
-.story-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; display: grid; place-items: center; }
-.story-bg__logo { width: min(100%, 52rem); opacity: 0.07; transform: translate3d(0, var(--parallax, 0px), 0); will-change: transform; }
-.story-bg__logo svg { display: block; width: 100%; height: auto; }
+.story-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; display: grid; place-items: center end; }
+/* On the right and always whole: at most 85% of the block's height and the screen's width, so the parallax
+ *  (clamped in ParallaxLogo) never pushes it out of the block. Wide screens: against the page's right margin. */
+.story-bg__logo { width: min(100%, 22rem); max-height: 85%; opacity: 0.1; transform: translate3d(0, var(--parallax, 0px), 0); will-change: transform; }
+.story-bg__logo .gn-alogo { display: block; }
+.story-bg__logo svg { display: block; width: 100%; height: auto; max-height: inherit; }
+@media (min-width: 60rem) { .story-bg__logo { width: min(45%, 30rem); margin-right: max(1.25rem, calc((100vw - 72rem) / 2)); } }
