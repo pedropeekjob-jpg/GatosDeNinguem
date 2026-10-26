@@ -581,3 +581,4 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 .story-bg__logo .gn-alogo { display: block; }
 .story-bg__logo svg { display: block; width: 100%; height: auto; max-height: inherit; }
 @media (min-width: 60rem) { .story-bg__logo { width: min(45%, 30rem); margin-right: max(1.25rem, calc((100vw - 72rem) / 2)); } }
+.contact-aside { border-top: 1px solid var(--gn-line); padding-top: var(--gn-space-m); }
