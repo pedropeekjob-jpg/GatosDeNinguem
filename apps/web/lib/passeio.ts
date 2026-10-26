@@ -1,21 +1,17 @@
 /**
- * The strolling cat: now and then a cat drawn like the one in the logo walks along the bottom of the screen, stops,
- * says the name of a real cat up for adoption, and walks on. Tapping it (or pointing at it) shows that cat's card.
- * These rules keep it rare, so it stays a nice surprise and never gets in the way.
+ * The strolling cat: now and then the logo's cat walks into the bottom right corner, says the name of a real cat up
+ * for adoption and lies there a while. Tapping it (or pointing at it) shows that cat's card. How often it comes is
+ * set in the back office (Avisos); "Agora não" sends it away for the rest of the visit.
  */
 
 /** Optional part of the site; on unless the site is built with GATO_PASSEIO=0. */
 export const strollingCatOn = process.env.NEXT_PUBLIC_GATO_PASSEIO !== "0";
 
 export const STROLL = {
-  /** Never in the first seconds of a visit: people first look at the page. */
-  firstAfterMs: 20_000,
-  /** At least this long between two walks. */
-  gapMs: 150_000,
-  /** At most this many walks per visit. */
-  perVisit: 3,
-  /** "Agora não" hides it for this long. */
-  pauseMs: 3 * 24 * 60 * 60 * 1000,
+  /** The first one comes a few seconds into a visit, once people have seen the page. */
+  firstAfterMs: 8_000,
+  /** Between one cat leaving and the next one coming in, unless the back office says otherwise. */
+  gapMs: 60_000,
 };
 
 /** Pages where it never walks, on top of the new-cat pop-up's quiet pages: giving money and signing up are focus moments. */
@@ -24,21 +20,16 @@ export const STROLL_QUIET = [/^\/doar/, /^\/ajudar\/(doar|amigo|voluntariado)/, 
 export type StrollState = {
   /** When this visit started (ms). */
   visitStart: number;
-  /** Walks so far in this visit. */
-  walks: number;
-  /** When the last walk started (ms), if any. */
+  /** When the last cat left the screen (ms), if any. */
   lastWalk?: number;
-  /** Hidden with "Agora não" until then (ms). */
-  pausedUntil?: number;
-  /** The new-cat pop-up already showed in this visit: one cat surprise per visit is enough. */
-  newCatShown: boolean;
+  /** "Agora não" was chosen in this visit. */
+  declined?: boolean;
 };
 
-/** How long to wait before the next walk, or null when there is none left in this visit. */
-export function nextWalkIn(s: StrollState, now: number): number | null {
-  if (s.newCatShown || s.walks >= STROLL.perVisit) return null;
-  if (s.pausedUntil && s.pausedUntil > now) return null;
-  const due = Math.max(s.visitStart + STROLL.firstAfterMs, (s.lastWalk ?? 0) + STROLL.gapMs);
+/** How long to wait before the next walk, or null when there is none (after "Agora não"). */
+export function nextWalkIn(s: StrollState, now: number, gapMs = STROLL.gapMs): number | null {
+  if (s.declined) return null;
+  const due = Math.max(s.visitStart + STROLL.firstAfterMs, (s.lastWalk ?? 0) + gapMs);
   return Math.max(0, due - now);
 }
 

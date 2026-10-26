@@ -10,7 +10,7 @@ import { ClientNavigation } from "@/components/client/ClientNavigation";
 import { NewCatPrompt, type NewCat } from "@/components/client/CatAlerts";
 import { StrollingCat } from "@/components/client/StrollingCat";
 import { strollingCatOn } from "@/lib/passeio";
-import { getSeoSettings, listCats } from "@/lib/content";
+import { getPage, getSeoSettings, listCats } from "@/lib/content";
 import "./globals.css";
 
 // Inter: a clean, modern sans-serif made for screens, very legible at reading sizes. Inter Tight for headings.
@@ -42,7 +42,11 @@ async function adoptableCats(): Promise<NewCat[]> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [settings, cats] = await Promise.all([getSeoSettings(), adoptableCats()]);
+  const [settings, cats, stroll] = await Promise.all([
+    getSeoSettings(),
+    adoptableCats(),
+    getPage("/").then((p) => p.strollingCat).catch(() => undefined),
+  ]);
   return (
     <html lang="pt-PT" className={`${inter.variable} ${interTight.variable}`}>
       <body>
@@ -58,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ScrollReveal />
         <ClientNavigation />
         <NewCatPrompt cats={cats.slice(0, 6)} />
-        {strollingCatOn ? <StrollingCat cats={cats} /> : null}
+        {strollingCatOn && stroll?.on !== false ? <StrollingCat cats={cats} everySeconds={stroll?.everySeconds} /> : null}
         <JsonLd data={organizationJsonLd(settings)} />
       </body>
     </html>

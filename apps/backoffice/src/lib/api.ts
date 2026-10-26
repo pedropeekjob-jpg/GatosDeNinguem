@@ -46,7 +46,7 @@ export interface Api extends PatinhasApi, CuidadosApi, LojaApi, AlertasApi {
   editPromotion(id: string, edit: PromotionEdit): Promise<PromotionView>;
   promotionAction(id: string, action: "aprovar" | "rascunho" | "cancelar" | "publicar"): Promise<PromotionView>;
   pages(): Promise<Page[]>;
-  updatePage(id: string, changes: Partial<Pick<Page, "heading" | "intro" | "gallery" | "carousel">>): Promise<Page>;
+  updatePage(id: string, changes: Partial<Pick<Page, "heading" | "intro" | "gallery" | "carousel" | "strollingCat">>): Promise<Page>;
   /** Stores a photo (already resized) and returns its public address. */
   uploadPhoto(photo: { type: string; data: string }): Promise<{ url: string }>;
   partners(): Promise<Partner[]>;

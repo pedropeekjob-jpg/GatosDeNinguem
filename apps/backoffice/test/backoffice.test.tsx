@@ -255,4 +255,19 @@ describe("Avisos de gatos novos", () => {
     await waitFor(() => expect(screen.queryByText("joao@exemplo.pt")).not.toBeInTheDocument());
     expect(await axeViolations(container)).toEqual([]);
   });
+  it("sets how often the strolling cat comes, or turns it off", async () => {
+    const user = userEvent.setup();
+    const { api } = renderAt("/avisos");
+    const seconds = await screen.findByLabelText("Segundos até voltar");
+    expect(seconds).toHaveValue(60);
+    await user.clear(seconds);
+    await user.type(seconds, "120");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(await screen.findByText("Guardado")).toBeInTheDocument();
+    expect((await api.pages()).find((p) => p.path === "/")!.strollingCat).toEqual({ on: true, everySeconds: 120 });
+    await user.click(screen.getByLabelText("Mostrar o gato que passeia"));
+    expect(screen.queryByLabelText("Segundos até voltar")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(async () => expect((await api.pages()).find((p) => p.path === "/")!.strollingCat).toEqual({ on: false, everySeconds: 120 }));
+  });
 });

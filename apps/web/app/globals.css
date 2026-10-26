@@ -563,11 +563,16 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 /* The strolling cat (StrollingCat.tsx): walks into the bottom right corner, above the phone tab bar and under
    every window. Only the cat and its card take taps; the strip around it lets them through to the page. */
 .stroll {
-  position: fixed; z-index: 30; left: 0; bottom: 0; width: 9.5rem; pointer-events: none;
+  position: fixed; z-index: 30; left: 0; bottom: 0.5rem; width: 11rem; pointer-events: none;
   transition-property: transform; transition-timing-function: linear; color: var(--gn-ink);
 }
-@media (max-width: 63.99rem) { .stroll { width: 7.5rem; bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px) - 0.4rem); } }
-.stroll__cat { pointer-events: auto; display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 1rem; }
+/* On a white disc with a soft shadow, so it stands out over photos and colour; a little bigger on phones. */
+@media (max-width: 63.99rem) { .stroll { width: 9.5rem; bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px) + 0.35rem); } }
+.stroll__cat::before {
+  content: ""; position: absolute; z-index: -1; left: 12%; right: 10%; top: 14%; bottom: 3%; border-radius: 50%;
+  background: #fff; box-shadow: 0 6px 22px rgb(0 0 0 / 0.16);
+}
+.stroll__cat { position: relative; isolation: isolate; pointer-events: auto; display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 1rem; }
 /* One strip of frames per action (public/gato), played with steps(); out to the right it is the walk, mirrored. */
 .stroll__sprite { display: block; width: 100%; aspect-ratio: 228 / 161; background-repeat: no-repeat; background-position: 0 0; filter: drop-shadow(0 0 1.5px rgb(255 255 255 / 0.95)); }
 .stroll--out .stroll__sprite { transform: scaleX(-1); }

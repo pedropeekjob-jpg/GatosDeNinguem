@@ -2,24 +2,24 @@ import { describe, expect, it } from "vitest";
 import { nextWalkIn, pickCat, STROLL } from "./passeio";
 
 const start = 1_000_000;
-const visit = { visitStart: start, walks: 0, newCatShown: false };
+const visit = { visitStart: start };
 
 describe("strolling cat timing", () => {
-  it("waits for the first seconds of a visit", () => {
+  it("comes a few seconds into a visit", () => {
+    expect(STROLL.firstAfterMs).toBe(8_000);
     expect(nextWalkIn(visit, start)).toBe(STROLL.firstAfterMs);
     expect(nextWalkIn(visit, start + STROLL.firstAfterMs + 5)).toBe(0);
   });
 
-  it("leaves a long gap between walks and stops after a few", () => {
-    const now = start + 60_000;
-    expect(nextWalkIn({ ...visit, walks: 1, lastWalk: now }, now)).toBe(STROLL.gapMs);
-    expect(nextWalkIn({ ...visit, walks: STROLL.perVisit, lastWalk: start }, now + STROLL.gapMs)).toBeNull();
+  it("comes back a minute after the last one left, or as often as the back office says", () => {
+    const left = start + 60_000;
+    expect(nextWalkIn({ ...visit, lastWalk: left }, left)).toBe(60_000);
+    expect(nextWalkIn({ ...visit, lastWalk: left }, left + 20_000, 120_000)).toBe(100_000);
+    expect(nextWalkIn({ ...visit, lastWalk: left }, left + 61_000)).toBe(0);
   });
 
-  it("stays away after 'Agora não' and in a visit that already showed the new-cat pop-up", () => {
-    expect(nextWalkIn({ ...visit, pausedUntil: start + STROLL.pauseMs }, start + 60_000)).toBeNull();
-    expect(nextWalkIn({ ...visit, pausedUntil: start - 1 }, start)).toBe(STROLL.firstAfterMs);
-    expect(nextWalkIn({ ...visit, newCatShown: true }, start + 60_000)).toBeNull();
+  it("stays away for the rest of the visit after 'Agora não'", () => {
+    expect(nextWalkIn({ ...visit, declined: true }, start + 600_000)).toBeNull();
   });
 });
 

@@ -3,12 +3,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ageLabel } from "@gn/domain";
 import { Button } from "@gn/ui";
-import { nextWalkIn, pickCat, STROLL, STROLL_QUIET, type StrollState } from "@/lib/passeio";
-import { NEW_CAT_SESSION_KEY, QUIET_PAGES, type NewCat } from "./CatAlerts";
+import { nextWalkIn, pickCat, STROLL_QUIET, type StrollState } from "@/lib/passeio";
+import { QUIET_PAGES, type NewCat } from "./CatAlerts";
 import sprites from "../../public/gato/acoes.json";
 
 const VISIT_KEY = "gn-passeio";
-const PAUSE_KEY = "gn-passeio-pausa";
 const LAST_KEY = "gn-passeio-ultimo";
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 type Action = keyof typeof sprites.actions;
@@ -23,31 +22,31 @@ const ms = (a: Action) => sprites.actions[a].seconds * 1000;
 /** How long it lies purring if nobody comes. */
 const LIE_MS = 40_000;
 /** Width of the cat on screen (matches .stroll in globals.css), so it starts and ends just off screen. */
-const OFF = 160;
+const OFF = 176;
 /** `?gato=agora` sends a cat out at once, on any page: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("gato") === "agora";
 
 /** in: walking in; bonk: rubs its head on the glass; turn: turns round on the spot; lie: lies down; purr: lies purring; stand: stays up while its card is open; rise: gets up; leaving: one more rub, turning to go; out: walking away. */
 type Phase = "away" | "in" | "bonk" | "turn" | "lie" | "purr" | "stand" | "rise" | "leaving" | "out";
 
+/** This visit (sessionStorage, so "Agora não" lasts until the browser tab is closed) and the last cat shown. */
 function readState(): StrollState & { lastSlug?: string } {
   let visit: Partial<StrollState> = {};
-  let pausedUntil: number | undefined;
   let lastSlug: string | undefined;
-  let newCatShown = false;
   try {
     visit = JSON.parse(sessionStorage.getItem(VISIT_KEY) ?? "{}");
-    newCatShown = sessionStorage.getItem(NEW_CAT_SESSION_KEY) === "1";
-    pausedUntil = Number(localStorage.getItem(PAUSE_KEY)) || undefined;
     lastSlug = localStorage.getItem(LAST_KEY) ?? undefined;
   } catch { /* private mode: every visit starts afresh */ }
-  const state = { visitStart: visit.visitStart ?? Date.now(), walks: visit.walks ?? 0, lastWalk: visit.lastWalk, pausedUntil, newCatShown, lastSlug };
-  if (!visit.visitStart) saveVisit(state);
+  const state = { visitStart: visit.visitStart ?? Date.now(), lastWalk: visit.lastWalk, declined: visit.declined, lastSlug };
+  if (!visit.visitStart) saveVisit({});
   return state;
 }
 
-function saveVisit(s: Pick<StrollState, "visitStart" | "walks" | "lastWalk">) {
-  try { sessionStorage.setItem(VISIT_KEY, JSON.stringify({ visitStart: s.visitStart, walks: s.walks, lastWalk: s.lastWalk })); } catch { /* private mode */ }
+function saveVisit(changes: Partial<StrollState>) {
+  try {
+    const visit = JSON.parse(sessionStorage.getItem(VISIT_KEY) ?? "{}");
+    sessionStorage.setItem(VISIT_KEY, JSON.stringify({ visitStart: Date.now(), ...visit, ...changes }));
+  } catch { /* private mode */ }
 }
 
 /**
@@ -58,7 +57,7 @@ function saveVisit(s: Pick<StrollState, "visitStart" | "walks" | "lastWalk">) {
  * same after a while. It stays under every window, never shows while someone types or on pages where people need
  * to concentrate, and never for people who asked their device for less motion.
  */
-export function StrollingCat({ cats }: { cats: NewCat[] }) {
+export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeconds?: number }) {
   const pathname = usePathname();
   const [cat, setCat] = useState<NewCat>();
   const [phase, setPhase] = useState<Phase>("away");
@@ -67,6 +66,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   const [card, setCard] = useState<"closed" | "hover" | "open">("closed");
   const box = useRef<HTMLDivElement>(null);
   const cardId = useId();
+  const previewed = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const later = (fn: () => void, wait: number) => { timers.current.push(setTimeout(fn, wait)); };
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = []; };
@@ -97,7 +97,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
     const out = () => {
       setPhase("out");
       const d = walkTo(window.innerWidth + 20, here, OUT_PACE);
-      later(() => { setPhase("away"); setCat(undefined); setDur(0); }, d + 100);
+      later(() => { saveVisit({ lastWalk: Date.now() }); setPhase("away"); setCat(undefined); setDur(0); }, d + 100);
     };
     const bonkThenOut = () => { setPhase("leaving"); later(out, ms("leave")); };
     if (lying) { setPhase("rise"); later(bonkThenOut, ms("lie")); } else bonkThenOut();
@@ -107,9 +107,10 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   useEffect(() => {
     if (phase !== "away" || !cats.length) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const preview = isPreview();
+    // ?gato=agora: the first one at once, then as usual
+    const preview = isPreview() && !previewed.current;
     const state = readState();
-    const wait = preview ? 500 : nextWalkIn(state, Date.now());
+    const wait = preview ? 500 : nextWalkIn(state, Date.now(), everySeconds ? everySeconds * 1000 : undefined);
     if (wait === null) return;
     const quiet = () => QUIET_PAGES.some((r) => r.test(window.location.pathname)) || STROLL_QUIET.some((r) => r.test(window.location.pathname));
     const busy = () => !!document.querySelector("dialog[open]") || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "") || document.visibilityState !== "visible";
@@ -118,7 +119,9 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
       if (!preview && (quiet() || busy())) { timer = setTimeout(start, 10_000); return; }
       const next = pickCat(cats, state.lastSlug);
       if (!next) return;
-      saveVisit({ visitStart: state.visitStart, walks: state.walks + 1, lastWalk: Date.now() });
+      previewed.current = true;
+      // counted from now too, in case the page is closed while it is out
+      saveVisit({ lastWalk: Date.now() });
       try { localStorage.setItem(LAST_KEY, next.slug); } catch { /* private mode */ }
       // Its pictures first (fetched only now), so it never walks in half drawn; standing is rare, so it comes later.
       Promise.all(Object.keys(sprites.actions).filter((a) => a !== "stand").map((a) => {
@@ -154,7 +157,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
     timer = setTimeout(start, wait);
     return () => { gone = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, phase, cats]);
+  }, [pathname, phase, cats, everySeconds]);
 
   // While its card is open the cat stays where it is (lying, or standing); Escape closes the card.
   useEffect(() => {
@@ -185,7 +188,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   };
   const close = () => leave(lying);
   const notNow = () => {
-    try { localStorage.setItem(PAUSE_KEY, String(Date.now() + STROLL.pauseMs)); } catch { /* private mode */ }
+    saveVisit({ declined: true });
     close();
   };
 

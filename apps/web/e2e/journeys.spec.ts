@@ -856,8 +856,8 @@ test.describe("strolling cat", () => {
     await expect(card.getByRole("link", { name: /^Conhecer (a|o) / })).toHaveAttribute("href", /^\/adotar\/[a-z0-9-]+$/);
     await card.getByRole("button", { name: "Agora não" }).click();
     await expect(card).toBeHidden();
-    const pausedUntil = await page.evaluate(() => Number(localStorage.getItem("gn-passeio-pausa")));
-    expect(pausedUntil).toBeGreaterThan(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    const declined = await page.evaluate(() => JSON.parse(sessionStorage.getItem("gn-passeio") ?? "{}").declined);
+    expect(declined).toBe(true);
   });
 
   test("never for people who asked their device for less motion", async ({ browser }) => {

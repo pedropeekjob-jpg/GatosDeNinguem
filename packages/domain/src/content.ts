@@ -69,6 +69,15 @@ export const carouselSettingsSchema = z.object({
 export type CarouselSettings = z.infer<typeof carouselSettingsSchema>;
 export const defaultCarouselSettings: CarouselSettings = { autoplay: true, intervalSeconds: 6 };
 
+/** The strolling cat on the site (the logo's cat presenting a cat up for adoption): on or off, and how often it comes. */
+export const strollingCatSettingsSchema = z.object({
+  on: z.boolean(),
+  /** Seconds between the cat leaving and the next one coming in. */
+  everySeconds: z.number().int().min(30).max(3600),
+});
+export type StrollingCatSettings = z.infer<typeof strollingCatSettingsSchema>;
+export const defaultStrollingCatSettings: StrollingCatSettings = { on: true, everySeconds: 60 };
+
 /** Editable static pages (Início, Ajudar, SOS Gato, Sobre...). */
 export const pageSchema = z.object({
   id: z.string(),
@@ -79,6 +88,8 @@ export const pageSchema = z.object({
   /** Photos shown in a full-width carousel (used on the home page). */
   gallery: z.array(galleryPhotoSchema).default([]),
   carousel: carouselSettingsSchema.default(defaultCarouselSettings),
+  /** Only on the home page: the strolling cat's settings, for the whole site. */
+  strollingCat: strollingCatSettingsSchema.default(defaultStrollingCatSettings),
   seo: seoFieldsSchema.default({}),
   updatedAt: z.string().datetime(),
 });
