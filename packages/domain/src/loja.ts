@@ -3,12 +3,11 @@ import { photoSchema } from "./content";
 import { slugSchema } from "./seo-fields";
 
 /**
- * Loja solidária: donations with a thank-you gift, online.
- * The association is a non-profit and does not sell: each article is a symbolic thank-you ("oferta") for a
- * donation of at least a minimum amount, and the person chooses how much to give above it. People reserve
- * online and pay by MB WAY, bank transfer or when they pick up; the team confirms payments in the back office.
- * The shop page shows how much was donated, what the gifts cost and what the money paid for.
- * Money is kept in cents so sums never drift.
+ * Loja solidária: the association's shop, a physical place. The site only shows the articles and invites
+ * people to visit: no prices and nothing ordered online. The association is a non-profit, so each article
+ * is a thank-you ("oferta") for a donation of at least a minimum amount, which the team keeps in the back
+ * office and records when a donation is made at the shop or a stand. The shop page shows how much was
+ * donated, what the gifts cost and what the money paid for. Money is kept in cents so sums never drift.
  */
 
 export const productCategorySchema = z.enum(["roupa", "casa", "acessorios", "artesanato", "livros", "outro"]);
@@ -320,13 +319,11 @@ export function shopTransparency(orders: ShopOrder[], spending: ShopSpending[], 
   };
 }
 
-/** Payment details and practical information shown after ordering. Edited in the back office. */
+/** Where the shop is and when it opens, edited in the back office. Until they are set, the site says they are coming soon. */
 export const shopSettingsSchema = z.object({
-  /** The association's MB WAY number. Without it, MB WAY is not offered. */
-  mbwayPhone: z.string().optional(),
-  iban: z.string().min(15),
-  pickup: z.string().min(3).max(300),
-  shipping: z.string().min(3).max(300),
+  address: z.string().trim().max(200).optional(),
+  /** One line per day or group of days, e.g. "Sábados, 10h às 13h". */
+  hours: z.string().trim().max(500).optional(),
 });
 export type ShopSettings = z.infer<typeof shopSettingsSchema>;
 

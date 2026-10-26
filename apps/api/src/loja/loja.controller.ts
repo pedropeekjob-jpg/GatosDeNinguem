@@ -6,7 +6,6 @@ import {
   orderCode,
   orderErrorMessage,
   orderLineInputSchema,
-  orderRequestSchema,
   orderStatus,
   placeOrder,
   productInputSchema,
@@ -26,13 +25,13 @@ import { parseBody } from "../common/validation";
 
 const isBot = (body: unknown) => !!(body && typeof body === "object" && (body as Record<string, unknown>).website_url);
 
-/** Loja solidária: thank-you gifts for donations paid outside the site, what the money paid for, and articles people offer. */
+/** Loja solidária: the articles shown on the site, donations recorded at the shop, what the money paid for, and articles people offer. */
 @Controller("loja")
 export class LojaController {
   constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {}
   private get repo() { return this.options.repository; }
   private now() { return this.options.now?.() ?? new Date(); }
-  /** Orders are placed one at a time, so two people never get the last gift. */
+  /** Donations are recorded one at a time, so stock never goes below zero. */
   private queue: Promise<unknown> = Promise.resolve();
   private serial<T>(work: () => Promise<T>): Promise<T> {
     const next = this.queue.then(work, work);
@@ -55,22 +54,11 @@ export class LojaController {
     return p;
   }
 
-  /** Payment details, and how much the shop raised this year and what it paid for. */
+  /** Where the shop is and when it opens, and how much it raised this year and what it paid for. */
   @Get("resumo")
   async summary() {
     const [settings, orders, spending] = await Promise.all([this.repo.getShopSettings(), this.repo.listShopOrders(), this.repo.listShopSpending()]);
     return { settings, transparency: shopTransparency(orders, spending, this.now().getUTCFullYear()) };
-  }
-
-  /** Reserves the gifts. Nothing is charged here: the reply says how to pay. A hidden "website_url" field catches spam bots. */
-  @Post("pedidos")
-  @HttpCode(201)
-  async order(@Body() body: unknown) {
-    if (isBot(body)) return { code: "L-0000", totalCents: 0 };
-    const input = parseBody(orderRequestSchema, body);
-    const order = await this.serial(() => this.place(input));
-    await this.changed();
-    return { code: order.code, totalCents: order.totalCents, delivery: order.delivery, payment: order.payment, settings: await this.repo.getShopSettings() };
   }
 
   @Post("doacoes")
@@ -209,7 +197,7 @@ export class LojaController {
   @UseGuards(AdminGuard)
   async saveSettings(@Body() body: unknown) {
     const input = parseBody(shopSettingsSchema, body);
-    const saved = await this.repo.saveShopSettings({ ...input, mbwayPhone: input.mbwayPhone?.trim() || undefined });
+    const saved = await this.repo.saveShopSettings({ address: input.address || undefined, hours: input.hours || undefined });
     await this.changed();
     return saved;
   }

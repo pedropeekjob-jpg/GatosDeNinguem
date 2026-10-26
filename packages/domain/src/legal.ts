@@ -1,9 +1,3 @@
-/**
- * The shop gives thank-you gifts for donations; it does not sell. The donor still commits to giving
- * the amount they chose, so the button says so plainly.
- */
-export const DONATE_BUTTON_LABEL = "Confirmar o donativo";
-
 /** Official electronic complaints book (DL 156/2005, as changed by DL 74/2017). */
 export const COMPLAINTS_BOOK_URL = "https://www.livroreclamacoes.pt";
 

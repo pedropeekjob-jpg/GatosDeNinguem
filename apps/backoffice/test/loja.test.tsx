@@ -54,7 +54,7 @@ describe("Loja: pedidos", () => {
   it("records a donation at a stand, at least the minimum of the gifts", async () => {
     const user = userEvent.setup();
     const { api } = renderAt("/loja");
-    await user.click(await screen.findByRole("button", { name: "Registar donativo na banca" }));
+    await user.click(await screen.findByRole("button", { name: "Registar donativo na loja ou na banca" }));
     await user.selectOptions(await screen.findByLabelText("Oferta"), "art-tshirt");
     await user.selectOptions(screen.getByLabelText("Tamanho"), "M");
     await user.clear(screen.getByLabelText("Quantidade"));
@@ -118,7 +118,7 @@ describe("Loja: doações de artigos", () => {
 });
 
 describe("Loja: contas", () => {
-  it("shows the year's numbers, adds what the money paid for and saves the MB WAY number", async () => {
+  it("shows the year's numbers, adds what the money paid for and saves where the shop is and when it opens", async () => {
     const user = userEvent.setup();
     const { api, container } = renderAt("/loja");
     await user.click(await screen.findByRole("tab", { name: "Contas e transparência" }));
@@ -129,9 +129,10 @@ describe("Loja: contas", () => {
     expect(api.addSpending).toHaveBeenCalledWith({ date: "2026-11-02", description: "Areia para o Paquito", amountCents: 2400 });
     expect((await screen.findAllByText("Areia para o Paquito", { exact: false })).length).toBeGreaterThan(0);
 
-    await user.type(screen.getByLabelText("Número MB WAY da associação"), "912 345 678");
+    await user.type(screen.getByLabelText("Morada da loja"), "Rua da Bandeira 10, Viana do Castelo");
+    await user.type(screen.getByLabelText("Horário"), "Sábados, 10h às 13h");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
-    expect(api.saveShopSettings).toHaveBeenCalledWith(expect.objectContaining({ mbwayPhone: "912 345 678" }));
+    expect(api.saveShopSettings).toHaveBeenCalledWith({ address: "Rua da Bandeira 10, Viana do Castelo", hours: "Sábados, 10h às 13h" });
     expect(await axeViolations(container)).toEqual([]);
   });
 });

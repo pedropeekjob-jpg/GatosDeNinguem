@@ -1,5 +1,5 @@
 "use client";
-import { adoptionInterestSchema, contactMessageSchema, fosterApplicationSchema, itemDonationSchema, orderRequestSchema, newsletterSignupSchema, partnerApplicationSchema, sponsorshipRequestSchema, volunteerSignupInputSchema } from "@gn/domain";
+import { adoptionInterestSchema, contactMessageSchema, fosterApplicationSchema, itemDonationSchema, newsletterSignupSchema, partnerApplicationSchema, sponsorshipRequestSchema, volunteerSignupInputSchema } from "@gn/domain";
 
 export type SubmitResult = { ok: true } | { ok: false; message: string; fieldErrors: Record<string, string> };
 
@@ -27,24 +27,6 @@ export async function requestSponsorship(data: unknown): Promise<SubmitResult & 
     const res = await fetch("/api/forms/apadrinhar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
     const body = (await res.json().catch(() => ({}))) as { checkoutUrl?: string; message?: string; issues?: Issue[] };
     if (res.ok) return { ok: true, checkoutUrl: body.checkoutUrl };
-    return toResult(body.message ?? "Não foi possível enviar. Tente outra vez.", body.issues);
-  } catch {
-    return toResult("Sem ligação à internet. Verifique a ligação e tente outra vez.");
-  }
-}
-
-export type OrderPlaced = { code: string; totalCents: number };
-
-/** Sends a shop order and returns its code. The static demo makes up a code and sends nothing. */
-export async function placeShopOrder(data: unknown, demoTotalCents: number): Promise<SubmitResult & { order?: OrderPlaced }> {
-  if (STATIC_DEMO) {
-    const parsed = orderRequestSchema.safeParse(data);
-    return parsed.success ? { ok: true, order: { code: "L-DEMO", totalCents: demoTotalCents } } : toResult("Alguns campos não estão corretos.", parsed.error.issues);
-  }
-  try {
-    const res = await fetch("/api/loja/pedido", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
-    const body = (await res.json().catch(() => ({}))) as Partial<OrderPlaced> & { message?: string; issues?: Issue[] };
-    if (res.ok && body.code) return { ok: true, order: { code: body.code, totalCents: body.totalCents ?? demoTotalCents } };
     return toResult(body.message ?? "Não foi possível enviar. Tente outra vez.", body.issues);
   } catch {
     return toResult("Sem ligação à internet. Verifique a ligação e tente outra vez.");

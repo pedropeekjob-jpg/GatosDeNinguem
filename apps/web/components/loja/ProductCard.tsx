@@ -1,7 +1,7 @@
-import { euros, LOW_STOCK, stockOf, type Product } from "@gn/domain";
+import { LOW_STOCK, stockOf, type Product } from "@gn/domain";
 import { Badge, Card } from "@gn/ui";
 
-/** Photo-first, like the cat cards: the picture, the name and the minimum donation. The shop page says once that every donation goes to the cats. */
+/** Photo-first, like the cat cards: the picture and the name. No prices: the site only shows what waits at the shop. */
 export function ProductCard({ product }: { product: Product }) {
   const photo = product.photos[0]!;
   const left = stockOf(product);
@@ -11,7 +11,6 @@ export function ProductCard({ product }: { product: Product }) {
       title={product.name}
       href={`/loja/${product.slug}`}
       media={{ src: photo.url, alt: photo.alt }}
-      subtitle={<span className="product-card__price">Donativo a partir de {euros(product.minDonationCents)}</span>}
       badges={
         left === 0 || left <= LOW_STOCK || product.donated ? (
           <>
