@@ -1,4 +1,5 @@
 import { createApp } from "./app";
+import { DEFAULT_CONTACT_RECIPIENTS } from "./content/contact.controller";
 import { InMemoryContentRepository } from "./content/in-memory.repository";
 import type { ContentRepository } from "./content/repository";
 import type { PhotoStore } from "./media/photo-store";
@@ -134,6 +135,17 @@ function promotionPublishers() {
   return { ...meta, ...tiktok, ...(key ? { email: resendNewsletterPublisher({ apiKey: key, from }) } : {}) };
 }
 
+/** "Contactos" form recipients. CONTACT_EMAIL_CC takes a comma-separated list; set it empty for no copy. */
+function contactRecipients() {
+  const to = process.env.CONTACT_EMAIL_TO?.trim();
+  const cc = process.env.CONTACT_EMAIL_CC;
+  if (!to && cc === undefined) return undefined;
+  return {
+    to: to || DEFAULT_CONTACT_RECIPIENTS.to,
+    cc: cc === undefined ? DEFAULT_CONTACT_RECIPIENTS.cc : cc.split(",").map((s) => s.trim()).filter(Boolean),
+  };
+}
+
 /** Plain-text emails through Resend's batch endpoint (100 per call). Without RESEND_API_KEY the API runs without email. */
 function emailSender() {
   const key = process.env.RESEND_API_KEY;
@@ -144,7 +156,7 @@ function emailSender() {
       const res = await fetch("https://api.resend.com/emails/batch", {
         method: "POST",
         headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-        body: JSON.stringify(emails.slice(i, i + 100).map((e) => ({ from, to: [e.to], subject: e.subject, text: e.text, headers: e.headers }))),
+        body: JSON.stringify(emails.slice(i, i + 100).map((e) => ({ from, to: [e.to], cc: e.cc, reply_to: e.replyTo, subject: e.subject, text: e.text, headers: e.headers }))),
       });
       if (!res.ok) throw new Error(`Email: erro ${res.status} ao enviar${i > 0 ? ` (já tinham saído ${i})` : ""}.`);
     }
@@ -199,6 +211,7 @@ const options = {
   siteUrl: process.env.PUBLIC_SITE_URL,
   promotionPublishers: promotionPublishers(),
   sendEmail: emailSender(),
+  contactRecipients: contactRecipients(),
   ...(await pushSender()),
   unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
 };

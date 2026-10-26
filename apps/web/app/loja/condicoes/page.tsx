@@ -2,7 +2,7 @@ import { COMPLAINTS_BOOK_URL, DONATE_BUTTON_LABEL } from "@gn/domain";
 import { Container } from "@gn/ui";
 import { LegalDraftNotice } from "@/components/LegalDraftNotice";
 import { PageHero } from "@/components/PageHero";
-import { association } from "@/lib/association";
+import { association, contactHref } from "@/lib/association";
 import { getShopSummary } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
@@ -34,7 +34,8 @@ export default async function ShopConditionsPage() {
           <h2 id="quem-recebe">Quem recebe o seu donativo</h2>
           <p>
             {association.name}, NIF {association.nif}, associação sem fins lucrativos de Viana do Castelo.
-            Contacto: <a href={`mailto:${association.email}`}>{association.email}</a>.
+            Morada: {association.gatil.lines.join(", ")}.
+            Contacto: <a href={contactHref("loja")}>formulário de contacto</a>, com o assunto «Loja solidária».
           </p>
 
           <h2 id="nao-vendemos">Não vendemos: agradecemos</h2>
@@ -61,7 +62,7 @@ export default async function ShopConditionsPage() {
 
           <h2 id="reclamacoes">Sugestões e reclamações</h2>
           <p>
-            Fale connosco: <a href={`mailto:${association.email}`}>{association.email}</a>.
+            Fale connosco pelo <a href={contactHref("reclamacao")}>formulário de contacto</a>, com o assunto «Reclamação».
             Também pode usar o <a href={COMPLAINTS_BOOK_URL} rel="noopener">Livro de Reclamações Eletrónico</a>.
           </p>
           <p className="small muted">Os seus dados são tratados como explicamos na <a href="/privacidade">política de privacidade</a>.</p>

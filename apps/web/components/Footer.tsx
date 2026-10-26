@@ -1,5 +1,5 @@
 import { AnimatedLogo, Container } from "@gn/ui";
-import { association } from "@/lib/association";
+import { association, contactHref } from "@/lib/association";
 import { NewsletterForm } from "./forms/NewsletterForm";
 
 /** Provisional: the association has no TikTok account yet. Change it here once the account exists. */
@@ -34,7 +34,7 @@ export function Footer() {
               <span className="site-footer__small">{gatil.visits}.</span>
               <span className="site-footer__inline">
                 <a href={gatil.mapUrl} rel="noopener" target="_blank">Ver no mapa<span className="gn-sr-only"> (abre o Google Maps)</span></a>
-                <a href={`mailto:${association.email}`}>{association.email}</a>
+                <a href={contactHref()}>Fale connosco</a>
               </span>
             </address>
             <ul className="social-links" aria-label="Siga-nos">

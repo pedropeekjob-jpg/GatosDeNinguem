@@ -231,6 +231,31 @@ export const newsletterSignupSchema = z.object({
 });
 export type NewsletterSignup = z.infer<typeof newsletterSignupSchema>;
 
+/** Topics of the "Contactos" form. The site never shows an email address: every message arrives through this form. */
+export const contactTopics = {
+  geral: "Pergunta geral",
+  adocao: "Adoção",
+  ajudar: "Donativos, voluntariado e apadrinhamento",
+  loja: "Loja solidária (donativos com oferta)",
+  reclamacao: "Reclamação",
+  dados: "Os meus dados pessoais (RGPD)",
+  imprensa: "Imprensa e parcerias",
+} as const;
+export type ContactTopic = keyof typeof contactTopics;
+export const isContactTopic = (value: unknown): value is ContactTopic => typeof value === "string" && value in contactTopics;
+
+export const contactMessageSchema = z.object({
+  name: z.string({ required_error: "Indique o seu nome" }).trim().min(2, "Indique o seu nome").max(120),
+  email: z.string({ required_error: "Indique um email válido para lhe respondermos" }).trim().email("Indique um email válido para lhe respondermos"),
+  phone: z.string().trim().max(30).optional(),
+  topic: z.enum(Object.keys(contactTopics) as [ContactTopic, ...ContactTopic[]], { errorMap: () => ({ message: "Escolha o assunto" }) }),
+  /** Shop order code, when the message is about an order. */
+  orderCode: z.string().trim().max(30).optional(),
+  message: z.string({ required_error: "Escreva a sua mensagem" }).trim().min(10, "Escreva a sua mensagem (pelo menos 10 letras)").max(4000, "A mensagem é demasiado longa (máximo 4000 letras)"),
+  consent: z.literal(true, { errorMap: () => ({ message: "Precisa de aceitar para lhe respondermos" }) }),
+});
+export type ContactMessage = z.infer<typeof contactMessageSchema>;
+
 export const catInputSchema = catSchema.omit({ id: true, updatedAt: true });
 export type CatInput = z.infer<typeof catInputSchema>;
 

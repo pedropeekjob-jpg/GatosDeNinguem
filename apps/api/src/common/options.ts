@@ -18,6 +18,8 @@ export type ApiOptions = {
   promotionPublishers?: Partial<Record<PromotionChannel, PromotionPublisher>>;
   /** Sends plain-text emails (Resend). Used for "Avisem-me quando chegarem gatos" confirmations and alerts. */
   sendEmail?: (emails: OutgoingEmail[]) => Promise<void>;
+  /** Who receives the "Contactos" form (CONTACT_EMAIL_TO / CONTACT_EMAIL_CC). Default: gatosninguem@gmail.com, copy to gatosdeninguemvc@gmail.com. */
+  contactRecipients?: ContactRecipients;
   /** Sends a Web Push notification. "gone" means the browser dropped the subscription and it can be deleted. */
   sendPush?: (to: PushSubscriptionJson, notification: PushNotification) => Promise<"ok" | "gone">;
   /** VAPID public key the site needs to subscribe a device to notifications. */
@@ -60,7 +62,8 @@ export type PromotionMessage = {
 };
 export type PromotionPublisher = (message: PromotionMessage) => Promise<{ externalId?: string; detail?: string }>;
 
-export type OutgoingEmail = { to: string; subject: string; text: string; headers?: Record<string, string> };
+export type OutgoingEmail = { to: string; cc?: string[]; replyTo?: string; subject: string; text: string; headers?: Record<string, string> };
+export type ContactRecipients = { to: string; cc?: string[] };
 export type PushNotification = { title: string; body: string; url: string; image?: string };
 
 export const API_OPTIONS = Symbol("ApiOptions");

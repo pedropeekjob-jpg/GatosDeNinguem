@@ -32,6 +32,10 @@ export default async function ShopPage() {
   return (
     <>
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Loja solidária" }]}>
+        <p className="shop-promise">
+          <strong className="shop-promise__big">100%</strong>
+          <span>Todos os donativos angariados pela loja vão para os gatos.</span>
+        </p>
         <CartBar />
       </PageHero>
       <Section heading={`${products.length} ofertas`} intro="A associação não vende. Cada artigo é o nosso obrigado por um donativo, a partir do valor indicado.">

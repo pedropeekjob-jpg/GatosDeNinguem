@@ -1,7 +1,7 @@
 import { Container } from "@gn/ui";
 import { LegalDraftNotice } from "@/components/LegalDraftNotice";
 import { PageHero } from "@/components/PageHero";
-import { association } from "@/lib/association";
+import { association, contactHref } from "@/lib/association";
 import { getPage } from "@/lib/content";
 import { features } from "@/lib/features";
 import { buildMetadata } from "@/lib/seo";
@@ -14,13 +14,14 @@ export async function generateMetadata() {
 /** Who processes personal data for the association. Keep in step with the services the code uses (art. 13.º RGPD). */
 const processors = [
   { name: "Render", where: "alojamento na UE, empresa dos EUA", what: "aloja o site, a API e a base de dados." },
-  { name: "Resend", where: "EUA", what: "envia os emails: códigos de entrada, newsletter e novidades dos afilhados." },
+  { name: "Resend", where: "EUA", what: "envia os emails: códigos de entrada, newsletter, novidades dos afilhados e as mensagens do formulário de contacto." },
+  { name: "Google (Gmail)", where: "UE e EUA", what: "caixa de correio da associação, onde chegam e são respondidas as mensagens do formulário de contacto." },
   { name: "Stripe", where: "Irlanda e EUA", what: "recebe o IBAN e trata o mandato e os débitos diretos do apadrinhamento." },
 ];
 
 export default async function PrivacyPage() {
   const page = await getPage("/privacidade");
-  const mail = `mailto:${association.email}`;
+  const form = contactHref("dados");
   return (
     <>
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Política de privacidade" }]} />
@@ -31,7 +32,8 @@ export default async function PrivacyPage() {
           <h2>Quem trata os seus dados</h2>
           <p>
             A {association.name}, com o NIF {association.nif}, é a responsável pelo tratamento dos dados pessoais recolhidos neste site.
-            Para qualquer questão sobre os seus dados escreva para <a href={mail}>{association.email}</a>.
+            Para qualquer questão sobre os seus dados escreva-nos pelo <a href={form}>formulário de contacto</a>, com o assunto «Os meus dados pessoais».
+            Também pode escrever por carta para o gatil: {association.gatil.lines.join(", ")}.
           </p>
 
           <h2>Que dados recolhemos e para quê</h2>
@@ -46,6 +48,7 @@ export default async function PrivacyPage() {
             )}
             <li><strong>Loja solidária e oferta de artigos:</strong> nome, contactos e o pedido, para combinarmos o pagamento e a entrega.</li>
             <li><strong>Pedidos de parceria:</strong> nome da empresa, pessoa de contacto e contactos.</li>
+            <li><strong>Formulário de contacto:</strong> nome, email, telefone (opcional) e a mensagem, para lhe respondermos. A mensagem segue por email para a caixa de correio da associação e não fica guardada no site.</li>
             <li><strong>Débito direto do apadrinhamento:</strong> nome, email e o estado de cada débito. O IBAN é escrito na página segura do prestador de pagamentos e não fica no nosso site.</li>
             <li><strong>Newsletter:</strong> o seu email, para enviarmos novidades. Pode cancelar em qualquer email.</li>
             <li><strong>Avisos de gatos novos:</strong> o seu email (que confirma numa ligação que lhe enviamos) ou a autorização de notificações deste aparelho, e os gatos que escolheu, para o avisarmos quando chega um gato para adoção. Pode cancelar em qualquer aviso.</li>
@@ -85,7 +88,7 @@ export default async function PrivacyPage() {
           <h2>Os seus direitos</h2>
           <p>
             Pode pedir-nos a qualquer momento para ver, corrigir, apagar ou levar consigo os seus dados, limitar ou opor-se ao seu tratamento e retirar o consentimento.
-            Basta escrever para <a href={mail}>{association.email}</a>. Respondemos no prazo de um mês.
+            Basta pedir pelo <a href={form}>formulário de contacto</a> ou por carta para o gatil. Respondemos no prazo de um mês.
           </p>
           <p>
             Se achar que não tratámos bem os seus dados, pode apresentar queixa à Comissão Nacional de Proteção de Dados (<a href="https://www.cnpd.pt" rel="noopener">www.cnpd.pt</a>).

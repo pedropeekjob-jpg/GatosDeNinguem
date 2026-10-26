@@ -9,6 +9,7 @@ import { featuresOf } from "./common/feature.guard";
 import { API_OPTIONS, type ApiOptions } from "./common/options";
 import { AdoptionsController } from "./content/adoptions.controller";
 import { CatsController } from "./content/cats.controller";
+import { ContactController } from "./content/contact.controller";
 import { EngagementController } from "./content/engagement.controller";
 import { PagesController } from "./content/pages.controller";
 import { PartnersController } from "./content/partners.controller";
@@ -50,7 +51,7 @@ class AppModule {
     const sponsors = new SponsorService(options);
     return {
       module: AppModule,
-      controllers: [HealthController, FeaturesController, AdoptionsController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController, AlertasController, AlertasGestaoController],
+      controllers: [HealthController, FeaturesController, AdoptionsController, ContactController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController, AlertasController, AlertasGestaoController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, accounts) },

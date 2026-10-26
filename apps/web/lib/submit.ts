@@ -1,12 +1,12 @@
 "use client";
-import { adoptionInterestSchema, fosterApplicationSchema, itemDonationSchema, orderRequestSchema, newsletterSignupSchema, partnerApplicationSchema, sponsorshipRequestSchema, volunteerSignupInputSchema } from "@gn/domain";
+import { adoptionInterestSchema, contactMessageSchema, fosterApplicationSchema, itemDonationSchema, orderRequestSchema, newsletterSignupSchema, partnerApplicationSchema, sponsorshipRequestSchema, volunteerSignupInputSchema } from "@gn/domain";
 
 export type SubmitResult = { ok: true } | { ok: false; message: string; fieldErrors: Record<string, string> };
 
 /** The GitHub Pages demo has no server: forms are checked in the browser and nothing is sent. */
 const STATIC_DEMO = process.env.NEXT_PUBLIC_STATIC_DEMO === "1";
 
-const formSchemas = { adocao: adoptionInterestSchema, parceiro: partnerApplicationSchema, newsletter: newsletterSignupSchema, apadrinhar: sponsorshipRequestSchema, "familia-temporaria": fosterApplicationSchema, "doacao-loja": itemDonationSchema } as const;
+const formSchemas = { adocao: adoptionInterestSchema, parceiro: partnerApplicationSchema, newsletter: newsletterSignupSchema, apadrinhar: sponsorshipRequestSchema, "familia-temporaria": fosterApplicationSchema, "doacao-loja": itemDonationSchema, contacto: contactMessageSchema } as const;
 
 /** Posts a form to our own /api/forms route and turns validation errors into per-field messages. */
 export function submitForm(kind: keyof typeof formSchemas, data: unknown): Promise<SubmitResult> {
