@@ -19,6 +19,7 @@ import { PatinhasPage } from "./pages/PatinhasPage";
 import { PedidosPage } from "./pages/PedidosPage";
 import { PromocaoPage } from "./pages/PromocaoPage";
 import { SeoPage } from "./pages/SeoPage";
+import { IdiomasPage } from "./pages/IdiomasPage";
 
 const nav: { href: string; label: string; feature?: keyof FeatureFlags }[] = [
   { href: "/", label: "Hoje" },
@@ -34,6 +35,7 @@ const nav: { href: string; label: string; feature?: keyof FeatureFlags }[] = [
   { href: "/patinhas", label: "Patinhas", feature: "patinhas" },
   { href: "/numeros", label: "Números" },
   { href: "/seo", label: "SEO" },
+  { href: "/idiomas", label: "Idiomas" },
 ];
 
 const TOKEN_KEY = "gn-admin-token";
@@ -91,6 +93,7 @@ export function Shell({ api, onLogout, today }: { api: Api; onLogout?: () => voi
                 <Route path="/patinhas" element={<PatinhasPage />} />
                 <Route path="/numeros" element={<NumerosPage />} />
                 <Route path="/seo" element={<SeoPage />} />
+                <Route path="/idiomas" element={<IdiomasPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Container>

@@ -225,7 +225,7 @@ describe("Promoção de eventos", () => {
     await user.type(screen.getByLabelText("Título"), "Magusto solidário no gatil");
     await user.click(screen.getByLabelText("Evento"));
     await user.type(screen.getByLabelText("Resumo"), "Castanhas e a Loja Solidária aberta.");
-    await user.type(screen.getByLabelText(/^Texto/), "Venha passar a tarde connosco.");
+    await user.type(screen.getByLabelText(/^Texto(?! \()/), "Venha passar a tarde connosco.");
     expect(screen.getByRole("button", { name: "Publicar" })).toBeDisabled();
     await user.type(screen.getByLabelText("Dia"), "2026-11-11");
     await user.type(screen.getByLabelText("Começa às"), "15:00");
@@ -269,5 +269,36 @@ describe("Avisos de gatos novos", () => {
     expect(screen.queryByLabelText("Segundos até voltar")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Guardar" }));
     await waitFor(async () => expect((await api.pages()).find((p) => p.path === "/")!.strollingCat).toEqual({ on: false, everySeconds: 120 }));
+  });
+});
+
+describe("Idiomas", () => {
+  it("shows a cat's machine translation, and correcting it marks it as checked by the team", async () => {
+    const user = userEvent.setup();
+    const api = fakeApi(today);
+    const carvao = (await api.cats()).find((c) => c.name === "Carvão")!;
+    await api.updateCat(carvao.id, { translations: { en: { summary: "Machine summary", story: "Machine story", auto: true } } });
+    const { container } = renderAt("/gatos", api);
+    await user.click(await screen.findByRole("button", { name: "Editar Carvão" }));
+    const panel = screen.getByRole("group", { name: "Noutros idiomas" });
+    expect(within(panel).getByText("Tradução automática, por rever")).toBeInTheDocument();
+    const summary = within(panel).getByLabelText("Resumo (inglês)");
+    expect(summary).toHaveValue("Machine summary");
+    await user.clear(summary);
+    await user.type(summary, "Checked summary");
+    expect(within(panel).getByText("Revista pela equipa")).toBeInTheDocument();
+    expect(await axeViolations(container)).toEqual([]);
+    await user.click(screen.getByRole("button", { name: "Guardar gato" }));
+    await screen.findByRole("button", { name: "Adicionar gato" });
+    const saved = (await api.cats()).find((c) => c.name === "Carvão")!;
+    expect(saved.translations?.en).toMatchObject({ summary: "Checked summary", story: "Machine story", auto: false });
+  });
+
+  it("says whether translation is on and fills in what is missing", async () => {
+    const user = userEvent.setup();
+    renderAt("/idiomas");
+    expect(await screen.findByText("Tradução automática ligada")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Traduzir o que falta" }));
+    expect(await screen.findByText("Traduzidos 3 textos.")).toBeInTheDocument();
   });
 });

@@ -1,8 +1,9 @@
 import { Body, Controller, Get, HttpCode, Inject, Post, Put, UseGuards } from "@nestjs/common";
-import { impactSchema, newsletterSignupSchema } from "@gn/domain";
+import { campaignTranslationSpec, impactSchema, newsletterSignupSchema } from "@gn/domain";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
+import { TranslationService } from "../traducao/translation.service";
 
 @Controller()
 export class EngagementController {
@@ -14,7 +15,12 @@ export class EngagementController {
   @Put("impact")
   @UseGuards(AdminGuard)
   async saveImpact(@Body() body: unknown) {
-    const saved = await this.options.repository.saveImpact(parseBody(impactSchema, body));
+    const impact = parseBody(impactSchema, body);
+    if (impact.campaign) {
+      const previous = (await this.options.repository.getImpact()).campaign;
+      impact.campaign = await new TranslationService(this.options).fill(campaignTranslationSpec, impact.campaign, previous);
+    }
+    const saved = await this.options.repository.saveImpact(impact);
     await this.options.onContentChanged({ type: "page", path: "/" });
     return saved;
   }

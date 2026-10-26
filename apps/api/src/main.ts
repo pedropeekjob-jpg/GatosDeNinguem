@@ -7,6 +7,7 @@ import { InMemoryPatinhasRepository, type PatinhasRepository } from "./patinhas/
 import { stripeSepaDebit } from "./padrinhos/debit";
 import { metaPublishers, resendNewsletterPublisher, tiktokPublisher } from "./promocao/publishers";
 import { PromotionService } from "./promocao/promotion.service";
+import { deeplTranslator } from "./traducao/translator";
 import { formatFeatures, lisbonNow, lisbonToUtc, parseFeatures, type Account, type CareAlert, type Contact, type PushSubscriptionJson } from "@gn/domain";
 import type { OutgoingEmail, PushNotification } from "./common/options";
 
@@ -186,6 +187,12 @@ async function pushSender() {
   return { sendPush, pushPublicKey: publicKey };
 }
 
+/** Machine translation of the team's texts into English, Spanish and French (see docs/traducao-automatica.md). */
+function translator() {
+  const key = process.env.DEEPL_API_KEY?.trim();
+  return key ? deeplTranslator(key) : undefined;
+}
+
 const adminToken = process.env.ADMIN_TOKEN;
 if (!adminToken || adminToken.length < 16) throw new Error("Set ADMIN_TOKEN (16+ characters) before starting the API.");
 
@@ -214,6 +221,7 @@ const options = {
   contactRecipients: contactRecipients(),
   ...(await pushSender()),
   unsubscribeSecret: process.env.UNSUBSCRIBE_SECRET,
+  translator: translator(),
 };
 const app = await createApp(options);
 // Approved promotions go out when their day comes. On hosts that sleep, an external cron also calls POST /promocoes/correr.

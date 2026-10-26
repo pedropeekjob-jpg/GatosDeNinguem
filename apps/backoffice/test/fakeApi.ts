@@ -53,6 +53,8 @@ export function fakeApi(now = new Date("2026-11-01T09:00:00.000Z"), features: Fe
     ...fakeCuidados(now, () => cats),
     ...fakeLoja(now),
     features: async () => features,
+    translationStatus: async () => ({ on: true, provider: "DeepL" }),
+    fillTranslations: async () => ({ on: true, updated: 3 }),
     people: async () => seedAccounts.map((a) => ({ ...a, ...person(a.id) })),
     person: async () => { throw new Error("not used"); },
     givePatinhas: vi.fn(async (accountId, input) => {

@@ -29,6 +29,7 @@ import { NewsletterSairController, PromocoesController } from "./promocao/promoc
 import { PromotionService } from "./promocao/promotion.service";
 import { SeoController } from "./seo/seo.controller";
 import { MAX_UPLOAD_BYTES, UploadsController } from "./media/uploads.controller";
+import { TraducoesController } from "./traducao/traducoes.controller";
 
 @Controller("health")
 class HealthController {
@@ -51,7 +52,7 @@ class AppModule {
     const sponsors = new SponsorService(options);
     return {
       module: AppModule,
-      controllers: [HealthController, FeaturesController, AdoptionsController, ContactController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController, AlertasController, AlertasGestaoController],
+      controllers: [HealthController, FeaturesController, AdoptionsController, ContactController, CatsController, EngagementController, PagesController, PostsController, PartnersController, EscalasController, SeoController, UploadsController, ContaController, PatinhasController, CuidadosController, VoluntarioCuidadosController, PromocoesController, NewsletterSairController, LojaController, PadrinhosController, AlertasController, AlertasGestaoController, TraducoesController],
       providers: [
         { provide: API_OPTIONS, useValue: options },
         { provide: PatinhasService, useValue: new PatinhasService(options, accounts) },

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { postCategoryLabel, type PostCategory } from "@gn/domain";
 import { Badge, Button, ChoiceList, Notice, TextArea, TextField } from "@gn/ui";
+import { TranslationsPanel, type Translations } from "../components/TranslationsPanel";
 import { errorMessage, useApi } from "../lib/api";
 import { lisbonDate, lisbonToUtc, timeLabel } from "../lib/dates";
 import { slugify } from "../lib/slug";
@@ -45,6 +46,7 @@ function PostForm({ post, onClose }: { post?: Post; onClose: () => void }) {
   const [eventStart, setEventStart] = useState(ev ? timeLabel(ev.startsAt) : "");
   const [eventEnd, setEventEnd] = useState(ev?.endsAt ? timeLabel(ev.endsAt) : "");
   const [eventLocation, setEventLocation] = useState(ev?.location ?? "Gatil, Santa Marta de Portuzelo");
+  const [translations, setTranslations] = useState<Translations | undefined>(post?.translations as Translations | undefined);
   const isEvent = category === "evento";
   const eventReady = !isEvent || (eventDay && eventStart && eventLocation.length >= 2);
   const save = useMutation({
@@ -59,6 +61,7 @@ function PostForm({ post, onClose }: { post?: Post; onClose: () => void }) {
         cta: ctaLabel && ctaHref ? { label: ctaLabel, href: ctaHref } : undefined,
         event: isEvent ? { startsAt: lisbonToUtc(eventDay, eventStart), endsAt: eventEnd ? lisbonToUtc(eventDay, eventEnd) : undefined, location: eventLocation } : undefined,
         seo: post?.seo ?? {},
+        translations: translations as Post["translations"],
       };
       return post ? api.updatePost(post.id, input) : api.createPost(input);
     },
@@ -84,6 +87,12 @@ function PostForm({ post, onClose }: { post?: Post; onClose: () => void }) {
       <TextArea id="p-body" label="Texto" hint="Deixe uma linha em branco entre parágrafos." rows={8} value={body} onChange={(e) => setBody(e.target.value)} />
       <TextField id="p-cta-label" label="Botão (opcional)" hint="Ex.: Inscrever no Open Day" value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} />
       <TextField id="p-cta-href" label="Para onde leva o botão" hint="Ex.: /ajudar ou https://…" value={ctaHref} onChange={(e) => setCtaHref(e.target.value)} />
+      <TranslationsPanel
+        id="p-tr"
+        fields={[{ key: "title", label: "Título" }, { key: "summary", label: "Resumo", long: true }, { key: "body", label: "Texto", long: true }, ...(ctaLabel ? [{ key: "ctaLabel", label: "Botão" }] : [])]}
+        value={translations}
+        onChange={setTranslations}
+      />
       {save.isError ? <Notice tone="error" title="Não foi publicada">{errorMessage(save.error)}</Notice> : null}
       <div><Button type="submit" disabled={!title || !summary || !body || !eventReady || save.isPending}>{post ? "Guardar" : "Publicar"}</Button></div>
     </form>

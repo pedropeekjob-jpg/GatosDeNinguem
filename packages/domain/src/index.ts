@@ -18,3 +18,4 @@ export * from "./alertas";
 export * from "./padrinhos";
 export * from "./datas";
 export * from "./legal";
+export * from "./traducao";

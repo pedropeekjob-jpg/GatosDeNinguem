@@ -1,10 +1,11 @@
 import { BadRequestException, Body, ConflictException, Controller, Delete, Get, HttpCode, Inject, NotFoundException, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { postEventSchema, postInputSchema, seoFieldsSchema, sortNewestFirst, type Post as NewsPost } from "@gn/domain";
+import { postEventSchema, postInputSchema, postTranslationSpec, seoFieldsSchema, sortNewestFirst, type Post as NewsPost } from "@gn/domain";
 import { randomUUID } from "node:crypto";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
 import { PromotionService } from "../promocao/promotion.service";
+import { TranslationService } from "../traducao/translation.service";
 
 const eventInput = postInputSchema.superRefine((p, ctx) => {
   if (p.event?.endsAt && p.event.endsAt < p.event.startsAt) ctx.addIssue({ code: "custom", path: ["event", "endsAt"], message: "O evento tem de acabar depois de começar." });
@@ -14,6 +15,7 @@ const eventInput = postInputSchema.superRefine((p, ctx) => {
 export class PostsController {
   constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions, @Inject(PromotionService) private readonly promotions: PromotionService) {}
   private get repo() { return this.options.repository; }
+  private get translations() { return new TranslationService(this.options); }
 
   @Get()
   async list() {
@@ -34,7 +36,7 @@ export class PostsController {
   async create(@Body() body: unknown) {
     const input = parseBody(eventInput, body);
     if (await this.repo.getPostBySlug(input.slug)) throw new ConflictException("Já existe uma notícia com este endereço (slug).");
-    const post: NewsPost = { ...input, id: randomUUID(), updatedAt: new Date().toISOString() };
+    const post: NewsPost = await this.translations.fill(postTranslationSpec, { ...input, id: randomUUID(), updatedAt: new Date().toISOString() }, undefined, [input.event?.location]);
     await this.repo.savePost(post);
     await this.promotions.postSaved(post);
     await this.options.onContentChanged({ type: "post", path: `/noticias/${post.slug}` });
@@ -52,7 +54,7 @@ export class PostsController {
     const { event, ...rest } = changes;
     const merged = { ...current, ...rest, event: event === null ? undefined : event ?? current.event, updatedAt: new Date().toISOString() };
     if (merged.event?.endsAt && merged.event.endsAt < merged.event.startsAt) throw new BadRequestException("O evento tem de acabar depois de começar.");
-    const next = await this.repo.savePost(merged);
+    const next = await this.repo.savePost(await this.translations.fill(postTranslationSpec, merged, current, [merged.event?.location]));
     await this.promotions.postSaved(next);
     await this.options.onContentChanged({ type: "post", path: `/noticias/${next.slug}` });
     return next;

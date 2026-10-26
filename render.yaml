@@ -58,6 +58,9 @@ services:
       # Optional: sign-in codes by email. Without it codes are only written to the API log.
       - key: RESEND_API_KEY
         sync: false
+      # Optional: translates cats, news and pages into English, Spanish and French when saved (docs/traducao-automatica.md).
+      - key: DEEPL_API_KEY
+        sync: false
       - key: LOGIN_EMAIL_FROM
         sync: false
       # "Contactos" form (the site shows no email address). Defaults: gatosninguem@gmail.com, copy to gatosdeninguemvc@gmail.com.

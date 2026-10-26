@@ -9,6 +9,7 @@ import {
   orderStatus,
   placeOrder,
   productInputSchema,
+  productTranslationSpec,
   restock,
   setOrderStatus,
   shopSettingsSchema,
@@ -22,6 +23,7 @@ import { z } from "zod";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
+import { TranslationService } from "../traducao/translation.service";
 
 const isBot = (body: unknown) => !!(body && typeof body === "object" && (body as Record<string, unknown>).website_url);
 
@@ -95,7 +97,7 @@ export class LojaController {
   async createProduct(@Body() body: unknown) {
     const input = parseBody(productInputSchema, body);
     if (await this.repo.getProductBySlug(input.slug)) throw new ConflictException("Já há um artigo com este nome. Escolha outro.");
-    const product: Product = { ...input, id: randomUUID(), updatedAt: this.now().toISOString() };
+    const product: Product = await new TranslationService(this.options).fill(productTranslationSpec, { ...input, id: randomUUID(), updatedAt: this.now().toISOString() });
     await this.repo.saveProducts([product]);
     await this.changed();
     return product;
@@ -108,7 +110,7 @@ export class LojaController {
     if (!current) throw new NotFoundException("Artigo não encontrado.");
     const { id: _id, updatedAt: _u, ...rest } = current;
     const input = parseBody(productInputSchema, { ...rest, ...(body as object) });
-    const product: Product = { ...input, id, updatedAt: this.now().toISOString() };
+    const product: Product = await new TranslationService(this.options).fill(productTranslationSpec, { ...input, id, updatedAt: this.now().toISOString() }, current);
     await this.repo.saveProducts([product]);
     await this.changed();
     return product;
