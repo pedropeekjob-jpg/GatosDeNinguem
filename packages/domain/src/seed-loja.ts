@@ -82,12 +82,8 @@ export const seedShopSpending: ShopSpending[] = [
   { id: "gasto-2", date: "2026-10-15", description: "Vacinas da Estrela e do Tobias", amountCents: 3000 },
 ];
 
-// IBAN as published on the association's current website. No MB WAY number until the team adds the real one.
-export const seedShopSettings: ShopSettings = {
-  iban: "PT50 0045 1436 4033 0203 2321 6",
-  pickup: "No gatil, em Santa Marta de Portuzelo, aos sábados de manhã, ou numa banca da associação. Avisamos quando estiver pronto.",
-  shipping: "Enviamos por CTT para todo o país. Os portes dependem do peso: dizemos-lhe o valor antes de pagar.",
-};
+// The shop's address and opening hours are not known yet: the team adds them in the back office.
+export const seedShopSettings: ShopSettings = {};
 
 export const seedItemDonations: StoredItemDonation[] = [
   { id: "doa-1", what: "Caixa com 10 livros infantis e 2 puzzles completos", category: "livros", condition: "como-novo", handover: "entrego", name: "Inês Faria", phone: "914000013", town: "Darque", consent: true, receivedAt: "2026-10-21T11:00:00.000Z", status: "nova" },

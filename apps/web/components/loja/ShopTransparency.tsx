@@ -9,7 +9,7 @@ export function ShopTransparency({ summary }: { summary: Summary }) {
     <div className="gn-stack gn-stack--m">
       <div className="stats">
         <StatTile value={euros(summary.forTheCatsCents)} label={`para os gatos em ${summary.year}`} />
-        <StatTile value={summary.giftsGiven} label="ofertas entregues" />
+        <StatTile value={summary.giftsGiven} label="artigos que já saíram da loja" />
         <StatTile value={euros(summary.spentCents)} label="já gastos em comida e tratamentos" />
       </div>
       {summary.spending.length > 0 ? (
@@ -25,7 +25,7 @@ export function ShopTransparency({ summary }: { summary: Summary }) {
           </ul>
         </div>
       ) : null}
-      <p className="small muted">Donativos recebidos desde 1 de janeiro de {summary.year}, já sem o custo das ofertas. A equipa atualiza a lista de gastos sempre que usa este dinheiro.</p>
+      <p className="small muted">Donativos recebidos desde 1 de janeiro de {summary.year}, já sem o custo dos artigos. A equipa atualiza a lista de gastos sempre que usa este dinheiro.</p>
     </div>
   );
 }

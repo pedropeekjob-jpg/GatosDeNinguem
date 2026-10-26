@@ -23,7 +23,7 @@ describe.runIf(Boolean(url))("seedEssentials", () => {
     expect((await repo.listPages()).length).toBeGreaterThan(3);
     expect((await repo.getSeoSettings()).siteUrl).toBe("https://gatosdeninguem.pt");
     expect((await db.redirect.findUnique({ where: { from: "/wp-admin" } }))?.to).toBe("/");
-    expect((await repo.getShopSettings()).iban).toMatch(/^PT50/);
+    expect(await repo.getShopSettings()).toEqual({});
   });
 
   it("loads no example cats, posts, partners, shifts, godparents or orders", async () => {

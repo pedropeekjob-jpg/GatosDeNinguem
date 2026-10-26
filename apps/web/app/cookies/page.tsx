@@ -14,7 +14,6 @@ export async function generateMetadata() {
 const stored = [
   { name: "gn-sessao", kind: "Cookie", what: "Mantém a sua sessão quando entra na sua conta.", lasts: "180 dias ou até sair da conta" },
   { name: "gn-conta", kind: "Armazenamento local", what: "Lembra o seu nome para o mostrar no menu.", lasts: "Até sair da conta" },
-  { name: "gn-cesto", kind: "Armazenamento local", what: "Guarda os artigos que pôs no cesto da loja.", lasts: "Até fazer o pedido ou esvaziar o cesto" },
   { name: "gn-favoritos", kind: "Armazenamento local", what: "Guarda os gatos que marcou com o coração.", lasts: "Até os retirar" },
   { name: "gn-splash", kind: "Armazenamento da sessão", what: "Mostra a animação do logótipo só na primeira página que abre.", lasts: "Até fechar o separador" },
 ];
@@ -54,7 +53,7 @@ export default async function CookiesPage() {
           <p>Ao abrir a morada do gatil no mapa vai para o Google Maps, que tem a sua própria política de cookies.</p>
 
           <h2>Como apagar</h2>
-          <p>Pode apagar estes dados a qualquer momento nas definições do seu navegador. Se o fizer, sai da sua conta e perde o cesto e os favoritos.</p>
+          <p>Pode apagar estes dados a qualquer momento nas definições do seu navegador. Se o fizer, sai da sua conta e perde os favoritos.</p>
 
           <h2>Dúvidas</h2>
           <p>Escreva-nos pelo <a href={contactHref("dados")}>formulário de contacto</a>. Veja também a <a href="/privacidade">política de privacidade</a>.</p>

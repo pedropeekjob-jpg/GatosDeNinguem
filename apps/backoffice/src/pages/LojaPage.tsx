@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   centsFromText, deliveryLabel, euros, forTheCatsCents, isSymbolicGift, itemConditionLabel, minDonationFor, SYMBOLIC_GIFT_SHARE, itemDonationStatusLabel, itemHandoverLabel, orderStatusLabel, paymentLabel, productCategoryLabel, stockOf,
-  type ItemDonationStatus, type OrderLineInput, type OrderStatus, type Product, type ProductCategory, type ProductInput, type ShopOrder, type StoredItemDonation,
+  type ItemDonationStatus, type OrderLineInput, type OrderStatus, type Product, type ProductCategory, type ProductInput, type ShopOrder, type ShopSettings, type StoredItemDonation,
 } from "@gn/domain";
 import { Badge, Button, Checkbox, ChoiceList, Notice, StatTile, TextArea, TextField } from "@gn/ui";
 import { PhotoManager } from "../components/PhotoManager";
@@ -12,7 +12,7 @@ import { slugify } from "../lib/slug";
 
 type Tab = "pedidos" | "artigos" | "doacoes" | "contas";
 const tabs: { key: Tab; label: string }[] = [
-  { key: "pedidos", label: "Pedidos" },
+  { key: "pedidos", label: "Donativos" },
   { key: "artigos", label: "Artigos" },
   { key: "doacoes", label: "Doações de artigos" },
   { key: "contas", label: "Contas e transparência" },
@@ -70,9 +70,9 @@ function Orders() {
 
   return (
     <div className="gn-stack gn-stack--m">
-      <p className="muted">Os donativos com oferta feitos no site chegam aqui. Quando o dinheiro chegar, marque como pago; quando a pessoa levar a oferta, como entregue. Cancelar devolve as ofertas ao stock.</p>
+      <p className="muted">O site só mostra os artigos: não recebe pedidos. Registe aqui os donativos feitos na loja ou numa banca, para o stock e as contas ficarem certos. Cancelar devolve os artigos ao stock.</p>
       <div className="action-row">
-        <Button onClick={() => setSelling((v) => !v)} variant={selling ? "secondary" : "primary"}>{selling ? "Fechar" : "Registar donativo na banca"}</Button>
+        <Button onClick={() => setSelling((v) => !v)} variant={selling ? "secondary" : "primary"}>{selling ? "Fechar" : "Registar donativo na loja ou na banca"}</Button>
       </div>
       {selling ? <GiveInPerson onDone={() => setSelling(false)} /> : null}
       <div className="action-row" role="group" aria-label="Mostrar">
@@ -167,7 +167,7 @@ function GiveInPerson({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="panel gn-stack gn-stack--s">
-      <h2>Donativo na banca</h2>
+      <h2>Donativo na loja ou na banca</h2>
       <div className="gn-field">
         <label className="gn-field__label" htmlFor="venda-artigo">Oferta</label>
         <select id="venda-artigo" className="gn-input" value={productId} onChange={(e) => { setProductId(e.target.value); setVariant(""); }}>
@@ -302,10 +302,10 @@ function ProductForm({ product, draft, onClose }: { product?: Product; draft?: D
       </section>
       <ChoiceList name="a-categoria" legend="Categoria" value={f.category} onChange={(v) => set("category", v)} options={categoryOptions} />
       <TextArea id="a-descricao" label="Descrição" hint="Material, tamanho, quem fez. Uma ou duas frases chegam." rows={3} value={f.description} onChange={(e) => set("description", e.target.value)} />
-      <TextField id="a-preco" label="Donativo mínimo (euros)" hint="A associação não vende: o artigo é o obrigado por um donativo de pelo menos este valor. A pessoa pode dar mais." inputMode="numeric" value={f.price} onChange={(e) => set("price", e.target.value)} />
+      <TextField id="a-preco" label="Donativo mínimo (euros)" hint="Só para a equipa, não aparece no site. A associação não vende: o artigo é o obrigado por um donativo de pelo menos este valor." inputMode="numeric" value={f.price} onChange={(e) => set("price", e.target.value)} />
       <Checkbox id="a-doado" label="Foi oferecido à loja" hint="Não custou nada à associação: o donativo vai todo para os gatos." checked={f.donated} onChange={(v) => set("donated", v)} />
-      {!f.donated ? <TextField id="a-custo" label="Quanto custou à associação, por unidade (euros)" hint="Aparece no site para quem doa saber quanto vai para os gatos." inputMode="numeric" value={f.cost} onChange={(e) => set("cost", e.target.value)} /> : null}
-      {preview !== undefined ? <p className="panel">No site: pelo menos <strong>{euros(preview)}</strong> de cada donativo vão para os gatos.</p> : null}
+      {!f.donated ? <TextField id="a-custo" label="Quanto custou à associação, por unidade (euros)" hint="Só para as contas da loja: não aparece no site." inputMode="numeric" value={f.cost} onChange={(e) => set("cost", e.target.value)} /> : null}
+      {preview !== undefined ? <p className="panel">Pelo menos <strong>{euros(preview)}</strong> de cada donativo vão para os gatos.</p> : null}
       {notSymbolic ? (
         <Notice tone="warning" title="Esta oferta não é simbólica">
           Custa mais de {Math.round(SYMBOLIC_GIFT_SHARE * 100)}% do donativo mínimo. Assim, as Finanças podem ver o donativo como uma venda disfarçada. Suba o donativo mínimo ou escolha uma oferta mais barata, e confirme com o contabilista.
@@ -447,22 +447,20 @@ function Accounts({ today }: { today: Date }) {
   );
 }
 
-function Settings({ initial }: { initial: { mbwayPhone?: string; iban: string; pickup: string; shipping: string } }) {
+function Settings({ initial }: { initial: ShopSettings }) {
   const api = useApi();
   const qc = useQueryClient();
-  const [s, setS] = useState({ ...initial, mbwayPhone: initial.mbwayPhone ?? "" });
+  const [s, setS] = useState({ address: initial.address ?? "", hours: initial.hours ?? "" });
   const save = useMutation({
-    mutationFn: () => api.saveShopSettings({ ...s, mbwayPhone: s.mbwayPhone.trim() || undefined }),
+    mutationFn: () => api.saveShopSettings({ address: s.address.trim() || undefined, hours: s.hours.trim() || undefined }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["shop-summary"] }),
   });
   return (
     <form className="gn-stack gn-stack--s" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
-      <h2>Pagamento e entrega</h2>
-      <p className="muted">Aparece a quem faz um donativo, logo a seguir a enviar.</p>
-      <TextField id="d-mbway" label="Número MB WAY da associação" hint="Sem número, dizemos a quem escolhe MB WAY que lhe ligamos para combinar." type="tel" inputMode="tel" value={s.mbwayPhone} onChange={(e) => setS({ ...s, mbwayPhone: e.target.value })} />
-      <TextField id="d-iban" label="IBAN para transferências" value={s.iban} onChange={(e) => setS({ ...s, iban: e.target.value })} />
-      <TextArea id="d-levantar" label="Onde e quando levantar" rows={2} value={s.pickup} onChange={(e) => setS({ ...s, pickup: e.target.value })} />
-      <TextArea id="d-correio" label="Envios pelo correio" rows={2} value={s.shipping} onChange={(e) => setS({ ...s, shipping: e.target.value })} />
+      <h2>A loja física</h2>
+      <p className="muted">Aparece no site, na página da loja e em cada artigo. Enquanto estiver em branco, o site diz que a morada e o horário vêm em breve.</p>
+      <TextField id="d-morada" label="Morada da loja" hint="Rua, número, código postal e localidade. O site mostra um botão «Como chegar» que abre o Google Maps." value={s.address} onChange={(e) => setS({ ...s, address: e.target.value })} />
+      <TextArea id="d-horario" label="Horário" hint="Uma linha por dia ou grupo de dias, por exemplo: Sábados, 10h às 13h." rows={3} value={s.hours} onChange={(e) => setS({ ...s, hours: e.target.value })} />
       {save.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(save.error)}</Notice> : null}
       {save.isSuccess ? <p role="status">Guardado</p> : null}
       <div><Button type="submit" disabled={save.isPending}>Guardar</Button></div>

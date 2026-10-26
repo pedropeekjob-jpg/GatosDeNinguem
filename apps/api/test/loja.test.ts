@@ -29,42 +29,15 @@ describe("public shop", () => {
     expect(caneca).toMatchObject({ minDonationCents: 900, costCents: 350, stock: 12 });
   });
 
-  it("shows how much the shop raised this year and what it paid for", async () => {
+  it("shows how much the shop raised this year, what it paid for, and nothing about where it is until the team says", async () => {
     const res = await req("GET", "/loja/resumo");
     expect(res.json().transparency).toMatchObject({ year: 2026, donationsCents: 11600, spentCents: 6800 });
-    expect(res.json().settings.iban).toMatch(/^PT50/);
+    expect(res.json().settings).toEqual({});
   });
 
-  it("reserves the gifts for a donation, answers with a code and how to pay, and takes them out of stock", async () => {
-    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-tshirt", variant: "L", quantity: 2 }, { productId: "art-caneca", quantity: 1 }], amountCents: 4500 });
-    expect(res.statusCode).toBe(201);
-    expect(res.json()).toMatchObject({ totalCents: 4500, payment: "mbway", code: expect.stringMatching(/^L-/) });
-    expect(res.json().settings.pickup).toBeTruthy();
-    const tshirt = (await req("GET", "/loja/artigos/t-shirt-gatos-de-ninguem")).json();
-    expect(tshirt.variants.find((v: { label: string }) => v.label === "L").stock).toBe(2);
-    expect(refreshed).toContain("loja");
-    const orders = (await req("GET", "/loja/gestao/pedidos", undefined, true)).json();
-    expect(orders[0]).toMatchObject({ name: "Helena Castro", status: "novo", totalCents: 4500 });
-  });
-
-  it("refuses a donation below the minimum of the chosen gifts", async () => {
-    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-caneca", quantity: 2 }], amountCents: 1000 });
-    expect(res.statusCode).toBe(409);
-    expect(res.json().message).toMatch(/donativo mínimo é 18\s€/);
-  });
-
-  it("explains when a gift ran out", async () => {
-    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-saco", quantity: 5 }], amountCents: 4000 });
-    expect(res.statusCode).toBe(409);
-    expect(res.json().message).toBe("Só há 2 de Saco de pano «Adote, não compre». Diminua a quantidade, por favor.");
-  });
-
-  it("checks the form and ignores spam bots", async () => {
-    const bad = await req("POST", "/loja/pedidos", { items: [] });
-    expect(bad.statusCode).toBe(400);
-    const bot = await req("POST", "/loja/pedidos", { website_url: "http://spam", items: [{ productId: "art-caneca", quantity: 10 }] });
-    expect(bot.statusCode).toBe(201);
-    expect((await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock).toBe(11);
+  it("takes no orders online: the site only shows the articles", async () => {
+    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-caneca", quantity: 1 }], amountCents: 900 });
+    expect(res.statusCode).toBe(404);
   });
 
   it("takes offers of articles to sell", async () => {
@@ -104,8 +77,7 @@ describe("back office", () => {
     expect(paid.json()).toMatchObject({ status: "pago", paidAt: "2026-11-01T09:00:00.000Z", teamNote: "MB WAY recebido" });
 
     const before = (await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock;
-    const placed = (await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-caneca", quantity: 3 }], amountCents: 2700 })).json();
-    const order = (await req("GET", "/loja/gestao/pedidos", undefined, true)).json().find((o: { code: string }) => o.code === placed.code);
+    const order = (await req("POST", "/loja/gestao/pedidos", { items: [{ productId: "art-caneca", quantity: 3 }], amountCents: 2700 }, true)).json();
     await req("PATCH", `/loja/gestao/pedidos/${order.id}`, { status: "cancelado" }, true);
     expect((await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock).toBe(before);
     const revive = await req("PATCH", `/loja/gestao/pedidos/${order.id}`, { status: "pago" }, true);
@@ -119,6 +91,11 @@ describe("back office", () => {
     expect((await req("GET", "/loja/resumo")).json().transparency.donationsCents).toBe(before + 2000);
     const more = await req("POST", "/loja/gestao/pedidos", { items: [{ productId: "art-calendario", quantity: 1 }], amountCents: 2500 }, true);
     expect(more.json()).toMatchObject({ totalCents: 2500 });
+    const below = await req("POST", "/loja/gestao/pedidos", { items: [{ productId: "art-caneca", quantity: 2 }], amountCents: 1000 }, true);
+    expect(below.statusCode).toBe(409);
+    expect(below.json().message).toMatch(/donativo mínimo é 18\s€/);
+    const tooMany = await req("POST", "/loja/gestao/pedidos", { items: [{ productId: "art-saco", quantity: 5 }] }, true);
+    expect(tooMany.json().message).toBe("Só há 2 de Saco de pano «Adote, não compre». Diminua a quantidade, por favor.");
   });
 
   it("adds and removes what the money paid for", async () => {
@@ -129,9 +106,11 @@ describe("back office", () => {
     expect((await req("GET", "/loja/resumo")).json().transparency.spentCents).toBe(6800);
   });
 
-  it("saves the MB WAY number", async () => {
-    const res = await req("PUT", "/loja/gestao/definicoes", { mbwayPhone: "912 345 678", iban: "PT50 0045 1436 4033 0203 2321 6", pickup: "No gatil aos sábados.", shipping: "Por CTT." }, true);
-    expect(res.json().mbwayPhone).toBe("912 345 678");
-    expect((await req("GET", "/loja/resumo")).json().settings.mbwayPhone).toBe("912 345 678");
+  it("saves where the shop is and when it opens, and forgets them when cleared", async () => {
+    const res = await req("PUT", "/loja/gestao/definicoes", { address: " Rua da Bandeira 10, Viana do Castelo ", hours: "Sábados, 10h às 13h" }, true);
+    expect(res.json()).toEqual({ address: "Rua da Bandeira 10, Viana do Castelo", hours: "Sábados, 10h às 13h" });
+    expect((await req("GET", "/loja/resumo")).json().settings.hours).toBe("Sábados, 10h às 13h");
+    await req("PUT", "/loja/gestao/definicoes", { address: "", hours: "" }, true);
+    expect((await req("GET", "/loja/resumo")).json().settings).toEqual({});
   });
 });

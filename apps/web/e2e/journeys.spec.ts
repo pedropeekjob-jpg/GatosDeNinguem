@@ -5,7 +5,7 @@ import { parseFeatures } from "@gn/domain";
 // The same FEATURES setting the site was built with. CI runs the journeys twice: all off, and all on.
 const features = parseFeatures(process.env.FEATURES);
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/doar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/voluntariado", ...(features.amigo ? ["/ajudar/amigo"] : []), "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies", "/contactos"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/doar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/voluntariado", ...(features.amigo ? ["/ajudar/amigo"] : []), "/loja", "/loja/t-shirt-gatos-de-ninguem", "/privacidade", "/cookies", "/contactos"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -639,7 +639,7 @@ test("footer: shows where the gatil is and links to the privacy and cookie polic
 
 test("contact: no email address anywhere, the footer leads to a form that sends the message", async ({ page }) => {
   // Pedro (2026-10-26): every contact goes through the form.
-  for (const path of ["/", "/sobre", "/privacidade", "/cookies", "/loja/condicoes", "/contactos"]) {
+  for (const path of ["/", "/sobre", "/privacidade", "/cookies", "/loja", "/contactos"]) {
     await page.goto(path);
     await expect(page.locator('a[href^="mailto:"]:not([href^="mailto:?"])'), path).toHaveCount(0);
     expect(await page.locator("body").innerText(), path).not.toMatch(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
@@ -665,71 +665,28 @@ test("contact: the privacy page opens the form with the data topic chosen", asyn
   await expect(page.getByLabel("Assunto")).toHaveValue("dados");
 });
 
-test("shop: choose a gift, give at least the minimum and see how to pay", async ({ page }) => {
+test("shop: shows the articles without prices and invites people to the shop", async ({ page }) => {
   await page.goto("/loja");
-  await expect(page.getByText("A associação não vende.", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("Todos os donativos angariados pela loja vão para os gatos.")).toBeVisible();
+  // A showcase: no prices, nothing to order online.
+  await expect(page.locator(".product-card", { hasText: "€" })).toHaveCount(0);
+  await expect(page.getByText("Não vendemos pelo site", { exact: false }).first()).toBeVisible();
+  await page.getByRole("link", { name: "Onde fica a loja" }).click();
+  await expect(page.getByRole("heading", { name: "Visite a loja" })).toBeInViewport();
+  // The address and hours are not known yet: the site says they are coming, without empty lines.
+  await expect(page.getByText("Em breve dizemos aqui a morada e o horário.", { exact: false }).first()).toBeVisible();
+
   await page.getByRole("link", { name: "T-shirt Gatos de Ninguém" }).click();
   await expect(page).toHaveURL(/\/loja\/t-shirt-gatos-de-ninguem$/);
-  // A minimum donation, never a price, and how much of it goes to the cats.
-  await expect(page.getByText(/Donativo a partir de 15\s€/)).toBeVisible();
-  await expect(page.getByText("pelo menos 9 €", { exact: false })).toBeVisible();
-  await page.getByText("M", { exact: true }).click();
-  await page.getByRole("button", { name: "Mais um" }).click();
-  await page.getByRole("button", { name: "Escolher esta oferta" }).click();
-  await page.getByRole("main").getByRole("link", { name: "Fazer o donativo", exact: true }).click();
-  await expect(page).toHaveURL(/\/loja\/cesto$/);
-  await expect(page.getByText(/Donativo mínimo\s*30\s€/)).toBeVisible();
-
-  await page.getByRole("button", { name: "Fazer o donativo" }).click();
-  const dialog = page.getByRole("dialog", { name: "Fazer o donativo" });
-  // Below the minimum is refused before sending.
-  await dialog.getByText("Outro valor").click();
-  await dialog.getByLabel("Valor do donativo, em euros").fill("20");
-  await dialog.getByRole("button", { name: "Confirmar o donativo" }).click();
-  await expect(dialog.getByText(/O donativo mínimo para estas ofertas é 30\s€/)).toBeVisible();
-  await dialog.getByLabel("Valor do donativo, em euros").fill("40");
-  await dialog.getByText("Receber pelo correio").click();
-  // By post there is no "pay when you pick up".
-  await expect(dialog.getByText("Pagar quando levantar")).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Confirmar o donativo" }).click();
-  await expect(dialog.getByText("Indique a morada completa, com código postal")).toBeVisible();
-  await dialog.getByLabel("Morada completa, com código postal").fill("Rua das Flores 12, 4900-000 Viana do Castelo");
-  await dialog.getByText("Transferência bancária").click();
-  await dialog.getByLabel("O seu nome").fill("Maria Silva");
-  await dialog.getByLabel("Telemóvel").fill("912345678");
-  await dialog.getByText("Aceito que a associação me contacte").click();
-  await expect(dialog.getByText("As ofertas são o nosso obrigado: não é uma compra.", { exact: false })).toBeVisible();
-  await expect(dialog.getByRole("link", { name: "Como funcionam os donativos com oferta" })).toHaveAttribute("href", "/loja/condicoes");
-  await dialog.getByRole("button", { name: "Confirmar o donativo" }).click();
-
-  await expect(page.getByText("Obrigado pelo seu donativo!")).toBeVisible();
-  await expect(page.getByText(/^L-[2-9A-Z]{4}$/).first()).toBeVisible();
-  await expect(page.getByText(/Transfira\s*40\s€/)).toBeVisible();
-  await expect(page.getByText("PT50 0045 1436 4033 0203 2321 6")).toBeVisible();
-  // Nothing is chosen any more.
-  await page.goto("/loja/cesto");
-  await expect(page.getByText("Ainda não escolheu nenhuma oferta.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Venha vê-lo à loja" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /cesto|Escolher|Encomendar/ })).toHaveCount(0);
+  await expect(page.getByText(/Donativo a partir de|\d\s€/)).toHaveCount(0);
 });
 
-test("shop: the conditions say the association does not sell, who receives and where to complain", async ({ page }) => {
-  await page.goto("/loja");
-  await page.getByRole("main").getByRole("link", { name: "como funcionam os donativos com oferta" }).click();
-  await expect(page).toHaveURL(/\/loja\/condicoes\/?$/);
-  const main = page.getByRole("main");
-  await expect(main.getByRole("heading", { name: "Não vendemos: agradecemos" })).toBeVisible();
-  await expect(main.getByText(/NIF \d{9}/)).toBeVisible();
-  await expect(main.getByRole("link", { name: "Livro de Reclamações Eletrónico" })).toHaveAttribute("href", "https://www.livroreclamacoes.pt");
-  await expect(page.getByRole("navigation", { name: "Informação legal" }).getByRole("link", { name: "Condições da loja" })).toBeVisible();
-});
-
-test("shop: sold-out gifts cannot be chosen, and the page shows where the money goes", async ({ page }) => {
+test("shop: sold-out articles say so, and the page shows where the money goes", async ({ page }) => {
   await page.goto("/loja/porta-chaves-gato");
-  await expect(page.getByText("Esta oferta esgotou.", { exact: false })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Escolher esta oferta" })).toHaveCount(0);
+  await expect(page.getByText("Já não temos este artigo.", { exact: false })).toBeVisible();
   await page.goto("/loja");
-  // One promise for the whole shop, not a sum on every card.
-  await expect(page.getByText("Todos os donativos angariados pela loja vão para os gatos.")).toBeVisible();
-  await expect(page.locator(".product-card").getByText("para os gatos")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Para onde vai o dinheiro" })).toBeVisible();
   await expect(page.getByText("Vacinas da Estrela e do Tobias")).toBeVisible();
 });

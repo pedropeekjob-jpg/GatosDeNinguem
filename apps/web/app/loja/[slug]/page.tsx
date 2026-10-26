@@ -1,11 +1,9 @@
 import { notFound } from "next/navigation";
-import { euros, productCategoryLabel } from "@gn/domain";
-import { Breadcrumbs, Container, ShareBar } from "@gn/ui";
+import { productCategoryLabel, stockOf } from "@gn/domain";
+import { Breadcrumbs, Container, Notice, ShareBar } from "@gn/ui";
 import { JsonLd } from "@/components/JsonLd";
-import { AddToCart } from "@/components/loja/AddToCart";
-import { CartBar } from "@/components/loja/CartBar";
-import { PriceBreakdown } from "@/components/loja/PriceBreakdown";
-import { getProduct, getSeoSettings, listProducts } from "@/lib/content";
+import { ShopVisit } from "@/components/loja/ShopVisit";
+import { getProduct, getSeoSettings, getShopSummary, listProducts } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -18,13 +16,13 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props) {
   const p = await getProduct((await params).slug);
   if (!p) return {};
-  return buildMetadata({ path: `/loja/${p.slug}`, title: `${p.name}, loja solidária`, description: `Oferta por um donativo a partir de ${euros(p.minDonationCents)}. ${p.description}`.slice(0, 160), image: p.photos[0]?.url });
+  return buildMetadata({ path: `/loja/${p.slug}`, title: `${p.name}, loja solidária`, description: `${p.description} Venha vê-lo à loja solidária da Gatos de Ninguém.`.slice(0, 160), image: p.photos[0]?.url });
 }
 
 export default async function ProductPage({ params }: Props) {
   const product = await getProduct((await params).slug);
   if (!product) notFound();
-  const settings = await getSeoSettings();
+  const [settings, shop] = await Promise.all([getSeoSettings(), getShopSummary()]);
   const photo = product.photos[0]!;
   const url = `${settings.siteUrl}/loja/${product.slug}`;
   return (
@@ -32,7 +30,6 @@ export default async function ProductPage({ params }: Props) {
       <div className="page-hero">
         <Breadcrumbs items={[{ href: "/", label: "Início" }, { href: "/loja", label: "Loja solidária" }, { label: product.name }]} />
       </div>
-      <CartBar />
       <div className="cat-profile product">
         <div className="gn-stack gn-stack--s">
           <img className="cat-profile__photo" src={photo.url} alt={photo.alt} width={800} height={600} />
@@ -43,13 +40,14 @@ export default async function ProductPage({ params }: Props) {
         <div className="gn-stack gn-stack--m">
           <p className="gn-eyebrow">{productCategoryLabel[product.category]}</p>
           <h1>{product.name}</h1>
-          <p className="product__price">Donativo a partir de {euros(product.minDonationCents)}</p>
-          <p className="small muted">A associação não vende: esta oferta é o nosso obrigado por um donativo. Pode dar mais do que o mínimo.</p>
-          <PriceBreakdown product={product} />
           {product.description ? <p>{product.description}</p> : null}
-          <AddToCart product={product} />
-          <p className="small muted"><a href="/loja/condicoes">Como funcionam os donativos com oferta</a></p>
-          <ShareBar url={url} text={`${product.name}: cada donativo ajuda os gatos da Gatos de Ninguém`} />
+          {stockOf(product) === 0 ? <Notice tone="info" title="Esgotado">Já não temos este artigo. Venha ver os outros à loja.</Notice> : null}
+          <section className="gn-stack gn-stack--s" aria-labelledby="visite">
+            <h2 id="visite">Venha vê-lo à loja</h2>
+            <p>Não vendemos pelo site. Este e outros artigos esperam por si na loja solidária, e tudo o que lá se angaria vai para os gatos.</p>
+            <ShopVisit settings={shop.settings} />
+          </section>
+          <ShareBar url={url} text={`${product.name}: está na loja solidária da Gatos de Ninguém`} />
         </div>
       </div>
       <JsonLd data={{

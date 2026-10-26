@@ -388,7 +388,7 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
     id: "page-loja",
     path: "/loja",
     heading: "Loja solidária",
-    intro: "T-shirts, canecas, calendários e peças feitas à mão, como obrigado pelo seu donativo. Cada donativo paga comida, vacinas e tratamentos aos gatos do gatil.",
+    intro: "T-shirts, canecas, calendários e peças feitas à mão, à sua espera na nossa loja. Tudo o que a loja angaria paga comida, vacinas e tratamentos aos gatos do gatil.",
     seo: {},
     updatedAt: now,
   },
