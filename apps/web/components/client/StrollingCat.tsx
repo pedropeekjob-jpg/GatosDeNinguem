@@ -12,7 +12,7 @@ const LAST_KEY = "gn-passeio-ultimo";
 /** Walking speeds in pixels per second, each with the stride that keeps its paws from sliding on the ground. */
 const IN = { speed: 37, step: 0.8 };
 const OUT = { speed: 49, step: 0.6 };
-const SIT_MS = 6_000;
+const SIT_MS = 8_000;
 /** Width of the cat on screen (matches .stroll in globals.css), so it starts and ends just off screen. */
 const OFF = 130;
 /** `?gato=agora` sends a cat out at once, on any page: to try it on test sites and the demo. */
@@ -41,9 +41,10 @@ function saveVisit(s: Pick<StrollState, "visitStart" | "walks" | "lastWalk">) {
 }
 
 /**
- * Now and then (see lib/passeio.ts) a cat drawn like the one in the logo walks in from the right along the bottom of the screen,
- * stops and says hello with the name of a real cat waiting for a family, then walks on. Tapping it, or pointing
- * at it with a mouse, opens that cat's card. It walks under every window, never while someone types or on pages
+ * Now and then (see lib/passeio.ts) the logo's cat walks in from the right into the bottom right corner of the
+ * screen, head-butts the glass to get our attention, rubs itself as against your legs and says hello with the name
+ * of a real cat waiting for a family, then turns round and goes. Tapping it, or pointing at it with a mouse, opens
+ * that cat's card. It walks under every window, never while someone types or on pages
  * where people need to concentrate, and never for people who asked their device for less motion.
  */
 export function StrollingCat({ cats }: { cats: NewCat[] }) {
@@ -72,7 +73,8 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
     clear();
     setCard("closed");
     setPhase("out");
-    const d = walkTo(-OFF, OUT.speed, from);
+    // It turns round and goes back the way it came, so it never crosses the page.
+    const d = walkTo(window.innerWidth + 20, OUT.speed, from);
     later(() => { setPhase("away"); setCat(undefined); setMs(0); }, d + 100);
   };
 
@@ -99,9 +101,10 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
       setMs(0);
       const enter = window.innerWidth + 20;
       setX(enter);
-      // Next frame: walk in from the right to a spot near the right edge and stop there for a while.
+      // Next frame: walk in from the right into the bottom right corner and stop there for a while.
       later(() => {
-        const stop = Math.round(window.innerWidth - OFF - Math.max(16, Math.min(window.innerWidth * 0.1, 180)));
+        const width = box.current?.offsetWidth || OFF;
+        const stop = Math.round(window.innerWidth - width - (window.innerWidth < 640 ? 12 : 32));
         const d = walkTo(stop, IN.speed, enter);
         later(() => { setPhase("sit"); later(() => walkOut(stop), SIT_MS); }, d);
       }, 50);
@@ -146,7 +149,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   return (
     <div
       ref={box}
-      className={`stroll${sitting ? " stroll--sit" : ""}`}
+      className={`stroll${sitting ? " stroll--sit" : ""}${phase === "out" ? " stroll--back" : ""}`}
       style={{ transform: `translateX(${x}px)`, transitionDuration: `${ms}ms` }}
       onPointerLeave={(e) => { if (e.pointerType === "mouse" && card === "hover") later(() => walkOut(x), 600); }}
       onPointerEnter={(e) => { if (e.pointerType === "mouse" && card === "hover") clear(); }}
