@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Notice } from "@gn/ui";
+import { defaultStrollingCatSettings, type StrollingCatSettings } from "@gn/domain";
+import { Badge, Button, Checkbox, Notice, TextField } from "@gn/ui";
 import { errorMessage, useApi } from "../lib/api";
 
 const when = (iso: string) => new Intl.DateTimeFormat("pt-PT", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Lisbon" }).format(new Date(iso));
@@ -44,6 +46,8 @@ export function AvisosPage() {
           {pending.length > 0 ? <span className="muted"> · {plural(pending.length, "ainda não confirmou", "ainda não confirmaram")} o email</span> : null}
         </p>
       ) : null}
+
+      <StrollingCatSettingsForm />
 
       <section className="gn-stack gn-stack--s">
         <h2>Avisos enviados</h2>
@@ -104,5 +108,44 @@ export function AvisosPage() {
         ) : null}
       </section>
     </div>
+  );
+}
+
+/**
+ * The strolling cat on the site: now and then the logo's cat walks into a corner of the screen with the name of a cat
+ * up for adoption. Here: on or off, and how long between one cat leaving and the next coming in.
+ */
+function StrollingCatSettingsForm() {
+  const api = useApi();
+  const qc = useQueryClient();
+  const pages = useQuery({ queryKey: ["pages"], queryFn: () => api.pages() });
+  const home = pages.data?.find((p) => p.path === "/");
+  const [settings, setSettings] = useState<StrollingCatSettings>();
+  useEffect(() => { if (home && !settings) setSettings(home.strollingCat ?? defaultStrollingCatSettings); }, [home, settings]);
+  const save = useMutation({
+    mutationFn: (s: StrollingCatSettings) => {
+      if (!(s.everySeconds >= 30 && s.everySeconds <= 3600)) throw new Error("O intervalo deve ser entre 30 e 3600 segundos.");
+      return api.updatePage(home!.id, { strollingCat: s });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pages"] }),
+  });
+  if (!settings) return null;
+  const change = (s: StrollingCatSettings) => { save.reset(); setSettings(s); };
+  return (
+    <form className="gn-stack gn-stack--s" aria-labelledby="gato-passeio" onSubmit={(e) => { e.preventDefault(); save.mutate(settings); }}>
+      <h2 id="gato-passeio">Gato que passeia no site</h2>
+      <p className="small muted">
+        O gato do logótipo entra no canto do ecrã com o nome de um gato para adoção, 8 segundos depois de a pessoa chegar ao site.
+        Quem carrega em “Agora não” deixa de o ver até fechar o site.
+      </p>
+      <Checkbox id="gato-passeio-on" label="Mostrar o gato que passeia" checked={settings.on} onChange={(on) => change({ ...settings, on })} />
+      {settings.on ? (
+        <TextField id="gato-passeio-intervalo" label="Segundos até voltar" hint="Depois de um gato sair, quanto tempo até entrar o seguinte. Entre 30 e 3600 (60 = um minuto)." type="number" inputMode="numeric"
+          value={String(settings.everySeconds)} onChange={(e) => change({ ...settings, everySeconds: Number(e.target.value) })} />
+      ) : null}
+      {save.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(save.error)}</Notice> : null}
+      {save.isSuccess ? <Notice tone="success" title="Guardado">O site é atualizado em poucos segundos.</Notice> : null}
+      <div><Button type="submit" variant="secondary" disabled={save.isPending}>{save.isPending ? "A guardar…" : "Guardar"}</Button></div>
+    </form>
   );
 }

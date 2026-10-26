@@ -563,10 +563,23 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 /* The strolling cat (StrollingCat.tsx): walks into the bottom right corner, above the phone tab bar and under
    every window. Only the cat and its card take taps; the strip around it lets them through to the page. */
 .stroll {
-  position: fixed; z-index: 30; left: 0; bottom: 0; width: 9.5rem; pointer-events: none;
+  position: fixed; z-index: 30; left: 0; bottom: 0.5rem; width: 11rem; pointer-events: none;
   transition-property: transform; transition-timing-function: linear; color: var(--gn-ink);
 }
-@media (max-width: 63.99rem) { .stroll { width: 7.5rem; bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px) - 0.4rem); } }
+@media (max-width: 63.99rem) { .stroll { width: 9.5rem; bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px) + 0.35rem); } }
+/* The white runner rolled out for the cat, like a red carpet: from the right edge to the corner, under its paws,
+   fading out to the left.
+   It gives the cat a calm, light place to stand out on, over photos and colour. */
+.stroll-rug {
+  position: fixed; z-index: 29; right: 0; bottom: 0.15rem; height: 3.6rem; pointer-events: none;
+  background: linear-gradient(#fff, #fff 70%, #fbfaf9); border-radius: 1.8rem 0 0 1.8rem;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.12);
+  /* fading out to the left, so it has no hard end */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 45%); mask-image: linear-gradient(to right, transparent, #000 45%);
+  clip-path: inset(-2rem 0 -2rem 100% round 1.8rem 0 0 1.8rem); transition: clip-path 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.stroll-rug--open { clip-path: inset(-2rem -2rem -2rem -2rem round 1.8rem 0 0 1.8rem); }
+@media (max-width: 63.99rem) { .stroll-rug { height: 3.1rem; bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px) + 0.1rem); } }
 .stroll__cat { pointer-events: auto; display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 1rem; }
 /* One strip of frames per action (public/gato), played with steps(); out to the right it is the walk, mirrored. */
 .stroll__sprite { display: block; width: 100%; aspect-ratio: 228 / 161; background-repeat: no-repeat; background-position: 0 0; filter: drop-shadow(0 0 1.5px rgb(255 255 255 / 0.95)); }
@@ -594,7 +607,7 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   background: rgb(255 255 255 / 0.92); font-size: 1.4rem; line-height: 1; cursor: pointer; color: var(--gn-ink);
 }
 @keyframes stroll-pop { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
-@media (prefers-reduced-motion: reduce) { .stroll { display: none; } }
-@media print { .stroll { display: none; } }
+@media (prefers-reduced-motion: reduce) { .stroll, .stroll-rug { display: none; } }
+@media print { .stroll, .stroll-rug { display: none; } }
 
 .contact-aside { border-top: 1px solid var(--gn-line); padding-top: var(--gn-space-m); }
