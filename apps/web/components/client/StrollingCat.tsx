@@ -148,7 +148,7 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
         later(() => {
           const width = box.current?.offsetWidth || OFF;
           const stop = Math.round(window.innerWidth - width - (window.innerWidth < 640 ? 4 : 24));
-          setRug({ width: window.innerWidth - stop, open: true });
+          setRug({ width: Math.min(window.innerWidth, window.innerWidth - stop + width * 0.6), open: true });
           later(() => {
           const d = walkTo(stop, enter);
           later(() => {
