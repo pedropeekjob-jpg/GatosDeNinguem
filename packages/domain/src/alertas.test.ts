@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { alertAgeGroup, alertRecipients, catAlertMessage, catAlertSignupSchema, describeAlertFilters, isExpiredPending, matchesAlertFilters, noAlertFilters } from "./alertas";
+import { alertAgeGroup, alertRecipients, unseenNewCats, catAlertMessage, catAlertSignupSchema, describeAlertFilters, isExpiredPending, matchesAlertFilters, noAlertFilters } from "./alertas";
 
 const cat = { ageYears: 2, sex: "femea" as const, goodWithKids: true, goodWithCats: undefined, goodWithDogs: false };
 
@@ -54,5 +54,21 @@ describe("cat alerts", () => {
     expect(m.subject).toBe("Mimi procura família");
     expect(m.text).toContain("Há uma gata nova para adoção");
     expect(m.text).toContain("https://gatosdeninguem.pt/adotar/mimi");
+  });
+});
+
+describe("new cat pop-up", () => {
+  const now = new Date("2026-10-25T12:00:00Z");
+  const cats = [
+    { slug: "velho", status: "para-adocao" as const, listedAt: "2026-08-01T10:00:00Z" },
+    { slug: "mimi", status: "para-adocao" as const, listedAt: "2026-10-20T10:00:00Z" },
+    { slug: "tom", status: "para-adocao" as const, listedAt: "2026-10-24T10:00:00Z" },
+    { slug: "reservado", status: "reservado" as const, listedAt: "2026-10-24T11:00:00Z" },
+    { slug: "sem-data", status: "para-adocao" as const },
+  ];
+  it("shows cats listed in the last 30 days, newest first, that this visitor has not seen", () => {
+    expect(unseenNewCats(cats, [], now).map((c) => c.slug)).toEqual(["tom", "mimi"]);
+    expect(unseenNewCats(cats, ["tom"], now).map((c) => c.slug)).toEqual(["mimi"]);
+    expect(unseenNewCats(cats, ["*"], now)).toEqual([]);
   });
 });

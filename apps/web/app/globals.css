@@ -537,3 +537,16 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
   .donate-band__inner > :first-child { grid-row: span 2; }
   .donate-band__actions { grid-template-columns: repeat(2, auto); justify-content: start; }
 }
+
+/* "New cat" pop-up: the photo first, like a card. */
+/* Picture-first card: photo edge to edge, a small yellow tag, the name big, one clear button. */
+.new-cat__media { position: relative; }
+.new-cat__photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--gn-sand); }
+.new-cat__badge { position: absolute; left: 1rem; bottom: 1rem; padding: 0.3rem 0.75rem; border-radius: 999px; background: var(--gn-accent); color: var(--gn-ink); font-size: var(--gn-text-s); font-weight: 700; line-height: 1.3; }
+.new-cat__body { display: grid; gap: var(--gn-space-m); padding: var(--gn-space-m) var(--gn-space-m) calc(var(--gn-space-s) + env(safe-area-inset-bottom)); }
+.new-cat__name { margin: 0; font-size: var(--gn-h2); line-height: 1.15; letter-spacing: -0.02em; }
+.new-cat__meta { margin: 0.2rem 0 0; font-size: var(--gn-text-s); color: var(--gn-ink-soft); }
+.new-cat__summary { margin: 0; color: var(--gn-ink-soft); }
+.new-cat__actions { display: grid; gap: var(--gn-space-s); }
+.new-cat .alert-later { font-size: var(--gn-text-s); text-decoration-color: var(--gn-line); }
+@media (max-width: 47.99rem) { .new-cat__photo { aspect-ratio: 3 / 2; } }

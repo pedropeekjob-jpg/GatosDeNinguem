@@ -144,3 +144,18 @@ export function catAlertMessage(cat: Pick<Cat, "name" | "slug" | "sex" | "ageYea
     pushBody: `${ageLabel(cat.ageYears)}. ${cat.summary}`.slice(0, 180),
   };
 }
+
+/** A cat counts as "new" for the website pop-up during this many days after it is put up for adoption. */
+export const NEW_CAT_DAYS = 30;
+
+/**
+ * Cats to show in the "new cat" pop-up: put up for adoption in the last NEW_CAT_DAYS days and not yet seen
+ * by this visitor (in the pop-up or on its own page), newest first. "*" in `seen` means all seen.
+ */
+export function unseenNewCats<T extends Pick<Cat, "slug" | "status" | "listedAt">>(cats: T[], seen: string[], now: Date, days = NEW_CAT_DAYS): T[] {
+  if (seen.includes("*")) return [];
+  const since = now.getTime() - days * 86_400_000;
+  return cats
+    .filter((c) => c.status === "para-adocao" && c.listedAt && new Date(c.listedAt).getTime() >= since && !seen.includes(c.slug))
+    .sort((a, b) => b.listedAt!.localeCompare(a.listedAt!));
+}

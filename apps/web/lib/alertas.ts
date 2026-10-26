@@ -5,9 +5,7 @@ import { catAlertSignupSchema, type CatAlertFilters } from "@gn/domain";
 
 const STATIC_DEMO = process.env.NEXT_PUBLIC_STATIC_DEMO === "1";
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const KEY = "gn-avisos-gatos";
-/** After "Agora não", the window does not come back for this long. */
-const QUIET_DAYS = 60;
+const SEEN_KEY = "gn-gatos-vistos";
 
 type Issue = { path: (string | number)[]; message: string };
 export type AlertResult = { ok: true; demoConfirmUrl?: string } | { ok: false; message: string; fieldErrors: Record<string, string> };
@@ -68,26 +66,18 @@ export async function subscribeThisDevice(publicKey: string, filters: CatAlertFi
   }
 }
 
-type Remembered = { estado: "fechado" | "inscrito"; em: string };
-
-function read(): Remembered | null {
+/** Cats this visitor has already seen in the "new cat" pop-up or on their own page. Kept on this device only. */
+export function seenCats(): string[] {
   try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Remembered) : null;
+    const raw = localStorage.getItem(SEEN_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
-/** Remembered on this device only, so the window is never shown twice in a row. */
-export function rememberAlerts(estado: Remembered["estado"]) {
-  if (estado === "fechado" && read()?.estado === "inscrito") return;
-  try { localStorage.setItem(KEY, JSON.stringify({ estado, em: new Date().toISOString() })); } catch { /* private mode */ }
-}
-
-export function shouldOfferAlerts(now = new Date()): boolean {
-  const r = read();
-  if (!r) return true;
-  if (r.estado === "inscrito") return false;
-  return now.getTime() - new Date(r.em).getTime() > QUIET_DAYS * 86_400_000;
+export function markCatSeen(slug: string) {
+  const seen = seenCats();
+  if (seen.includes(slug)) return;
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, slug].slice(-200))); } catch { /* private mode */ }
 }
