@@ -8,6 +8,8 @@ import { Splash } from "@/components/Splash";
 import { ScrollReveal } from "@/components/client/ScrollReveal";
 import { ClientNavigation } from "@/components/client/ClientNavigation";
 import { NewCatPrompt, type NewCat } from "@/components/client/CatAlerts";
+import { StrollingCat } from "@/components/client/StrollingCat";
+import { strollingCatOn } from "@/lib/passeio";
 import { getSeoSettings, listCats } from "@/lib/content";
 import "./globals.css";
 
@@ -30,17 +32,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#ffffff" };
 
-/** The newest cats up for adoption, for the "new cat" pop-up (it decides which ones this visitor has not seen). */
-async function newestCats(): Promise<NewCat[]> {
+/** The cats up for adoption, newest first, for the "new cat" pop-up and the strolling cat. */
+async function adoptableCats(): Promise<NewCat[]> {
   const cats = await listCats("para-adocao").catch(() => []);
   return cats
+    .filter((c) => c.photos[0])
     .sort((a, b) => (b.listedAt ?? "").localeCompare(a.listedAt ?? ""))
-    .slice(0, 6)
     .map((c) => ({ slug: c.slug, name: c.name, sex: c.sex, ageYears: c.ageYears, summary: c.summary, status: "para-adocao", listedAt: c.listedAt, photo: c.photos[0]! }));
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [settings, newCats] = await Promise.all([getSeoSettings(), newestCats()]);
+  const [settings, cats] = await Promise.all([getSeoSettings(), adoptableCats()]);
   return (
     <html lang="pt-PT" className={`${inter.variable} ${interTight.variable}`}>
       <body>
@@ -55,7 +57,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Footer />
         <ScrollReveal />
         <ClientNavigation />
-        <NewCatPrompt cats={newCats} />
+        <NewCatPrompt cats={cats.slice(0, 6)} />
+        {strollingCatOn ? <StrollingCat cats={cats} /> : null}
         <JsonLd data={organizationJsonLd(settings)} />
       </body>
     </html>

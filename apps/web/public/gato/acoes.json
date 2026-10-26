@@ -1,0 +1,42 @@
+{
+  "width": 228,
+  "height": 161,
+  "fps": 12,
+  "actions": {
+    "walk": {
+      "frames": 10,
+      "seconds": 0.8,
+      "loop": true
+    },
+    "bonk": {
+      "frames": 29,
+      "seconds": 2.4,
+      "loop": false
+    },
+    "turn": {
+      "frames": 24,
+      "seconds": 2,
+      "loop": false
+    },
+    "lie": {
+      "frames": 12,
+      "seconds": 1,
+      "loop": false
+    },
+    "purr": {
+      "frames": 22,
+      "seconds": 1.8,
+      "loop": true
+    },
+    "stand": {
+      "frames": 29,
+      "seconds": 2.4,
+      "loop": true
+    },
+    "leave": {
+      "frames": 29,
+      "seconds": 2.4,
+      "loop": false
+    }
+  }
+}

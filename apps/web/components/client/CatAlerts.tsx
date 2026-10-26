@@ -152,8 +152,8 @@ export function CatAlertButton({ label = "Avisem-me de gatos novos", variant = "
 export type NewCat = { slug: string; name: string; sex: "macho" | "femea"; ageYears: number; summary: string; status: "para-adocao"; listedAt?: string; photo: { url: string; alt: string } };
 
 /** Pages where a pop-up would get in the way (emergencies, forms, the shop, the volunteers' area). */
-const QUIET = [/^\/sos/, /^\/conta/, /^\/loja/, /^\/patinhas/, /\/conhecer$/, /^\/adotar\/descobrir/, /^\/apadrinhar\//, /^\/ajudar\/(turnos|familia-temporaria)/, /^\/privacidade/, /^\/cookies/];
-const SESSION_KEY = "gn-novo-gato-mostrado";
+export const QUIET_PAGES = [/^\/sos/, /^\/conta/, /^\/loja/, /^\/patinhas/, /\/conhecer$/, /^\/adotar\/descobrir/, /^\/apadrinhar\//, /^\/ajudar\/(turnos|familia-temporaria)/, /^\/privacidade/, /^\/cookies/];
+export const NEW_CAT_SESSION_KEY = "gn-novo-gato-mostrado";
 /** `?avisos=agora` shows the newest cat at once, on any page, even if already seen: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("avisos") === "agora";
 /** Test sites (GitHub Pages demo, Render): the newest cat on every visit, seen or not, so the pop-up can be tried. */
@@ -179,8 +179,8 @@ export function NewCatPrompt({ cats }: { cats: NewCat[] }) {
     if (cat) return;
     const preview = isPreview();
     let shownThisVisit = false;
-    try { shownThisVisit = sessionStorage.getItem(SESSION_KEY) === "1"; } catch { /* private mode */ }
-    if (!preview && (shownThisVisit || QUIET.some((r) => r.test(pathname)))) return;
+    try { shownThisVisit = sessionStorage.getItem(NEW_CAT_SESSION_KEY) === "1"; } catch { /* private mode */ }
+    if (!preview && (shownThisVisit || QUIET_PAGES.some((r) => r.test(pathname)))) return;
     const candidates = preview || TEST_SITE ? cats.filter((c) => c.slug !== own) : unseenNewCats(cats, seenCats(), new Date()).filter((c) => c.slug !== own);
     const first = candidates[0];
     if (!first) return;
@@ -190,7 +190,7 @@ export function NewCatPrompt({ cats }: { cats: NewCat[] }) {
       if (busy()) { timer = setTimeout(attempt, 5_000); return; }
       if (!preview) {
         candidates.forEach((c) => markCatSeen(c.slug));
-        try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* private mode */ }
+        try { sessionStorage.setItem(NEW_CAT_SESSION_KEY, "1"); } catch { /* private mode */ }
       }
       setCat(first);
       setMore(candidates.length - 1);

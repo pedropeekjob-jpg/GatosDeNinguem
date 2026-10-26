@@ -843,3 +843,29 @@ test.describe("Quem somos", () => {
     await expect(team.getByRole("link", { name: "Venha conhecer-nos" })).toHaveAttribute("href", /\/ajudar\/voluntariado/);
   });
 });
+
+test.describe("strolling cat", () => {
+  test.use({ contextOptions: { reducedMotion: "no-preference" } });
+
+  test("now and then a cat walks in, says a real cat's name and shows its card; 'Agora não' sends it away for days", async ({ page }) => {
+    await page.goto("/adotar?gato=agora");
+    const cat = page.getByRole("button", { name: /^Olá, sou (a|o) .+ e procuro família/ });
+    await expect(cat).toBeVisible();
+    await cat.click();
+    const card = page.getByRole("dialog", { name: /para adoção$/ });
+    await expect(card.getByRole("link", { name: /^Conhecer (a|o) / })).toHaveAttribute("href", /^\/adotar\/[a-z0-9-]+$/);
+    await card.getByRole("button", { name: "Agora não" }).click();
+    await expect(card).toBeHidden();
+    const pausedUntil = await page.evaluate(() => Number(localStorage.getItem("gn-passeio-pausa")));
+    expect(pausedUntil).toBeGreaterThan(Date.now() + 2 * 24 * 60 * 60 * 1000);
+  });
+
+  test("never for people who asked their device for less motion", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("http://localhost:3000/adotar?gato=agora");
+    await page.waitForTimeout(1500);
+    await expect(page.locator(".stroll")).toHaveCount(0);
+    await context.close();
+  });
+});
