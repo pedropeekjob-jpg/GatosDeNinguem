@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { seedRedirects, type Redirect } from "@gn/domain";
 import { findRedirect } from "@gn/seo";
 import { switchedOffRedirect } from "@/lib/features";
+import { isPortugueseOnly, localize, splitLang } from "@/lib/i18n/config";
 
 /**
  * Redirects managed in the back office (e.g. old Wix URLs → new pages).
@@ -24,8 +25,12 @@ async function redirects(): Promise<Redirect[]> {
 
 export async function middleware(request: NextRequest) {
   // Pages of parts that are switched off (FEATURES) send their old links somewhere useful.
-  const off = switchedOffRedirect(request.nextUrl.pathname);
-  if (off) return NextResponse.redirect(new URL(off, request.url), 307);
+  // Also under /en, /es and /fr, to the same page in that language.
+  const [lang, path] = splitLang(request.nextUrl.pathname);
+  // The personal area and the legal texts exist only in Portuguese.
+  if (lang !== "pt" && isPortugueseOnly(path)) return NextResponse.redirect(new URL(path + request.nextUrl.search, request.url), 307);
+  const off = switchedOffRedirect(path);
+  if (off) return NextResponse.redirect(new URL(localize(off, lang), request.url), 307);
   const match = findRedirect(await redirects(), request.nextUrl.pathname);
   if (!match) return NextResponse.next();
   const target = new URL(match.to, request.url);

@@ -12,12 +12,18 @@ const serverOnly = ["app/api", "middleware.ts"];
 rmSync(stash, { recursive: true, force: true });
 mkdirSync(stash);
 for (const p of serverOnly) if (existsSync(p)) renameSync(p, join(stash, p.replace("/", "__")));
+// Pages under /en, /es and /fr allow cats and news added after the build (dynamicParams); a static export has
+// no server for those, and Next.js refuses the setting, so it is left out while exporting.
+const walkFiles = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? walkFiles(join(dir, d.name)) : [join(dir, d.name)]));
+const openParams = walkFiles("app/[lang]").map((file) => ({ file, src: readFileSync(file, "utf8") })).filter((f) => f.src.includes("export const dynamicParams = true;"));
+for (const { file, src } of openParams) writeFileSync(file, src.replace("export const dynamicParams = true;\n", ""));
 
 let status = 1;
 try {
   const env = { ...process.env, STATIC_EXPORT: "1", NEXT_PUBLIC_STATIC_DEMO: "1", NEW_CAT_POPUP: "teste", NEXT_PUBLIC_BASE_PATH: base, API_URL: "", ALLOW_INDEXING: "false" };
   status = spawnSync("pnpm", ["exec", "next", "build"], { env, stdio: "inherit", shell: process.platform === "win32" }).status ?? 1;
 } finally {
+  for (const { file, src } of openParams) writeFileSync(file, src);
   for (const p of serverOnly) {
     const from = join(stash, p.replace("/", "__"));
     if (existsSync(from)) renameSync(from, p);

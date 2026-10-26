@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextNode, sosTree } from "./sos";
+import { nextNode, sosTree, sosTreeIn } from "./sos";
 
 describe("SOS decision tree", () => {
   it("has no broken links and every path ends in an answer", () => {
@@ -32,5 +32,21 @@ describe("SOS decision tree", () => {
       return n.kind === "answer" ? 0 : 1 + Math.max(...n.options.map((o) => depth(o.next)));
     };
     expect(depth("inicio")).toBeLessThanOrEqual(3);
+  });
+
+  it("is fully translated: every node has its own words in English, Spanish and French", () => {
+    for (const lang of ["en", "es", "fr"] as const) {
+      const tree = sosTreeIn(lang);
+      for (const [id, node] of Object.entries(sosTree)) {
+        const other = tree[id]!;
+        if (node.kind === "question" && other.kind === "question") {
+          expect(other.question, `${lang} ${id}`).not.toBe(node.question);
+          other.options.forEach((o, i) => expect(o.label, `${lang} ${id} ${i}`).not.toBe(node.options[i]!.label));
+        } else if (node.kind === "answer" && other.kind === "answer") {
+          expect(other.title, `${lang} ${id}`).not.toBe(node.title);
+          expect(other.steps.length, `${lang} ${id}`).toBe(node.steps.length);
+        }
+      }
+    }
   });
 });

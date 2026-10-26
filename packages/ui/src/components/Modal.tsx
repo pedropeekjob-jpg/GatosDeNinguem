@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useUiText } from "./UiText";
 
 /**
  * A window over the page: full screen on phones, centred on computers.
@@ -12,6 +13,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
  * (for a picture-first card). `title` then only names the window for screen readers.
  */
 export function Modal({ open, onClose, title, intro, sheet, bare, children }: { open: boolean; onClose: () => void; title: string; intro?: ReactNode; sheet?: boolean; bare?: boolean; children: ReactNode }) {
+  const text = useUiText();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -40,7 +42,7 @@ export function Modal({ open, onClose, title, intro, sheet, bare, children }: { 
     >
       {open && bare ? (
         <>
-          <button type="button" className="gn-modal__x" onClick={onClose} aria-label="Fechar" title="Fechar">
+          <button type="button" className="gn-modal__x" onClick={onClose} aria-label={text.close} title={text.close}>
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
           </button>
           <div className="gn-modal__bare" tabIndex={-1}>{children}</div>
@@ -50,7 +52,7 @@ export function Modal({ open, onClose, title, intro, sheet, bare, children }: { 
           <div className="gn-modal__head">
             <h2 id={titleId} className="gn-modal__title">{title}</h2>
             <button type="button" className="gn-modal__close" onClick={onClose}>
-              <span aria-hidden="true">✕</span> Fechar
+              <span aria-hidden="true">✕</span> {text.close}
             </button>
           </div>
           <div className="gn-modal__body gn-stack gn-stack--m">

@@ -116,7 +116,8 @@ export function faqJsonLd(items: { q: string; a: string }[]) {
   };
 }
 
-export type SitemapEntry = { path: string; lastModified?: string; noindex?: boolean; priority?: number };
+/** alternates: the same page in other languages (hreflang code and path), listed so search engines connect them. */
+export type SitemapEntry = { path: string; lastModified?: string; noindex?: boolean; priority?: number; alternates?: { hreflang: string; path: string }[] };
 
 const escapeXml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -128,9 +129,11 @@ export function buildSitemapXml(settings: SeoSettings, entries: SitemapEntry[]):
       const parts = [`<loc>${escapeXml(absoluteUrl(settings, e.path))}</loc>`];
       if (e.lastModified) parts.push(`<lastmod>${e.lastModified.slice(0, 10)}</lastmod>`);
       if (e.priority !== undefined) parts.push(`<priority>${e.priority.toFixed(1)}</priority>`);
+      for (const a of e.alternates ?? []) parts.push(`<xhtml:link rel="alternate" hreflang="${escapeXml(a.hreflang)}" href="${escapeXml(absoluteUrl(settings, a.path))}"/>`);
       return `  <url>${parts.join("")}</url>`;
     });
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`;
+  const xhtml = entries.some((e) => e.alternates?.length) ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : "";
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${xhtml}>\n${urls.join("\n")}\n</urlset>\n`;
 }
 
 export function buildRobotsTxt(settings: SeoSettings, opts: { allowIndexing: boolean }): string {

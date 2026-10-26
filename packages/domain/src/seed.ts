@@ -3,6 +3,7 @@ import type { FosterPlacement, Shift, Sponsorship, StoredFosterApplication } fro
 import type { SponsorLetter } from "./padrinhos";
 import type { z } from "zod";
 import { pageSchema } from "./content";
+import { seedCatTranslations, seedPageTranslations, seedPartnerTranslations, seedPostTranslations } from "./seed-traducoes";
 import type { Cat, Impact, Page, Partner, Post, Redirect, SeoSettings } from "./index";
 
 /**
@@ -213,7 +214,14 @@ export const seedImpact: Impact = {
   adoptionsThisYear: 37,
   sterilizationsThisYear: 212,
   volunteers: 25,
-  campaign: { title: "Esterilizações de outubro na Meadela", current: 18, goal: 30, unit: "gatos", href: "/doar" },
+  campaign: {
+    title: "Esterilizações de outubro na Meadela", current: 18, goal: 30, unit: "gatos", href: "/doar",
+    translations: {
+      en: { title: "October neutering in Meadela", unit: "cats" },
+      es: { title: "Esterilizaciones de octubre en Meadela", unit: "gatos" },
+      fr: { title: "Stérilisations d’octobre à Meadela", unit: "chats" },
+    },
+  },
   updatedAt: now,
 };
 
@@ -265,7 +273,7 @@ export const seedPartners: Partner[] = [
     category: "veterinario",
     town: "Viana do Castelo",
     why: "Fazemos as esterilizações do programa CED a preço solidário.",
-    perks: [{ id: "consulta-10", description: "10% em consultas para Amigos da associação", audience: "amigos", patinhasCost: 150, minLevel: 2, monthlyLimitPerPerson: 1 }],
+    perks: [{ id: "consulta-10", description: "10% em consultas para Amigos da associação", translations: { en: { description: "10% off consultations for Friends of the association" }, es: { description: "10 % en consultas para Amigos de la asociación" }, fr: { description: "10 % sur les consultations pour les Amis de l’association" } }, audience: "amigos", patinhasCost: 150, minLevel: 2, monthlyLimitPerPerson: 1 }],
     active: true,
     since: "2024-03-01T00:00:00.000Z",
   },
@@ -276,7 +284,7 @@ export const seedPartners: Partner[] = [
     category: "loja-animais",
     town: "Viana do Castelo",
     why: "Cada saco de ração vendido com o código GN ajuda o gatil.",
-    perks: [{ id: "racao-15", description: "15% em ração e areia", audience: "amigos", patinhasCost: 100, monthlyLimitPerPerson: 2 }],
+    perks: [{ id: "racao-15", description: "15% em ração e areia", translations: { en: { description: "15% off cat food and litter" }, es: { description: "15 % en pienso y arena" }, fr: { description: "15 % sur les croquettes et la litière" } }, audience: "amigos", patinhasCost: 100, monthlyLimitPerPerson: 2 }],
     active: true,
     since: "2025-01-15T00:00:00.000Z",
   },
@@ -287,7 +295,7 @@ export const seedPartners: Partner[] = [
     category: "restauracao",
     town: "Darque",
     why: "Temos um mealheiro solidário ao balcão.",
-    perks: [{ id: "cafe-turno", description: "Um café oferecido por cada turno de voluntariado", audience: "voluntarios", patinhasCost: 30 }],
+    perks: [{ id: "cafe-turno", description: "Um café oferecido por cada turno de voluntariado", translations: { en: { description: "A free coffee for every volunteer shift" }, es: { description: "Un café gratis por cada turno de voluntariado" }, fr: { description: "Un café offert pour chaque créneau de bénévolat" } }, audience: "voluntarios", patinhasCost: 30 }],
     active: true,
     since: "2025-06-01T00:00:00.000Z",
   },
@@ -442,7 +450,13 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
   },
 ];
 
-export const seedPages: Page[] = seedPageInputs.map((p) => pageSchema.parse(p));
+export const seedPages: Page[] = seedPageInputs.map((p) => pageSchema.parse({ ...p, translations: (seedPageTranslations as Record<string, Page["translations"]>)[p.path] }));
+
+// The demo texts in English, Spanish and French (seed-traducoes.ts).
+const pick = <T>(all: Record<string, T>, key: string): T | undefined => all[key];
+for (const c of seedCats) c.translations = pick<Cat["translations"]>(seedCatTranslations, c.slug);
+for (const p of seedPosts) p.translations = pick<Post["translations"]>(seedPostTranslations, p.slug);
+for (const p of seedPartners) p.translations = pick<Partner["translations"]>(seedPartnerTranslations, p.slug);
 
 export const seedRedirects: Redirect[] = [
   { id: "r1", from: "/gatos", to: "/", permanent: true },

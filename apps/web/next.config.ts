@@ -14,6 +14,8 @@ const config: NextConfig = {
   env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1", NEXT_PUBLIC_NEW_CAT_POPUP: process.env.NEW_CAT_POPUP ?? "", NEXT_PUBLIC_FEATURES: process.env.FEATURES ?? process.env.NEXT_PUBLIC_FEATURES ?? "", NEXT_PUBLIC_GATO_PASSEIO: process.env.GATO_PASSEIO ?? "" },
   transpilePackages: ["@gn/ui", "@gn/domain", "@gn/seo"],
   poweredByHeader: false,
+  // One layout per language (app/(pt), app/[lang]): addresses that match nothing get app/global-not-found.tsx.
+  experimental: { globalNotFound: true },
   images: { unoptimized: true },
   // Static hosting cannot send headers; the real deploy does.
   headers: staticExport ? undefined : async () => {
