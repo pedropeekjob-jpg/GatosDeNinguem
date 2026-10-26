@@ -48,7 +48,7 @@ Without `DATABASE_URL` the API runs on in-memory demo content; without `API_URL`
 
 ## Avisos de gatos novos
 
-When a cat is put up for adoption, visitors see it in a pop-up (photo, name, age, short description and a link to its page) during its first 30 days, once per visitor (opening its page also counts), at most one pop-up per visit, 5 seconds after entering the site, and never on SOS, forms or the shop. Seen cats are kept in the browser only. On test sites (`NEW_CAT_POPUP=teste`, set for the GitHub Pages demo and in `render.yaml`) the newest cat pops up 5 seconds after entering on every visit, seen or not; remove it on the real site. To see it straight away on any site, add `?avisos=agora` to the address; the demo banner links to it.
+When a cat is put up for adoption, visitors see it in a pop-up (photo, name, age, short description and a link to its page) during its first 30 days, once per visitor (opening its page also counts), at most one pop-up per visit, 5 seconds after entering the site, and never on SOS, forms or the shop. Seen cats are kept in the browser only. On test sites (`NEW_CAT_POPUP=teste`, set for the GitHub Pages demo) the newest cat pops up 5 seconds after entering on every visit, seen or not; remove it on the real site. To see it straight away on any site, add `?avisos=agora` to the address; the demo banner links to it.
 
 People can also ask for an email when cats arrive (button on Adotar, and a link in the pop-up). Email needs a click on a confirmation link before anything is sent; unconfirmed sign-ups are dropped after 7 days, and every alert has a one-click unsubscribe. Where the browser allows and the VAPID keys are set, people can choose notifications on their device instead. The email goes out by itself the first time a cat is saved as "Para adoção"; managers see who asked and what was sent in the back office (Avisos). Uses the same `RESEND_API_KEY` as sign-in codes. In the static demo the confirmation email is simulated on screen.
 
@@ -58,9 +58,9 @@ People can also ask for an email when cats arrive (button on Adotar, and a link 
 
 GitHub Pages only serves files, so the API, the back office, saved forms, redirects and live SEO edits need a Node host.
 
-## Test environment (Render)
+## The real site (Render, gatosdeninguem.pt)
 
-`render.yaml` deploys the site, the back office, the API and Postgres on Render's free plan, and redeploys on every merge to `main` once the checks pass. Setup steps and limits: [docs/DEPLOY.md](docs/DEPLOY.md).
+`render.yaml` deploys the site (gatosdeninguem.pt), the back office (gestao.gatosdeninguem.pt), the API (api.gatosdeninguem.pt) and Postgres on Render's paid plans, and redeploys on every merge to `main` once the checks pass. It starts with the pages but no example cats or people (`db:seed -- --essencial`). Setup, DNS and email steps: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Tests (test-first, mobile-first)
 

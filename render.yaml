@@ -1,16 +1,19 @@
-# Test environment on Render (free plan): public site, back office, API and Postgres.
-# Set up once with New → Blueprint on render.com (steps in docs/DEPLOY.md).
+# The real site on Render (paid plans, about $20/month): public site, back office, API and Postgres.
+# Set up once with New → Blueprint on render.com, then point the domain at it (docs/DEPLOY.md).
 # After that every merge to main redeploys, once the GitHub checks have passed.
 #
-# The addresses below assume Render kept the service names. If Render added a suffix
-# (shown on each service's page), change them here and merge.
-#   site         https://gatosdeninguem-site.onrender.com
-#   back office  https://gatosdeninguem-gestao.onrender.com
-#   API          https://gatosdeninguem-api.onrender.com
+#   site         https://gatosdeninguem.pt          (www redirects to it)
+#   back office  https://gestao.gatosdeninguem.pt
+#   API          https://api.gatosdeninguem.pt
+#
+# The services also reach each other at their .onrender.com addresses, which work before and after the
+# domain points here. Those assume Render kept the service names: if Render added a suffix (shown on each
+# service's page), change them here and merge.
 
 databases:
   - name: gatosdeninguem-db
-    plan: free
+    # Daily backups, kept 7 days.
+    plan: basic-256mb
     region: frankfurt
     databaseName: gatos
     user: gn
@@ -19,13 +22,16 @@ services:
   - type: web
     name: gatosdeninguem-api
     runtime: node
-    plan: free
+    plan: starter
     region: frankfurt
     autoDeployTrigger: checksPass
     buildCommand: scripts/deploy/render-build.sh api
-    # Free services have no pre-deploy step, so migrations and the first demo content run at start.
-    startCommand: cd apps/api && node_modules/.bin/prisma migrate deploy && node dist/seed-db.js --if-empty && node dist/main.js
+    # Migrations, and on the very first deploy the starting pages (no example cats or people).
+    preDeployCommand: cd apps/api && node_modules/.bin/prisma migrate deploy && node dist/seed-db.js --if-empty --essencial
+    startCommand: cd apps/api && node dist/main.js
     healthCheckPath: /health
+    domains:
+      - api.gatosdeninguem.pt
     envVars:
       - key: NODE_VERSION
         value: "22"
@@ -43,10 +49,10 @@ services:
       - key: REVALIDATE_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://gatosdeninguem-gestao.onrender.com
+        value: https://gestao.gatosdeninguem.pt,https://gatosdeninguem-gestao.onrender.com
       - key: WEB_REVALIDATE_URL
         value: https://gatosdeninguem-site.onrender.com/api/revalidate
-      # The free disk is wiped on every deploy, so photos are kept in Postgres.
+      # Photos are kept in Postgres, so the database backups include them.
       - key: UPLOAD_STORAGE
         value: database
       # Optional: sign-in codes by email. Without it codes are only written to the API log.
@@ -56,11 +62,12 @@ services:
         sync: false
       # Event promotion (docs/promocao-eventos.md). Links in posts and emails point to the site.
       - key: PUBLIC_SITE_URL
-        value: https://gatosdeninguem-site.onrender.com
+        value: https://gatosdeninguem.pt
+      # Uploaded photos and unsubscribe links use the API's .onrender.com address (RENDER_EXTERNAL_URL),
+      # so photos added before the domain points here keep working.
       - key: UNSUBSCRIBE_SECRET
         generateValue: true
       # Optional: Facebook Page and Instagram. Without them those channels wait, marked "por ligar".
-      # Careful: with real values this test environment publishes on the association's real accounts.
       - key: META_PAGE_ID
         sync: false
       - key: META_IG_USER_ID
@@ -80,7 +87,7 @@ services:
       - key: TIKTOK_REFRESH_TOKEN
         sync: false
       # Optional: godparents' monthly debit (SEPA through Stripe). Without them, the team arranges payment by hand.
-      # Use test keys (sk_test_…) here; see docs/debito-direto.md.
+      # Try with test keys (sk_test_…) first; see docs/debito-direto.md.
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
@@ -89,12 +96,16 @@ services:
   - type: web
     name: gatosdeninguem-site
     runtime: node
-    plan: free
+    plan: starter
     region: frankfurt
     autoDeployTrigger: checksPass
     buildCommand: scripts/deploy/render-build.sh web
     startCommand: cd apps/web && node_modules/.bin/next start -p $PORT
     healthCheckPath: /
+    # Render redirects www to the bare domain.
+    domains:
+      - gatosdeninguem.pt
+      - www.gatosdeninguem.pt
     envVars:
       - key: NODE_VERSION
         value: "22"
@@ -108,13 +119,9 @@ services:
           type: web
           name: gatosdeninguem-api
           envVarKey: REVALIDATE_SECRET
-      # A test environment: keep it out of Google.
+      # The real site: search engines may index it.
       - key: ALLOW_INDEXING
-        value: "false"
-      # Testing the "new cat" pop-up: it opens 5 seconds after entering, on every visit, with the newest cat.
-      # Remove on the real site, where each cat shows once per visitor.
-      - key: NEW_CAT_POPUP
-        value: teste
+        value: "true"
 
   - type: web
     name: gatosdeninguem-gestao
@@ -122,6 +129,8 @@ services:
     autoDeployTrigger: checksPass
     buildCommand: scripts/deploy/render-build.sh backoffice
     staticPublishPath: apps/backoffice/dist
+    domains:
+      - gestao.gatosdeninguem.pt
     routes:
       # The back office is a single-page app: every address loads index.html.
       - type: rewrite
@@ -137,4 +146,4 @@ services:
       - key: VITE_API_URL
         value: https://gatosdeninguem-api.onrender.com
       - key: VITE_SITE_URL
-        value: https://gatosdeninguem-site.onrender.com
+        value: https://gatosdeninguem.pt
