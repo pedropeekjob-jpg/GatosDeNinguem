@@ -8,7 +8,7 @@ export interface LojaApi {
   shopOrders(): Promise<ShopOrder[]>;
   updateOrder(id: string, changes: { status?: OrderStatus; teamNote?: string }): Promise<ShopOrder>;
   /** A sale at a stand or at the shelter: already paid and handed over. */
-  sellInPerson(items: OrderLineInput[]): Promise<ShopOrder>;
+  giveInPerson(items: OrderLineInput[], amountCents?: number): Promise<ShopOrder>;
   shopSummary(): Promise<{ settings: ShopSettings; transparency: ShopTransparency }>;
   addSpending(s: Omit<ShopSpending, "id">): Promise<ShopSpending>;
   deleteSpending(id: string): Promise<void>;
@@ -25,7 +25,7 @@ export const lojaHttp = (call: Call): LojaApi => ({
   updateProduct: (id, changes) => call("PATCH", `/loja/gestao/artigos/${id}`, changes),
   shopOrders: () => call("GET", "/loja/gestao/pedidos"),
   updateOrder: (id, changes) => call("PATCH", `/loja/gestao/pedidos/${id}`, changes),
-  sellInPerson: (items) => call("POST", "/loja/gestao/pedidos", { items }),
+  giveInPerson: (items, amountCents) => call("POST", "/loja/gestao/pedidos", { items, ...(amountCents !== undefined ? { amountCents } : {}) }),
   shopSummary: () => call("GET", "/loja/resumo"),
   addSpending: (s) => call("POST", "/loja/gestao/gastos", s),
   deleteSpending: (id) => call("DELETE", `/loja/gestao/gastos/${id}`),

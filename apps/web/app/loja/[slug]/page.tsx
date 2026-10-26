@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { euros, productCategoryLabel, WITHDRAWAL_DAYS } from "@gn/domain";
+import { euros, productCategoryLabel } from "@gn/domain";
 import { Breadcrumbs, Container, ShareBar } from "@gn/ui";
 import { JsonLd } from "@/components/JsonLd";
 import { AddToCart } from "@/components/loja/AddToCart";
 import { CartBar } from "@/components/loja/CartBar";
 import { PriceBreakdown } from "@/components/loja/PriceBreakdown";
-import { getProduct, getSeoSettings, getShopSummary, listProducts } from "@/lib/content";
+import { getProduct, getSeoSettings, listProducts } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -18,13 +18,13 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props) {
   const p = await getProduct((await params).slug);
   if (!p) return {};
-  return buildMetadata({ path: `/loja/${p.slug}`, title: `${p.name}, loja solidária`, description: `${euros(p.priceCents)}. ${p.description}`.slice(0, 160), image: p.photos[0]?.url });
+  return buildMetadata({ path: `/loja/${p.slug}`, title: `${p.name}, loja solidária`, description: `Oferta por um donativo a partir de ${euros(p.minDonationCents)}. ${p.description}`.slice(0, 160), image: p.photos[0]?.url });
 }
 
 export default async function ProductPage({ params }: Props) {
   const product = await getProduct((await params).slug);
   if (!product) notFound();
-  const [settings, shop] = await Promise.all([getSeoSettings(), getShopSummary()]);
+  const settings = await getSeoSettings();
   const photo = product.photos[0]!;
   const url = `${settings.siteUrl}/loja/${product.slug}`;
   return (
@@ -43,12 +43,13 @@ export default async function ProductPage({ params }: Props) {
         <div className="gn-stack gn-stack--m">
           <p className="gn-eyebrow">{productCategoryLabel[product.category]}</p>
           <h1>{product.name}</h1>
-          <p className="product__price">{euros(product.priceCents)}{shop.settings.vatNote ? <span className="small muted"> {shop.settings.vatNote}</span> : null}</p>
+          <p className="product__price">Donativo a partir de {euros(product.minDonationCents)}</p>
+          <p className="small muted">A associação não vende: esta oferta é o nosso obrigado por um donativo. Pode dar mais do que o mínimo.</p>
           <PriceBreakdown product={product} />
           {product.description ? <p>{product.description}</p> : null}
           <AddToCart product={product} />
-          <p className="small muted">Pode desistir até {WITHDRAWAL_DAYS} dias depois de receber. <a href="/loja/condicoes">Condições da loja</a></p>
-          <ShareBar url={url} text={`${product.name}: cada compra ajuda os gatos da Gatos de Ninguém`} />
+          <p className="small muted"><a href="/loja/condicoes">Como funcionam os donativos com oferta</a></p>
+          <ShareBar url={url} text={`${product.name}: cada donativo ajuda os gatos da Gatos de Ninguém`} />
         </div>
       </div>
       <JsonLd data={{
@@ -57,7 +58,7 @@ export default async function ProductPage({ params }: Props) {
         name: product.name,
         description: product.description,
         image: photo.url.startsWith("/") ? `${settings.siteUrl}${photo.url}` : photo.url,
-        offers: { "@type": "Offer", price: (product.priceCents / 100).toFixed(2), priceCurrency: "EUR", url },
+        url,
       }} />
     </Container>
   );

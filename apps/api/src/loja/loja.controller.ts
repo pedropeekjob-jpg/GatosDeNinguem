@@ -1,5 +1,6 @@
 import { Body, ConflictException, Controller, Delete, Get, HttpCode, Inject, NotFoundException, Param, Patch, Post, Put, UseGuards } from "@nestjs/common";
 import {
+  donationAmountSchema,
   itemDonationSchema,
   itemDonationStatus,
   orderCode,
@@ -25,13 +26,13 @@ import { parseBody } from "../common/validation";
 
 const isBot = (body: unknown) => !!(body && typeof body === "object" && (body as Record<string, unknown>).website_url);
 
-/** Loja solidária: catalogue, orders paid outside the site, what the money paid for, and articles people offer. */
+/** Loja solidária: thank-you gifts for donations paid outside the site, what the money paid for, and articles people offer. */
 @Controller("loja")
 export class LojaController {
   constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions) {}
   private get repo() { return this.options.repository; }
   private now() { return this.options.now?.() ?? new Date(); }
-  /** Orders are placed one at a time, so two people never buy the last article. */
+  /** Orders are placed one at a time, so two people never get the last gift. */
   private queue: Promise<unknown> = Promise.resolve();
   private serial<T>(work: () => Promise<T>): Promise<T> {
     const next = this.queue.then(work, work);
@@ -50,7 +51,7 @@ export class LojaController {
   @Get("artigos/:slug")
   async product(@Param("slug") slug: string) {
     const p = await this.repo.getProductBySlug(slug);
-    if (!p || !p.active) throw new NotFoundException("Este artigo não existe ou já não está à venda.");
+    if (!p || !p.active) throw new NotFoundException("Esta oferta não existe ou já não está disponível.");
     return p;
   }
 
@@ -61,7 +62,7 @@ export class LojaController {
     return { settings, transparency: shopTransparency(orders, spending, this.now().getUTCFullYear()) };
   }
 
-  /** Reserves the articles. Nothing is charged here: the reply says how to pay. A hidden "website_url" field catches spam bots. */
+  /** Reserves the gifts. Nothing is charged here: the reply says how to pay. A hidden "website_url" field catches spam bots. */
   @Post("pedidos")
   @HttpCode(201)
   async order(@Body() body: unknown) {
@@ -131,18 +132,18 @@ export class LojaController {
     return this.repo.listShopOrders();
   }
 
-  /** "Registar venda na banca": sold in person, already paid and handed over. Counts for stock and transparency. */
+  /** "Registar donativo na banca": given in person, already paid and handed over. Counts for stock and transparency. */
   @Post("gestao/pedidos")
   @HttpCode(201)
   @UseGuards(AdminGuard)
-  async sellInPerson(@Body() body: unknown) {
-    const { items } = parseBody(z.object({ items: z.array(orderLineInputSchema).min(1, "Escolha pelo menos um artigo") }), body);
-    const order = await this.serial(() => this.place({ items }, true));
+  async giveInPerson(@Body() body: unknown) {
+    const { items, amountCents } = parseBody(z.object({ items: z.array(orderLineInputSchema).min(1, "Escolha pelo menos uma oferta"), amountCents: donationAmountSchema.optional() }), body);
+    const order = await this.serial(() => this.place({ items, ...(amountCents !== undefined ? { amountCents } : {}) }, true));
     await this.changed();
     return order;
   }
 
-  /** Paid, delivered or cancelled. Cancelling puts the articles back on sale. */
+  /** Paid, delivered or cancelled. Cancelling puts the gifts back. */
   @Patch("gestao/pedidos/:id")
   @UseGuards(AdminGuard)
   async updateOrder(@Param("id") id: string, @Body() body: unknown) {

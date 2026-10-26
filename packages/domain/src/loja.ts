@@ -3,10 +3,12 @@ import { photoSchema } from "./content";
 import { slugSchema } from "./seo-fields";
 
 /**
- * Loja solidária: the association's charity shop, online.
- * People reserve online and pay by MB WAY, bank transfer or when they pick up. The team confirms payments
- * in the back office. Every article shows what part of its price goes to the cats, and the shop page shows
- * how much it raised and what the money paid for. Money is kept in cents so sums never drift.
+ * Loja solidária: donations with a thank-you gift, online.
+ * The association is a non-profit and does not sell: each article is a symbolic thank-you ("oferta") for a
+ * donation of at least a minimum amount, and the person chooses how much to give above it. People reserve
+ * online and pay by MB WAY, bank transfer or when they pick up; the team confirms payments in the back office.
+ * The shop page shows how much was donated, what the gifts cost and what the money paid for.
+ * Money is kept in cents so sums never drift.
  */
 
 export const productCategorySchema = z.enum(["roupa", "casa", "acessorios", "artesanato", "livros", "outro"]);
@@ -32,8 +34,9 @@ const productFields = {
   name: z.string().min(2, "Dê um nome ao artigo").max(80),
   category: productCategorySchema,
   description: z.string().max(1000).default(""),
-  priceCents: z.number().int().min(50, "O preço mínimo é 0,50 €").max(100_000),
-  /** What the article cost the association (production, materials). Shown publicly so buyers see where the money goes. */
+  /** The smallest donation that gets this gift. It is not a price: people can give more. */
+  minDonationCents: z.number().int().min(100, "O donativo mínimo tem de ser pelo menos 1 €").max(100_000),
+  /** What the gift cost the association (production, materials). Shown publicly so donors see where the money goes. */
   costCents: z.number().int().min(0).default(0),
   /** Given to the shop by someone: everything goes to the cats. */
   donated: z.boolean().default(false),
@@ -45,20 +48,42 @@ const productFields = {
   active: z.boolean().default(true),
 };
 
-export const productInputSchema = z
-  .object(productFields)
-  .refine((p) => p.costCents < p.priceCents, { message: "O custo tem de ser menor do que o preço", path: ["costCents"] });
+/** Articles saved before the shop became donations-with-a-gift had a `priceCents`: it becomes the minimum donation. */
+const legacyPrice = (value: unknown) => {
+  if (!value || typeof value !== "object") return value;
+  const { priceCents, ...rest } = value as Record<string, unknown>;
+  return priceCents !== undefined && rest.minDonationCents === undefined ? { ...rest, minDonationCents: priceCents } : value;
+};
+
+export const productInputSchema = z.preprocess(
+  legacyPrice,
+  z.object(productFields).refine((p) => p.costCents < p.minDonationCents, { message: "O custo tem de ser menor do que o donativo mínimo", path: ["costCents"] }),
+);
 export type ProductInput = z.infer<typeof productInputSchema>;
-export const productSchema = z.object({ ...productFields, id: z.string(), updatedAt: z.string().datetime() });
+export const productSchema = z.preprocess(legacyPrice, z.object({ ...productFields, id: z.string(), updatedAt: z.string().datetime() }));
 export type Product = z.infer<typeof productSchema>;
+
+/**
+ * A thank-you gift must stay symbolic, or the donation looks like a sale in disguise (a donation has no
+ * commercial consideration, artigo 61.º do Estatuto dos Benefícios Fiscais). Our rule of thumb, to confirm
+ * with the association's accountant: the gift costs at most half of the minimum donation.
+ */
+export const SYMBOLIC_GIFT_SHARE = 0.5;
+export const isSymbolicGift = (p: Pick<Product, "minDonationCents" | "costCents" | "donated">) => p.donated || p.costCents <= p.minDonationCents * SYMBOLIC_GIFT_SHARE;
 
 export const euros = (cents: number) => (cents / 100).toLocaleString("pt-PT", { style: "currency", currency: "EUR", minimumFractionDigits: cents % 100 === 0 ? 0 : 2 });
 
 /** "9 €" and "2,50 €" typed by a person, to cents. */
 export const centsFromText = (text: string) => Math.round(Number(text.replace(/\s|€/g, "").replace(",", ".")) * 100);
 
-/** The part of the price that goes to the cats. */
-export const forTheCatsCents = (p: Pick<Product, "priceCents" | "costCents" | "donated">) => (p.donated ? p.priceCents : p.priceCents - p.costCents);
+/** What the gift cost the association: nothing when someone gave it to us. */
+export const giftCostCents = (p: Pick<Product, "costCents" | "donated">) => (p.donated ? 0 : p.costCents);
+
+/** The part of the minimum donation that goes to the cats. Everything given above the minimum goes to them too. */
+export const forTheCatsCents = (p: Pick<Product, "minDonationCents" | "costCents" | "donated">) => p.minDonationCents - giftCostCents(p);
+
+/** The smallest donation for a set of gifts. */
+export const minDonationFor = (lines: { minDonationCents: number; quantity: number }[]) => lines.reduce((n, l) => n + l.minDonationCents * l.quantity, 0);
 
 export function stockOf(p: Pick<Product, "variants" | "stock">, variant?: string): number {
   if (p.variants.length === 0) return p.stock;
@@ -93,10 +118,15 @@ export const orderLineInputSchema = z.object({
 });
 export type OrderLineInput = z.infer<typeof orderLineInputSchema>;
 
-/** The order form on the site. Nothing is charged online: the team gets in touch and confirms the payment. */
+/** How much someone gives, in cents. */
+export const donationAmountSchema = z.number({ required_error: "Diga quanto quer doar", invalid_type_error: "Diga quanto quer doar" }).int().min(100, "O donativo tem de ser pelo menos 1 €").max(1_000_000);
+
+/** The donation form on the site. Nothing is charged online: the team gets in touch and confirms the payment. */
 export const orderRequestSchema = z
   .object({
-    items: z.array(orderLineInputSchema).min(1, "O cesto está vazio").max(20),
+    items: z.array(orderLineInputSchema).min(1, "Ainda não escolheu nenhuma oferta").max(20),
+    /** How much the person chooses to give. At least the minimum of the gifts they chose (checked against the catalogue). */
+    amountCents: donationAmountSchema,
     name: z.string({ required_error: "Indique o seu nome" }).min(2, "Indique o seu nome"),
     phone: z.string({ required_error: "Indique um telefone com pelo menos 9 números" }).min(9, "Indique um telefone com pelo menos 9 números"),
     email: z.string().email("Indique um email válido").optional().or(z.literal("")),
@@ -114,15 +144,24 @@ export const orderStatus = ["novo", "pago", "entregue", "cancelado"] as const;
 export type OrderStatus = (typeof orderStatus)[number];
 export const orderStatusLabel: Record<OrderStatus, string> = { novo: "À espera de pagamento", pago: "Pago, por entregar", entregue: "Entregue", cancelado: "Cancelado" };
 
-export const orderLineSchema = z.object({
+/** Lines saved when the shop had prices: the price was the minimum, and price minus "for the cats" was the cost. */
+const legacyLine = (value: unknown) => {
+  if (!value || typeof value !== "object") return value;
+  const { unitPriceCents, unitForCatsCents, ...rest } = value as Record<string, unknown>;
+  if (typeof unitPriceCents !== "number" || rest.unitMinDonationCents !== undefined) return value;
+  return { ...rest, unitMinDonationCents: unitPriceCents, unitCostCents: unitPriceCents - (typeof unitForCatsCents === "number" ? unitForCatsCents : unitPriceCents) };
+};
+
+export const orderLineSchema = z.preprocess(legacyLine, z.object({
   productId: z.string(),
   name: z.string(),
   variant: z.string().optional(),
   quantity: z.number().int().min(1),
-  unitPriceCents: z.number().int().min(0),
-  /** What went to the cats per unit, fixed when ordered. */
-  unitForCatsCents: z.number().int().min(0),
-});
+  /** Fixed when the donation was made. */
+  unitMinDonationCents: z.number().int().min(0),
+  /** What the gift cost the association, fixed when the donation was made. */
+  unitCostCents: z.number().int().min(0),
+}));
 export type OrderLine = z.infer<typeof orderLineSchema>;
 
 export const shopOrderSchema = z.object({
@@ -130,6 +169,7 @@ export const shopOrderSchema = z.object({
   /** Short code the buyer writes in the MB WAY or transfer description, e.g. "L-7K3Q". */
   code: z.string(),
   lines: z.array(orderLineSchema).min(1),
+  /** The donation the person chose to make. */
   totalCents: z.number().int().min(0),
   name: z.string(),
   phone: z.string().optional(),
@@ -139,7 +179,7 @@ export const shopOrderSchema = z.object({
   payment: paymentSchema,
   message: z.string().optional(),
   status: z.enum(orderStatus),
-  /** Sold at a stand or at the shelter and recorded by the team. */
+  /** Given at a stand or at the shelter and recorded by the team. */
   inPerson: z.boolean().default(false),
   createdAt: z.string().datetime(),
   paidAt: z.string().datetime().optional(),
@@ -148,10 +188,11 @@ export const shopOrderSchema = z.object({
 });
 export type ShopOrder = z.infer<typeof shopOrderSchema>;
 
-export type OrderError = { error: "indisponivel" | "esgotado"; productName: string; left: number };
+export type OrderError = { error: "indisponivel" | "esgotado"; productName: string; left: number } | { error: "abaixo-do-minimo"; minimumCents: number };
 export function orderErrorMessage(e: OrderError): string {
-  if (e.error === "indisponivel") return `${e.productName} já não está à venda. Tire-o do cesto, por favor.`;
-  return e.left === 0 ? `${e.productName} esgotou. Tire-o do cesto, por favor.` : `Só há ${e.left} de ${e.productName}. Diminua a quantidade, por favor.`;
+  if (e.error === "abaixo-do-minimo") return `Para estas ofertas, o donativo mínimo é ${euros(e.minimumCents)}. Aumente o valor, por favor.`;
+  if (e.error === "indisponivel") return `${e.productName} já não está disponível. Tire-o das suas ofertas, por favor.`;
+  return e.left === 0 ? `${e.productName} esgotou. Tire-o das suas ofertas, por favor.` : `Só há ${e.left} de ${e.productName}. Diminua a quantidade, por favor.`;
 }
 
 /** Letters and digits that cannot be confused when read aloud or typed (no 0/O, 1/I/L). */
@@ -163,8 +204,9 @@ export function orderCode(random: () => number = Math.random): string {
 }
 
 /**
- * Turns a cart into an order and takes the articles out of stock, so two people never buy the last one.
- * Prices come from the catalogue, never from the buyer.
+ * Turns the chosen gifts and a donation into an order and takes the gifts out of stock, so two people never
+ * get the last one. Minimum donations come from the catalogue, never from the donor. Without an amount
+ * (a donation recorded at a stand) the donation is the minimum.
  */
 export function placeOrder(
   products: Product[],
@@ -182,16 +224,19 @@ export function placeOrder(
     const label = variant ? `${product.name} (${variant})` : product.name;
     if (left < item.quantity) return { ok: false, error: "esgotado", productName: label, left };
     changed.set(product.id, takeStock(product, variant, item.quantity));
-    lines.push({ productId: product.id, name: product.name, ...(variant ? { variant } : {}), quantity: item.quantity, unitPriceCents: product.priceCents, unitForCatsCents: forTheCatsCents(product) });
+    lines.push({ productId: product.id, name: product.name, ...(variant ? { variant } : {}), quantity: item.quantity, unitMinDonationCents: product.minDonationCents, unitCostCents: giftCostCents(product) });
   }
+  const minimumCents = minDonationFor(lines.map((l) => ({ minDonationCents: l.unitMinDonationCents, quantity: l.quantity })));
+  const amountCents = request.amountCents ?? minimumCents;
+  if (amountCents < minimumCents) return { ok: false, error: "abaixo-do-minimo", minimumCents };
   const now = meta.now.toISOString();
   const inPerson = meta.inPerson ?? false;
   const order: ShopOrder = {
     id: meta.id,
     code: meta.code,
     lines,
-    totalCents: lines.reduce((n, l) => n + l.unitPriceCents * l.quantity, 0),
-    name: request.name ?? "Venda na banca",
+    totalCents: amountCents,
+    name: request.name ?? "Donativo na banca",
     ...(request.phone ? { phone: request.phone } : {}),
     ...(request.email ? { email: request.email } : {}),
     delivery: request.delivery ?? "levantar",
@@ -211,7 +256,7 @@ function takeStock(p: Product, variant: string | undefined, quantity: number): P
   return { ...p, variants: p.variants.map((v) => (v.label === variant ? { ...v, stock: v.stock - quantity } : v)) };
 }
 
-/** A cancelled order puts its articles back on sale. */
+/** A cancelled order puts its gifts back. */
 export function restock(products: Product[], order: Pick<ShopOrder, "lines">): Product[] {
   const changed = new Map<string, Product>();
   for (const line of order.lines) {
@@ -247,11 +292,13 @@ export type ShopSpending = z.infer<typeof shopSpendingSchema>;
 
 export type ShopTransparency = {
   year: number;
-  /** Money received from paid orders this year. */
-  salesCents: number;
-  /** The part of it that went to the cats, after paying for what was produced. */
+  /** Donations received with a gift this year (paid orders). */
+  donationsCents: number;
+  /** What the gifts cost the association. */
+  giftsCostCents: number;
+  /** The part of the donations that went to the cats, after paying for the gifts. */
   forTheCatsCents: number;
-  articlesSold: number;
+  giftsGiven: number;
   spentCents: number;
   spending: ShopSpending[];
 };
@@ -260,11 +307,14 @@ export function shopTransparency(orders: ShopOrder[], spending: ShopSpending[], 
   const paid = orders.filter((o) => (o.status === "pago" || o.status === "entregue") && (o.paidAt ?? o.createdAt).startsWith(String(year)));
   const lines = paid.flatMap((o) => o.lines);
   const thisYear = spending.filter((s) => s.date.startsWith(String(year))).sort((a, b) => b.date.localeCompare(a.date));
+  const donationsCents = paid.reduce((n, o) => n + o.totalCents, 0);
+  const giftsCostCents = lines.reduce((n, l) => n + l.unitCostCents * l.quantity, 0);
   return {
     year,
-    salesCents: paid.reduce((n, o) => n + o.totalCents, 0),
-    forTheCatsCents: lines.reduce((n, l) => n + l.unitForCatsCents * l.quantity, 0),
-    articlesSold: lines.reduce((n, l) => n + l.quantity, 0),
+    donationsCents,
+    giftsCostCents,
+    forTheCatsCents: donationsCents - giftsCostCents,
+    giftsGiven: lines.reduce((n, l) => n + l.quantity, 0),
     spentCents: thisYear.reduce((n, s) => n + s.amountCents, 0),
     spending: thisYear,
   };
@@ -277,17 +327,12 @@ export const shopSettingsSchema = z.object({
   iban: z.string().min(15),
   pickup: z.string().min(3).max(300),
   shipping: z.string().min(3).max(300),
-  /**
-   * How VAT applies to the prices, shown next to every price, e.g. "IVA incluído" or
-   * "Isento de IVA (artigo 53.º do CIVA)". Depends on the association's tax status, so it is not guessed.
-   */
-  vatNote: z.string().max(120).optional(),
 });
 export type ShopSettings = z.infer<typeof shopSettingsSchema>;
 
 // ---------- donated articles ----------
 
-/** "Quero doar artigos para a loja" form. The team answers, and turns what arrives into articles for sale. */
+/** "Quero doar artigos para a loja" form. The team answers, and offers what arrives as thank-you gifts. */
 export const itemDonationSchema = z.object({
   what: z.string({ required_error: "Diga-nos o que quer doar" }).min(3, "Diga-nos o que quer doar").max(500),
   category: productCategorySchema.default("outro"),
@@ -307,7 +352,7 @@ export const itemDonationStatusLabel: Record<ItemDonationStatus, string> = { nov
 export const itemConditionLabel: Record<ItemDonation["condition"], string> = { novo: "Novo, nunca usado", "como-novo": "Usado, como novo", usado: "Usado, com marcas de uso" };
 export const itemHandoverLabel: Record<ItemDonation["handover"], string> = { entrego: "Entrego no gatil ou numa banca", recolha: "Preciso que alguém vá buscar" };
 
-/** What the shop accepts, so people don't offer what cannot be sold. */
+/** What the shop accepts, so people don't offer what cannot be given on. */
 export const acceptedDonations = [
   "Roupa e calçado limpos e em bom estado",
   "Livros, discos e jogos",
