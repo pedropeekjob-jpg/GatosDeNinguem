@@ -699,6 +699,9 @@ test("shop: sold-out gifts cannot be chosen, and the page shows where the money 
   await expect(page.getByText("Esta oferta esgotou.", { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Escolher esta oferta" })).toHaveCount(0);
   await page.goto("/loja");
+  // One promise for the whole shop, not a sum on every card.
+  await expect(page.getByText("Todos os donativos angariados pela loja vão para os gatos.")).toBeVisible();
+  await expect(page.locator(".product-card").getByText("para os gatos")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Para onde vai o dinheiro" })).toBeVisible();
   await expect(page.getByText("Vacinas da Estrela e do Tobias")).toBeVisible();
 });
