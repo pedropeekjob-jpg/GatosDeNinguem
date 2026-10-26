@@ -129,10 +129,12 @@ describe("Loja: contas", () => {
     expect(api.addSpending).toHaveBeenCalledWith({ date: "2026-11-02", description: "Areia para o Paquito", amountCents: 2400 });
     expect((await screen.findAllByText("Areia para o Paquito", { exact: false })).length).toBeGreaterThan(0);
 
+    expect(screen.getByLabelText("Morada da loja")).toHaveValue("Rua da Estação 134, Barroselas, Viana do Castelo");
+    await user.clear(screen.getByLabelText("Morada da loja"));
     await user.type(screen.getByLabelText("Morada da loja"), "Rua da Bandeira 10, Viana do Castelo");
     await user.type(screen.getByLabelText("Horário"), "Sábados, 10h às 13h");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
-    expect(api.saveShopSettings).toHaveBeenCalledWith({ address: "Rua da Bandeira 10, Viana do Castelo", hours: "Sábados, 10h às 13h" });
+    expect(api.saveShopSettings).toHaveBeenCalledWith({ address: "Rua da Bandeira 10, Viana do Castelo", landmark: "Em frente à Prio", hours: "Sábados, 10h às 13h" });
     expect(await axeViolations(container)).toEqual([]);
   });
 });

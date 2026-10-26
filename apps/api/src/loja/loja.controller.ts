@@ -197,7 +197,7 @@ export class LojaController {
   @UseGuards(AdminGuard)
   async saveSettings(@Body() body: unknown) {
     const input = parseBody(shopSettingsSchema, body);
-    const saved = await this.repo.saveShopSettings({ address: input.address || undefined, hours: input.hours || undefined });
+    const saved = await this.repo.saveShopSettings({ address: input.address || undefined, landmark: input.landmark || undefined, hours: input.hours || undefined });
     await this.changed();
     return saved;
   }

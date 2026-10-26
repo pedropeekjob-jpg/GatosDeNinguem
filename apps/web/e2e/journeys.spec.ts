@@ -673,8 +673,12 @@ test("shop: shows the articles without prices and invites people to the shop", a
   await expect(page.getByText("Não vendemos pelo site", { exact: false }).first()).toBeVisible();
   await page.getByRole("link", { name: "Onde fica a loja" }).click();
   await expect(page.getByRole("heading", { name: "Visite a loja" })).toBeInViewport();
-  // The address and hours are not known yet: the site says they are coming, without empty lines.
-  await expect(page.getByText("Em breve dizemos aqui a morada e o horário.", { exact: false }).first()).toBeVisible();
+  // The shop's address, with a landmark and directions in Google Maps. The hours are not known yet.
+  const visit = page.locator("#visitar");
+  await expect(visit.getByText("Rua da Estação 134, Barroselas, Viana do Castelo")).toBeVisible();
+  await expect(visit.getByText("Em frente à Prio")).toBeVisible();
+  await expect(visit.getByRole("link", { name: "Como chegar (Google Maps)" })).toHaveAttribute("href", /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=Rua%20da%20Esta%C3%A7%C3%A3o%20134/);
+  await expect(visit.getByText("Em breve dizemos aqui o horário.")).toBeVisible();
 
   await page.getByRole("link", { name: "T-shirt Gatos de Ninguém" }).click();
   await expect(page).toHaveURL(/\/loja\/t-shirt-gatos-de-ninguem$/);
