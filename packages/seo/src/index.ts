@@ -40,12 +40,18 @@ export type ResolvedSeo = {
  * Merges generated values with what the SEO editor set in the back office.
  * Override titles are used exactly as typed; generated titles get the site template.
  */
+/** The association's horizontal logo on white, 1200×630, for link previews that have no photo of their own. */
+export const DEFAULT_SHARE_IMAGE = "/partilha.png";
+/** The logo's cat as a square image, for search engines (schema.org asks for a raster logo). */
+export const DEFAULT_LOGO = "/icon-512.png";
+
 export function resolveSeo(settings: SeoSettings, input: SeoInput): ResolvedSeo {
   const o = input.overrides ?? {};
   const title = o.title?.trim() || settings.titleTemplate.replace("%s", input.title);
   const description = o.description?.trim() || input.description?.trim() || settings.defaultDescription;
   const canonical = o.canonicalUrl || absoluteUrl(settings, input.path);
-  const rawImage = o.ogImage || input.image || settings.defaultOgImage;
+  // Without a photo, shares show the logo (apps/web/public/partilha.png).
+  const rawImage = o.ogImage || input.image || settings.defaultOgImage || DEFAULT_SHARE_IMAGE;
   const image = rawImage ? absoluteUrl(settings, rawImage) : undefined;
   return {
     title,
@@ -74,7 +80,7 @@ export function organizationJsonLd(settings: SeoSettings) {
     name: settings.siteName,
     legalName: org.legalName,
     url: absoluteUrl(settings, "/"),
-    ...(org.logo ? { logo: org.logo } : {}),
+    logo: org.logo || absoluteUrl(settings, DEFAULT_LOGO),
     ...(org.email ? { email: org.email } : {}),
     ...(org.telephone ? { telephone: org.telephone } : {}),
     address: {
