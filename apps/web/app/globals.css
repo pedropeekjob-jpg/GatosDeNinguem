@@ -570,3 +570,12 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
     box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 10px 30px rgb(28 26 27 / .12);
   }
 }
+
+/* Sobre nós: the animated logo as a faint full-width backdrop behind the page, scrolling slower than the content
+ *  (parallax, see ParallaxLogo). Sections with their own background simply cover it. */
+.about-page { position: relative; isolation: isolate; overflow: clip; }
+.about-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.about-bg__logo { opacity: 0.07; transform: translate3d(0, var(--parallax, 0px), 0); will-change: transform; margin-top: -4rem; }
+.about-bg__logo .gn-loader { display: block; padding: 0; }
+.about-bg__logo svg { display: block; width: 100%; height: auto; }
+@media (min-width: 60rem) { .about-bg__logo { width: 80%; margin: -6rem auto 0; opacity: 0.06; } }

@@ -5,6 +5,7 @@ import { When } from "@/components/When";
 import { buildMetadata } from "@/lib/seo";
 import { TeamBanner } from "@/components/TeamBanner";
 import { teamPhoto } from "@/lib/equipa";
+import { ParallaxLogo } from "@/components/client/ParallaxLogo";
 
 export async function generateMetadata() {
   const page = await getPage("/sobre");
@@ -14,7 +15,8 @@ export async function generateMetadata() {
 export default async function AboutPage() {
   const [page, impact] = await Promise.all([getPage("/sobre"), getImpact()]);
   return (
-    <>
+    <div className="about-page">
+      <ParallaxLogo />
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Sobre nós" }]} />
       <Container>
         <TeamBanner photo={teamPhoto} />
@@ -55,6 +57,6 @@ export default async function AboutPage() {
           </div>
         ) : null}
       </Section>
-    </>
+    </div>
   );
 }
