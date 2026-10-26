@@ -51,23 +51,29 @@ describe("Loja: pedidos", () => {
     expect(api.updateOrder).toHaveBeenCalledWith("enc-2", { status: "cancelado" });
   });
 
-  it("records a sale at a stand", async () => {
+  it("records a donation at a stand, at least the minimum of the gifts", async () => {
     const user = userEvent.setup();
     const { api } = renderAt("/loja");
-    await user.click(await screen.findByRole("button", { name: "Registar venda na banca" }));
-    await user.selectOptions(await screen.findByLabelText("Artigo"), "art-tshirt");
+    await user.click(await screen.findByRole("button", { name: "Registar donativo na banca" }));
+    await user.selectOptions(await screen.findByLabelText("Oferta"), "art-tshirt");
     await user.selectOptions(screen.getByLabelText("Tamanho"), "M");
     await user.clear(screen.getByLabelText("Quantidade"));
     await user.type(screen.getByLabelText("Quantidade"), "2");
-    await user.click(screen.getByRole("button", { name: "Juntar à venda" }));
-    expect(screen.getByText(/Total 30\s€/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Registar venda" }));
-    expect(api.sellInPerson).toHaveBeenCalledWith([{ productId: "art-tshirt", variant: "M", quantity: 2 }]);
+    await user.click(screen.getByRole("button", { name: "Juntar ao donativo" }));
+    expect(screen.getByText(/Pelo menos 30\s€/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Quanto deu (euros)"), "20");
+    await user.click(screen.getByRole("button", { name: "Registar donativo" }));
+    expect(await screen.findByText(/O donativo mínimo para estas ofertas é 30\s€/)).toBeInTheDocument();
+    expect(api.giveInPerson).not.toHaveBeenCalled();
+    await user.clear(screen.getByLabelText("Quanto deu (euros)"));
+    await user.type(screen.getByLabelText("Quanto deu (euros)"), "35");
+    await user.click(screen.getByRole("button", { name: "Registar donativo" }));
+    expect(api.giveInPerson).toHaveBeenCalledWith([{ productId: "art-tshirt", variant: "M", quantity: 2 }], 3500);
   });
 });
 
 describe("Loja: artigos", () => {
-  it("adds an article with sizes and shows how much goes to the cats", async () => {
+  it("adds a gift with sizes, shows how much goes to the cats and warns when it is not symbolic", async () => {
     const user = userEvent.setup();
     const { api } = renderAt("/loja");
     await user.click(await screen.findByRole("tab", { name: "Artigos" }));
@@ -75,9 +81,13 @@ describe("Loja: artigos", () => {
     await user.type(screen.getByLabelText("Nome"), "Sweatshirt amarela");
     await user.upload(screen.getByLabelText("Escolher fotografias para adicionar"), new File(["x"], "foto.jpg", { type: "image/jpeg" }));
     await screen.findByLabelText("Descrição da fotografia 1");
-    await user.type(screen.getByLabelText("Preço de venda (euros)"), "25");
+    await user.type(screen.getByLabelText("Donativo mínimo (euros)"), "25");
+    await user.type(screen.getByLabelText(/Quanto custou/), "15");
+    expect(screen.getByText("Esta oferta não é simbólica")).toBeInTheDocument();
+    await user.clear(screen.getByLabelText(/Quanto custou/));
     await user.type(screen.getByLabelText(/Quanto custou/), "11,50");
     expect(screen.getByText(/13,50\s€/)).toBeInTheDocument();
+    expect(screen.queryByText("Esta oferta não é simbólica")).not.toBeInTheDocument();
     await user.click(screen.getByLabelText("Tem tamanhos ou cores"));
     await user.click(screen.getByRole("button", { name: "Juntar opção" }));
     await user.type(screen.getByLabelText("Opção 1"), "M");
@@ -85,21 +95,21 @@ describe("Loja: artigos", () => {
     await user.type(screen.getByLabelText("Quantos há (opção 1)"), "5");
     await user.click(screen.getByRole("button", { name: "Guardar artigo" }));
     expect(api.createProduct).toHaveBeenCalledWith(expect.objectContaining({
-      slug: "sweatshirt-amarela", priceCents: 2500, costCents: 1150, variants: [{ label: "M", stock: 5 }], stock: 0, active: true,
+      slug: "sweatshirt-amarela", minDonationCents: 2500, costCents: 1150, variants: [{ label: "M", stock: 5 }], stock: 0, active: true,
     }));
     expect(await screen.findByRole("button", { name: "Editar Sweatshirt amarela" })).toBeInTheDocument();
   });
 });
 
 describe("Loja: doações de artigos", () => {
-  it("accepts an offer, marks it received and puts it on sale as donated", async () => {
+  it("accepts an offer, marks it received and puts it in the shop as donated", async () => {
     const user = userEvent.setup();
     const { api } = renderAt("/loja");
     await user.click(await screen.findByRole("tab", { name: "Doações de artigos" }));
     const offer = await screen.findByRole("article", { name: "Oferta de Inês Faria" });
     await user.click(within(offer).getByRole("button", { name: "Aceitar (oferta de Inês Faria)" }));
     await user.click(await within(offer).findByRole("button", { name: "Já recebemos (oferta de Inês Faria)" }));
-    await user.click(await within(offer).findByRole("button", { name: "Pôr à venda (oferta de Inês Faria)" }));
+    await user.click(await within(offer).findByRole("button", { name: "Pôr na loja (oferta de Inês Faria)" }));
     expect(await screen.findByText("A partir de uma doação")).toBeInTheDocument();
     expect(screen.getByLabelText(/^Foi oferecido à loja/)).toBeChecked();
     expect(screen.getByLabelText(/^Descrição$/)).toHaveValue("Caixa com 10 livros infantis e 2 puzzles completos");

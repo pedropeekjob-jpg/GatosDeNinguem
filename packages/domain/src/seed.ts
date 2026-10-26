@@ -449,6 +449,11 @@ export const seedRedirects: Redirect[] = [
   { id: "r2", from: "/gatos/como-ajudar", to: "/ajudar", permanent: true },
   { id: "r3", from: "/gatos/manual-de-emerg-ncia", to: "/sos", permanent: true },
   { id: "r4", from: "/gatos/miss-o", to: "/sobre", permanent: true },
+  // gatosdeninguem.pt had a WordPress "Coming soon" page before this site.
+  { id: "r5", from: "/wp-admin", to: "/", permanent: true },
+  { id: "r6", from: "/wp-login.php", to: "/", permanent: true },
+  { id: "r7", from: "/feed", to: "/noticias", permanent: true },
+  { id: "r8", from: "/coming-soon", to: "/", permanent: true },
 ];
 
 /** Example schedules for previews (November 2026). */

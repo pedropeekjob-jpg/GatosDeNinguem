@@ -236,7 +236,7 @@ export const contactTopics = {
   geral: "Pergunta geral",
   adocao: "Adoção",
   ajudar: "Donativos, voluntariado e apadrinhamento",
-  loja: "Loja solidária (encomendas, desistência, garantia)",
+  loja: "Loja solidária (donativos com oferta)",
   reclamacao: "Reclamação",
   dados: "Os meus dados pessoais (RGPD)",
   imprensa: "Imprensa e parcerias",

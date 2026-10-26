@@ -1,23 +1,8 @@
 /**
- * Consumer rules for the online shop (Decreto-Lei 24/2014, distance contracts).
- * Kept here so the conditions page, the order confirmation and the tests agree.
+ * The shop gives thank-you gifts for donations; it does not sell. The donor still commits to giving
+ * the amount they chose, so the button says so plainly.
  */
-
-/** Days the buyer has to change their mind, counted from the day they (or someone for them) receive the articles. */
-export const WITHDRAWAL_DAYS = 14;
-
-/** Days the association has to give the money back after the buyer says they are returning the articles. */
-export const REFUND_DAYS = 14;
-
-/** Last day to say "I give up", as an ISO date (YYYY-MM-DD), for articles received on `receivedAt`. */
-export function withdrawalDeadline(receivedAt: Date): string {
-  const d = new Date(Date.UTC(receivedAt.getUTCFullYear(), receivedAt.getUTCMonth(), receivedAt.getUTCDate()));
-  d.setUTCDate(d.getUTCDate() + WITHDRAWAL_DAYS);
-  return d.toISOString().slice(0, 10);
-}
-
-/** The order button must say plainly that ordering means paying (artigo 5.º, n.º 3, DL 24/2014). */
-export const ORDER_BUTTON_LABEL = "Encomendar com obrigação de pagar";
+export const DONATE_BUTTON_LABEL = "Confirmar o donativo";
 
 /** Official electronic complaints book (DL 156/2005, as changed by DL 74/2017). */
 export const COMPLAINTS_BOOK_URL = "https://www.livroreclamacoes.pt";

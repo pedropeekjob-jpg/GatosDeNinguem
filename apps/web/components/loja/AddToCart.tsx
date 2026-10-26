@@ -4,7 +4,7 @@ import { stockOf, type Product } from "@gn/domain";
 import { Button, ChoiceList, Notice } from "@gn/ui";
 import { useCart } from "@/components/client/cart";
 
-/** Size (when there are sizes), how many, and one big button. Then a clear way to the basket. */
+/** Size (when there are sizes), how many, and one big button. Then a clear way to the donation. */
 export function AddToCart({ product }: { product: Product }) {
   const cart = useCart();
   const sizes = product.variants;
@@ -17,7 +17,7 @@ export function AddToCart({ product }: { product: Product }) {
   const max = Math.min(10, left);
 
   if (soldOut) {
-    return <Notice tone="info" title="Esgotado">Este artigo esgotou. Volte mais tarde ou veja os outros artigos da loja.</Notice>;
+    return <Notice tone="info" title="Esgotado">Esta oferta esgotou. Volte mais tarde ou veja as outras ofertas da loja.</Notice>;
   }
 
   return (
@@ -43,17 +43,17 @@ export function AddToCart({ product }: { product: Product }) {
         disabled={left === 0 || !cart.ready}
         onClick={() => {
           const photo = product.photos[0]!;
-          cart.add({ productId: product.id, slug: product.slug, name: product.name, ...(sizes.length && variant ? { variant } : {}), unitPriceCents: product.priceCents, photo: photo.url, quantity });
+          cart.add({ productId: product.id, slug: product.slug, name: product.name, ...(sizes.length && variant ? { variant } : {}), unitMinDonationCents: product.minDonationCents, photo: photo.url, quantity });
           setAdded(true);
         }}
       >
-        Pôr no cesto
+        Escolher esta oferta
       </Button>
       {added ? (
         <div role="status" className="gn-stack gn-stack--s">
-          <Notice tone="success" title="Está no cesto">Pode continuar a escolher ou fazer já o pedido.</Notice>
+          <Notice tone="success" title="Oferta escolhida">Pode escolher mais ou fazer já o donativo.</Notice>
           <div className="action-row">
-            <Button href="/loja/cesto">Ver o cesto e fazer o pedido</Button>
+            <Button href="/loja/cesto">Fazer o donativo</Button>
             <Button href="/loja" variant="secondary">Continuar a ver</Button>
           </div>
         </div>

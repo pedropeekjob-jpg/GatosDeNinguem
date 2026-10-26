@@ -27,8 +27,8 @@ export function fakeLoja(now: Date): LojaApi {
       orders = orders.map((x) => (x.id === oid ? next : x));
       return next;
     }),
-    sellInPerson: vi.fn(async (items) => {
-      const r = placeOrder(products, { items }, { id: id(), code: "L-BANC", now, inPerson: true });
+    giveInPerson: vi.fn(async (items, amountCents) => {
+      const r = placeOrder(products, { items, ...(amountCents !== undefined ? { amountCents } : {}) }, { id: id(), code: "L-BANC", now, inPerson: true });
       if (!r.ok) throw new Error(orderErrorMessage(r));
       merge(r.products);
       orders = [r.order, ...orders];

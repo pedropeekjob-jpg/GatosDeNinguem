@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { euros, ORDER_BUTTON_LABEL, stockOf, WITHDRAWAL_DAYS, type Delivery, type Payment, type Product, type ShopSettings } from "@gn/domain";
+import { centsFromText, DONATE_BUTTON_LABEL, euros, stockOf, type Delivery, type Payment, type Product, type ShopSettings } from "@gn/domain";
 import { Button, Checkbox, ChoiceList, Modal, Notice, NextStep, TextArea, TextField } from "@gn/ui";
 import { useCart, type CartLine } from "@/components/client/cart";
 import { useModalHistory } from "@/components/client/FormModal";
@@ -8,18 +8,18 @@ import { placeShopOrder, type OrderPlaced } from "@/lib/submit";
 import { PrivacyHint } from "@/components/forms/PrivacyHint";
 import { PaymentSteps } from "./PaymentSteps";
 
-/** The basket: change quantities, see the total, then order in a window over the page. */
+/** The chosen gifts: change quantities, see the minimum donation, then donate in a window over the page. */
 export function ShopCart({ products, settings }: { products: Product[]; settings: ShopSettings }) {
   const cart = useCart();
   const modal = useModalHistory();
   const [placed, setPlaced] = useState<{ order: OrderPlaced; payment: Payment; delivery: Delivery }>();
 
-  if (!cart.ready) return <p className="muted">A abrir o cesto…</p>;
+  if (!cart.ready) return <p className="muted">A abrir as suas ofertas…</p>;
 
   if (placed) {
     return (
       <NextStep
-        title="Obrigado! O seu pedido foi enviado."
+        title="Obrigado pelo seu donativo!"
         actions={<><Button href="/loja">Voltar à loja</Button><Button href="/ajudar" variant="secondary">Outras formas de ajudar</Button></>}
       >
         <PaymentSteps code={placed.order.code} totalCents={placed.order.totalCents} payment={placed.payment} delivery={placed.delivery} settings={settings} />
@@ -30,16 +30,16 @@ export function ShopCart({ products, settings }: { products: Product[]; settings
   if (cart.lines.length === 0) {
     return (
       <div className="gn-stack gn-stack--m">
-        <p className="gn-lead">O cesto está vazio.</p>
-        <div className="action-row"><Button href="/loja">Ver os artigos da loja</Button></div>
+        <p className="gn-lead">Ainda não escolheu nenhuma oferta.</p>
+        <div className="action-row"><Button href="/loja">Ver as ofertas da loja</Button></div>
       </div>
     );
   }
 
-  // Stock may have changed since the article went into the basket.
+  // Stock may have changed since the gift was chosen.
   const problem = (l: CartLine) => {
     const p = products.find((x) => x.id === l.productId);
-    if (!p) return "Já não está à venda.";
+    if (!p) return "Já não está disponível.";
     const left = stockOf(p, p.variants.length ? l.variant : undefined);
     if (left === 0) return "Esgotou entretanto.";
     if (left < l.quantity) return `Só há ${left}.`;
@@ -49,7 +49,7 @@ export function ShopCart({ products, settings }: { products: Product[]; settings
 
   return (
     <div className="gn-stack gn-stack--l">
-      <ul className="cart-lines" aria-label="Artigos no cesto">
+      <ul className="cart-lines" aria-label="Ofertas escolhidas">
         {cart.lines.map((l) => {
           const issue = problem(l);
           const label = l.variant ? `${l.name}, tamanho ${l.variant}` : l.name;
@@ -59,12 +59,12 @@ export function ShopCart({ products, settings }: { products: Product[]; settings
               <div className="cart-line__info">
                 <a href={`/loja/${l.slug}`} className="cart-line__name">{l.name}</a>
                 {l.variant ? <span className="small muted">Tamanho {l.variant}</span> : null}
-                <span>{euros(l.unitPriceCents)} cada</span>
+                <span>Donativo a partir de {euros(l.unitMinDonationCents)}{l.quantity > 1 ? " cada" : ""}</span>
                 {issue ? <span className="gn-field__error">{issue}</span> : null}
               </div>
               <div className="cart-line__qty">
                 <div className="qty" role="group" aria-label={`Quantidade de ${label}`}>
-                  <button type="button" className="qty__btn" onClick={() => cart.setQuantity(l, l.quantity - 1)} aria-label={l.quantity === 1 ? `Tirar ${label} do cesto` : `Menos um: ${label}`}>−</button>
+                  <button type="button" className="qty__btn" onClick={() => cart.setQuantity(l, l.quantity - 1)} aria-label={l.quantity === 1 ? `Tirar ${label}` : `Menos um: ${label}`}>−</button>
                   <output className="qty__value">{l.quantity}</output>
                   <button type="button" className="qty__btn" onClick={() => cart.setQuantity(l, l.quantity + 1)} disabled={l.quantity >= 10} aria-label={`Mais um: ${label}`}>+</button>
                 </div>
@@ -74,17 +74,18 @@ export function ShopCart({ products, settings }: { products: Product[]; settings
           );
         })}
       </ul>
-      <p className="cart-total">Total <strong>{euros(cart.totalCents)}</strong>{settings.vatNote ? <span className="small muted"> {settings.vatNote}</span> : null}</p>
-      {blocked ? <Notice tone="warning" title="Alguns artigos mudaram">Ajuste as quantidades marcadas a vermelho antes de fazer o pedido.</Notice> : null}
+      <p className="cart-total">Donativo mínimo <strong>{euros(cart.minDonationCents)}</strong></p>
+      <p className="small muted">A associação não vende: estas ofertas são o nosso obrigado pelo seu donativo. Pode dar mais do que o mínimo, e tudo o que der a mais vai para os gatos.</p>
+      {blocked ? <Notice tone="warning" title="Algumas ofertas mudaram">Ajuste as quantidades marcadas a vermelho antes de fazer o donativo.</Notice> : null}
       <div className="action-row">
-        <Button onClick={modal.show} disabled={blocked} aria-haspopup="dialog">Fazer o pedido</Button>
+        <Button onClick={modal.show} disabled={blocked} aria-haspopup="dialog">Fazer o donativo</Button>
         <Button href="/loja" variant="secondary">Continuar a ver</Button>
       </div>
-      <p className="small muted">Ainda não paga nada. Depois de enviar o pedido dizemos-lhe como pagar: MB WAY, transferência ou quando levantar.</p>
-      <Modal open={modal.open} onClose={modal.hide} title="Fazer o pedido" intro={`Total: ${euros(cart.totalCents)}. Deixe o seu contacto e diga-nos como prefere receber e pagar.`}>
+      <p className="small muted">Ainda não paga nada. Depois de enviar dizemos-lhe como pagar: MB WAY, transferência ou quando levantar.</p>
+      <Modal open={modal.open} onClose={modal.hide} title="Fazer o donativo" intro={`Donativo a partir de ${euros(cart.minDonationCents)}. Escolha quanto quer dar e diga-nos como prefere receber e pagar.`}>
         <OrderForm
           lines={cart.lines}
-          totalCents={cart.totalCents}
+          minDonationCents={cart.minDonationCents}
           settings={settings}
           onPlaced={(result) => { cart.clear(); modal.hide(); setPlaced(result); window.scrollTo({ top: 0 }); }}
         />
@@ -93,7 +94,13 @@ export function ShopCart({ products, settings }: { products: Product[]; settings
   );
 }
 
-function OrderForm({ lines, totalCents, settings, onPlaced }: { lines: CartLine[]; totalCents: number; settings: ShopSettings; onPlaced: (r: { order: OrderPlaced; payment: Payment; delivery: Delivery }) => void }) {
+/** Quick choices: the minimum, and a little or a lot more. */
+const amountChoices = (min: number) => [min, min + 500, min + 1500].map(String);
+
+function OrderForm({ lines, minDonationCents, settings, onPlaced }: { lines: CartLine[]; minDonationCents: number; settings: ShopSettings; onPlaced: (r: { order: OrderPlaced; payment: Payment; delivery: Delivery }) => void }) {
+  const [amount, setAmount] = useState<string>(String(minDonationCents));
+  const [other, setOther] = useState("");
+  const amountCents = amount === "outro" ? centsFromText(other) : Number(amount);
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", message: "", website_url: "" });
   const [delivery, setDelivery] = useState<Delivery>("levantar");
   const [payment, setPayment] = useState<Payment>("mbway");
@@ -105,16 +112,22 @@ function OrderForm({ lines, totalCents, settings, onPlaced }: { lines: CartLine[
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!Number.isFinite(amountCents) || amountCents < minDonationCents) {
+      setErrors({ amountCents: `O donativo mínimo para estas ofertas é ${euros(minDonationCents)}.` });
+      setSummary("Aumente o valor do donativo, por favor.");
+      return;
+    }
     setSending(true);
     const result = await placeShopOrder({
       ...form,
+      amountCents,
       items: lines.map((l) => ({ productId: l.productId, ...(l.variant ? { variant: l.variant } : {}), quantity: l.quantity })),
       delivery,
       payment,
       address: delivery === "correio" ? form.address : undefined,
       message: form.message || undefined,
       consent: consent || undefined,
-    }, totalCents);
+    }, amountCents);
     setSending(false);
     if (result.ok && result.order) return onPlaced({ order: result.order, payment, delivery });
     if (!result.ok) {
@@ -134,6 +147,16 @@ function OrderForm({ lines, totalCents, settings, onPlaced }: { lines: CartLine[
   return (
     <form onSubmit={onSubmit} className="gn-stack gn-stack--m" noValidate>
       {summary ? <Notice tone="error" title="Falta corrigir alguns campos">{summary}</Notice> : null}
+      <ChoiceList
+        name="valor"
+        legend="Quanto quer doar?"
+        value={amount}
+        onChange={setAmount}
+        options={[...amountChoices(minDonationCents).map((v, i) => ({ value: v, label: euros(Number(v)), ...(i === 0 ? { hint: "O mínimo" } : {}) })), { value: "outro", label: "Outro valor" }]}
+      />
+      {amount === "outro" ? (
+        <TextField id="outro-valor" label="Valor do donativo, em euros" hint={`A partir de ${euros(minDonationCents)}.`} inputMode="numeric" value={other} onChange={(e) => setOther(e.target.value)} error={errors.amountCents} required />
+      ) : errors.amountCents ? <p className="gn-field__error">{errors.amountCents}</p> : null}
       <ChoiceList
         name="entrega"
         legend="Como quer receber?"
@@ -157,14 +180,14 @@ function OrderForm({ lines, totalCents, settings, onPlaced }: { lines: CartLine[
         <label htmlFor="website_url">Não preencher</label>
         <input id="website_url" tabIndex={-1} autoComplete="off" value={form.website_url} onChange={set("website_url")} />
       </div>
-      <Checkbox id="consentimento" label="Tenho 18 anos ou mais e aceito que a associação me contacte sobre este pedido" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
+      <Checkbox id="consentimento" label="Tenho 18 anos ou mais e aceito que a associação me contacte sobre este donativo" hint={<PrivacyHint />} checked={consent} onChange={setConsent} />
       {errors.consent ? <p className="gn-field__error">{errors.consent}</p> : null}
       <p className="small">
-        Total a pagar: <strong>{euros(totalCents)}</strong>{delivery === "correio" ? " mais os portes" : ""}{settings.vatNote ? ` (${settings.vatNote})` : ""}.
-        Pode desistir até {WITHDRAWAL_DAYS} dias depois de receber os artigos.{" "}
-        <a href="/loja/condicoes" target="_blank" rel="noopener">Condições da loja</a>
+        O seu donativo: <strong>{Number.isFinite(amountCents) && amountCents > 0 ? euros(amountCents) : "…"}</strong>{delivery === "correio" ? " mais os portes" : ""}.
+        As ofertas são o nosso obrigado: não é uma compra.{" "}
+        <a href="/loja/condicoes" target="_blank" rel="noopener">Como funcionam os donativos com oferta</a>
       </p>
-      <Button type="submit" disabled={sending} block>{sending ? "A enviar…" : ORDER_BUTTON_LABEL}</Button>
+      <Button type="submit" disabled={sending} block>{sending ? "A enviar…" : DONATE_BUTTON_LABEL}</Button>
     </form>
   );
 }

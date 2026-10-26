@@ -9,11 +9,6 @@ import type { ContactTopic } from "@gn/domain";
 export const association = {
   name: "Associação Gatos de Ninguém",
   nif: "513283307",
-  /**
-   * Shown ONLY in the shop conditions (/loja/condicoes): distance-selling law asks the seller for an email address
-   * (DL 24/2014 artigo 4.º, DL 7/2004 artigo 10.º). Everywhere else the site points to the contact form.
-   */
-  shopLegalEmail: "gatosninguem@gmail.com",
   gatil: {
     label: "Gatil Gatos de Ninguém",
     lines: ["Rua dos Lentos, 6", "4925-070 Santa Marta de Portuzelo", "Viana do Castelo"],
