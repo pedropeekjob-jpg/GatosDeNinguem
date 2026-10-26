@@ -5,7 +5,7 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Gatos de Ninguém";
   event.waitUntil(self.registration.showNotification(title, {
     body: data.body || "Há um gato novo para adoção.",
-    icon: "/logo.svg",
+    icon: "/icon-192.png",
     image: data.image,
     lang: "pt-PT",
     data: { url: data.url || "/adotar" },

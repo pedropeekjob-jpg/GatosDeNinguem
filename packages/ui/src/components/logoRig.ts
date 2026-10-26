@@ -34,8 +34,8 @@ const PAW_R = "M257 340H420V640H257Z";
 const JAW = "M0 0H520V280C500 340 420 368 300 368C180 368 60 348 0 300Z";
 const CIRCLE = { x: 752, y: 597, r: 268 };
 /** Two front paws holding on to the edge of that circle while the cat peeks. */
-const GRIP = `<g class="gnc-ink"><ellipse cx="1020" cy="530" rx="26" ry="40"/><ellipse cx="1020" cy="662" rx="26" ry="40"/></g>`
-  + `<path class="gnc-cut" style="stroke-width:5" d="M1030 518h14M1030 540h14M1030 650h14M1030 672h14"/>`;
+const GRIP = `<g class="gnc-ink"><ellipse cx="1020" cy="530" rx="26" ry="40"/><ellipse cx="1020" cy="640" rx="26" ry="40"/></g>`
+  + `<path class="gnc-cut" style="stroke-width:5" d="M1030 518h14M1030 540h14M1030 628h14M1030 650h14"/>`;
 /** The right eye wide open, before the wink. */
 const OPEN_EYE = `<ellipse class="gnc-bg" cx="396" cy="236" rx="25" ry="21"/><circle class="gnc-ink" cx="400" cy="238" r="11"/>`;
 /** The body in mid-leap (logo coordinates, so it lands where the logo's body is): legs stretched, tail up. */
@@ -68,7 +68,7 @@ const STYLE = `
 .gnc .gnc-arm{transform-origin:340px 505px;transform:scaleX(.2);opacity:0}
 .gnc .gnc-tail{transform-origin:610px 1095px}
 .gnc .gnc-tip{transform-origin:785px 312px}
-.gnc .gnc-ball{transform:translate(739px,586px);opacity:0}
+.gnc .gnc-ball{transform:translate(680px,594px);opacity:0}
 
 /* Intro, 3.74s: only "Gat s de Ninguém" at first; a cat peeks out from behind the (invisible) circle around
    the words; a ball comes bouncing in; the cat leaps forward after it, lands in the logo's pose and bats the
@@ -81,8 +81,8 @@ const STYLE = `
 .gnc .gns-look{transform-origin:250px 330px}
 .gnc .gns-open{transform-origin:396px 236px}
 .gnc .gns-sweep,.gnc .gns-pour{stroke-dasharray:1;stroke-dashoffset:0}
-.gnc--intro .gnc-ball{transform:translate(739px,0)}
-.gnc--intro .gnc-ball-y{transform:translate(0,586px)}
+.gnc--intro .gnc-ball{transform:translate(680px,0)}
+.gnc--intro .gnc-ball-y{transform:translate(0,594px)}
 .gnc--intro .gnc-letters{animation:gns-letters 3.74s ease-out both}
 .gnc--intro .gnc-o{animation:gns-o 3.74s linear both}
 .gnc--intro .gns-peek{animation:gns-peek 3.74s both}
@@ -201,9 +201,9 @@ const STYLE = `
   39.41%{transform:translate(470px,0);animation-timing-function:linear}
   51.72%{transform:translate(540px,0);animation-timing-function:linear}
   58.5%{transform:translate(566px,0);animation-timing-function:linear}
-  69.21%{transform:translate(739px,0);opacity:1}
+  69.21%{transform:translate(680px,0);opacity:1}
   74%{opacity:1}
-  75.5%,100%{transform:translate(739px,0);opacity:0}}
+  75.5%,100%{transform:translate(680px,0);opacity:0}}
 @keyframes gns-ball-y{
   0%,12.32%{transform:translate(0,880px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
   19.33%{transform:translate(0,1060px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
@@ -214,7 +214,7 @@ const STYLE = `
   55.67%{transform:translate(0,500px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
   58.5%{transform:translate(0,515px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
   63.67%{transform:translate(0,300px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
-  69.21%,100%{transform:translate(0,586px)}}
+  69.21%,100%{transform:translate(0,594px)}}
 @keyframes gns-ball-sq{
   0%,18.47%{transform:none}
   19.33%{transform:translate(0,14px) scale(1.25,.75)}
@@ -224,7 +224,7 @@ const STYLE = `
   51.72%{transform:translate(0,8px) scale(1.12,.88)}
   52.96%,68.47%{transform:none;animation-timing-function:ease-out}
   70.44%{transform:scale(1.3,.7);animation-timing-function:ease-in-out}
-  74.14%,100%{transform:scale(.4,1)}}
+  74.14%,100%{transform:scale(.6,1)}}
 @keyframes gns-spin{
   0%,12.32%{transform:none;animation-timing-function:linear}
   39.41%{transform:rotate(-560deg);animation-timing-function:linear}
@@ -261,24 +261,24 @@ const STYLE = `
 @keyframes gnc-tail-loop{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
 @keyframes gnc-tip-loop{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(7deg)}}
 @keyframes gnc-ball-loop{
-  0%,5%{transform:translate(739px,0);opacity:0;animation-timing-function:linear}
+  0%,5%{transform:translate(680px,0);opacity:0;animation-timing-function:linear}
   9%{opacity:1;animation-timing-function:linear}
   42%{transform:translate(566px,0);animation-timing-function:linear}
-  82%{transform:translate(739px,0);opacity:1}
-  92%,100%{transform:translate(739px,0);opacity:0}}
+  82%{transform:translate(680px,0);opacity:1}
+  92%,100%{transform:translate(680px,0);opacity:0}}
 @keyframes gnc-ball-y-loop{
-  0%,5%{transform:translate(0,586px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
+  0%,5%{transform:translate(0,594px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
   22%{transform:translate(0,320px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
   42%{transform:translate(0,505px);animation-timing-function:cubic-bezier(.15,.5,.5,1)}
   62%{transform:translate(0,320px);animation-timing-function:cubic-bezier(.5,0,.85,.5)}
-  82%,100%{transform:translate(0,586px)}}
+  82%,100%{transform:translate(0,594px)}}
 @keyframes gnc-yarn-loop{
-  0%,5%{transform:scale(.4,1)}
+  0%,5%{transform:scale(.6,1)}
   10%{transform:scale(1)}
   42%{transform:rotate(-300deg)}
   81%{transform:rotate(0) scale(1)}
   85%{transform:scale(1.3,.7)}
-  90%,100%{transform:scale(.4,1)}}
+  90%,100%{transform:scale(.6,1)}}
 
 @media (prefers-reduced-motion:reduce){
   .gnc g{animation:none!important}
