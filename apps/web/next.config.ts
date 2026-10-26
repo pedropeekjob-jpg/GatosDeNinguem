@@ -10,7 +10,8 @@ const config: NextConfig = {
   // Without an API (the GitHub Pages demo, tests) accounts and Patinhas run in the browser on example data.
   // FEATURES switches on optional parts (patinhas, trocas, amigo); the same setting as the API's.
   // NEW_CAT_POPUP=teste (test sites): the "new cat" pop-up opens on every visit, so it can be tried.
-  env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1", NEXT_PUBLIC_NEW_CAT_POPUP: process.env.NEW_CAT_POPUP ?? "", NEXT_PUBLIC_FEATURES: process.env.FEATURES ?? process.env.NEXT_PUBLIC_FEATURES ?? "" },
+  // GATO_PASSEIO=0 switches off the cat that now and then strolls along the bottom of the screen.
+  env: { NEXT_PUBLIC_CONTAS_DEMO: process.env.API_URL ? "" : "1", NEXT_PUBLIC_NEW_CAT_POPUP: process.env.NEW_CAT_POPUP ?? "", NEXT_PUBLIC_FEATURES: process.env.FEATURES ?? process.env.NEXT_PUBLIC_FEATURES ?? "", NEXT_PUBLIC_GATO_PASSEIO: process.env.GATO_PASSEIO ?? "" },
   transpilePackages: ["@gn/ui", "@gn/domain", "@gn/seo"],
   poweredByHeader: false,
   images: { unoptimized: true },
