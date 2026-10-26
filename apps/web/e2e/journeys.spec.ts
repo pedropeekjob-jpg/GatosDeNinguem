@@ -717,8 +717,12 @@ test.describe("gato novo para adoção", () => {
     await page.clock.install({ time: new Date("2026-10-10T12:00:00Z") });
     await page.goto("/");
     const dialog = page.getByRole("dialog", { name: newest });
-    await page.clock.runFor(5_000);
-    await expect(dialog).toBeVisible();
+    // The 5-second timer only starts once the page has hydrated, which on a slow CI runner can be after a single
+    // runFor(5_000) has already gone by; keep the fake clock moving until the pop-up opens.
+    await expect(async () => {
+      await page.clock.runFor(1_000);
+      await expect(dialog).toBeVisible({ timeout: 200 });
+    }).toPass({ timeout: 20_000 });
     await expect(dialog.getByRole("img")).toBeVisible();
     await dialog.getByRole("link", { name: "Conhecer a Mia" }).click();
     await expect(page).toHaveURL(/\/adotar\/mia$/);
