@@ -1,13 +1,14 @@
-# Fotos da equipa (Quem somos)
+# Foto da equipa (Quem somos)
 
-**Estado: de exemplo.** Os seis retratos em `apps/web/public/equipa/` são ilustrações desenhadas por
-`apps/web/scripts/draw-team-placeholders.mjs` (não são pessoas reais, sem direitos de terceiros).
-Os nomes, funções e frases em `apps/web/lib/equipa.ts` também são inventados.
+**Estado: de exemplo.** `apps/web/public/equipa/grupo.webp` é uma ilustração desenhada por
+`apps/web/scripts/draw-team-banner.mjs` (não são pessoas reais, sem direitos de terceiros).
+Sem nomes nem cargos de propósito: é uma associação familiar, sem hierarquia.
 
-## Como trocar pelas pessoas reais
+## Como trocar por uma foto real
 
-1. Pedir à associação uma foto de cada pessoa (de frente, fundo simples, de preferência vertical) e
-   autorização escrita para a publicar (RGPD: a imagem é um dado pessoal).
-2. Recortar em 4:5 (por exemplo 960×1200), guardar em WebP em `apps/web/public/equipa/`.
-3. Atualizar nome, função, frase e `photo` em `apps/web/lib/equipa.ts` e pôr `teamIsPlaceholder = false`
-   (deixa de aparecer a nota "Fotos e nomes de exemplo").
+1. Pedir à associação uma foto de grupo (horizontal, de preferência com gatos) e a autorização de
+   cada pessoa para a publicar (RGPD: a imagem é um dado pessoal; para crianças, dos pais).
+2. Guardar em WebP, com pelo menos 1600 px de largura, como `apps/web/public/equipa/grupo.webp`.
+   No telemóvel a foto é cortada em 4:3 ao centro, por isso convém que as caras fiquem no meio.
+3. Em `apps/web/lib/equipa.ts`, atualizar o texto alternativo e pôr `placeholder: false`
+   (deixa de aparecer a nota "Imagem de exemplo").

@@ -3,8 +3,8 @@ import { PageHero } from "@/components/PageHero";
 import { getImpact, getPage } from "@/lib/content";
 import { When } from "@/components/When";
 import { buildMetadata } from "@/lib/seo";
-import { TeamRow } from "@/components/TeamRow";
-import { team, teamIsPlaceholder } from "@/lib/equipa";
+import { TeamBanner } from "@/components/TeamBanner";
+import { teamPhoto } from "@/lib/equipa";
 
 export async function generateMetadata() {
   const page = await getPage("/sobre");
@@ -17,7 +17,7 @@ export default async function AboutPage() {
     <>
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Sobre nós" }]} />
       <Container>
-        <TeamRow members={team} placeholder={teamIsPlaceholder} />
+        <TeamBanner photo={teamPhoto} />
       </Container>
       <Container narrow>
         <div className="gn-stack gn-stack--m">

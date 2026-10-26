@@ -551,28 +551,22 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
 .new-cat .alert-later { font-size: var(--gn-text-s); text-decoration-color: var(--gn-line); }
 @media (max-width: 47.99rem) { .new-cat__photo { aspect-ratio: 3 / 2; } }
 
-/* Quem somos: the team. Photo-first portrait cards with a soft shadow; yellow only in the small role tag.
- *  Phones: swipe row, two faces and the next one peeking in. Wide screens: all in one row. */
-.team { padding-block: var(--gn-space-l) var(--gn-space-xl); }
-.team__head { display: grid; gap: 0.4rem; margin-bottom: var(--gn-space-m); max-width: var(--gn-measure); }
-.team__head h2, .team__head p { margin: 0; }
-.team__head p { color: var(--gn-ink-soft); }
-.team__placeholder { font-size: var(--gn-text-s); }
-.team__track { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--gn-space-m); }
-.team__person { display: flex; flex-direction: column; background: var(--gn-surface); border-radius: var(--gn-radius); overflow: hidden; box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 6px 20px rgb(28 26 27 / .08); }
-.team__photo { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: var(--gn-sand); }
-.team__text { padding: 0.7rem 0.8rem 0.9rem; display: grid; gap: 0.35rem; justify-items: start; }
-.team__name { margin: 0; font-size: var(--gn-text); }
-.team__role { margin: 0; font-size: 0.75rem; font-weight: 650; padding: 0.1rem 0.5rem; border-radius: 0.4rem; background: var(--gn-accent-soft); }
-.team__quote { margin: 0.2rem 0 0; color: var(--gn-ink-soft); font-size: var(--gn-text-s); line-height: 1.45; }
+/* Quem somos: one big group picture, the words on a white sheet over its lower edge. Phones: photo edge to edge.
+ *  Wide screens: rounded photo, the sheet overlapping its bottom left corner. */
+.team-banner { position: relative; margin-block: var(--gn-space-m) var(--gn-space-xl); }
+.team-banner__photo { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--gn-sand); }
+.team-banner__sheet { position: relative; display: grid; gap: 0.6rem; justify-items: start; background: var(--gn-surface); }
+.team-banner__sheet h2, .team-banner__sheet p { margin: 0; }
+.team-banner__sheet p { color: var(--gn-ink-soft); }
+.team-banner__placeholder { font-size: var(--gn-text-s); }
 @media (max-width: 59.99rem) {
-  .team__track {
-    grid-auto-flow: column; grid-auto-columns: 42%; overflow-x: auto; overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory; scroll-padding-inline: 1.25rem; scrollbar-width: none;
-    margin-inline: -1.25rem; padding: 0.25rem 1.25rem 1rem;
-  }
-  .team__track::-webkit-scrollbar { display: none; }
-  .team__person { scroll-snap-align: start; }
+  .team-banner__photo { margin-inline: -1.25rem; width: calc(100% + 2.5rem); max-width: none; aspect-ratio: 4 / 3; }
+  .team-banner__sheet { margin: -1.5rem -1.25rem 0; padding: 1.25rem 1.25rem 0; border-radius: 1.25rem 1.25rem 0 0; }
 }
-@media (min-width: 60rem) { .team__track { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); } }
-.team__track:focus-visible { outline: 3px solid var(--gn-focus); outline-offset: 3px; }
+@media (min-width: 60rem) {
+  .team-banner__photo { border-radius: var(--gn-radius); aspect-ratio: 2 / 1; object-position: 50% 30%; }
+  .team-banner__sheet {
+    max-width: 30rem; margin: -7rem 0 0 2rem; padding: var(--gn-space-l); border-radius: var(--gn-radius);
+    box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 10px 30px rgb(28 26 27 / .12);
+  }
+}
