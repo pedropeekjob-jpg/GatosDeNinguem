@@ -835,12 +835,10 @@ test("dates: cats show how long they have waited, news and happy endings show wh
 });
 
 test.describe("Quem somos", () => {
-  test("shows the faces behind the association, each with a name and a role", async ({ page }) => {
+  test("shows the team together in one group picture, as a family", async ({ page }) => {
     await page.goto("/sobre");
-    const team = page.getByRole("region", { name: "As caras por trás dos gatos" });
-    await expect(team.getByRole("listitem")).toHaveCount(6);
-    await expect(team.getByRole("img", { name: "Fotografia de Ana Ribeiro" })).toBeVisible();
-    await expect(team.getByRole("heading", { name: "Ana Ribeiro" })).toBeVisible();
-    await expect(team.getByText("Presidente")).toBeVisible();
+    const team = page.getByRole("region", { name: "Somos uma família" });
+    await expect(team.getByRole("img", { name: /voluntários da associação/ })).toBeVisible();
+    await expect(team.getByRole("link", { name: "Venha conhecer-nos" })).toHaveAttribute("href", /\/ajudar\/voluntariado/);
   });
 });
