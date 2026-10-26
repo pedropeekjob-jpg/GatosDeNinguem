@@ -30,7 +30,6 @@ const sections: NavItem[] = [
       { href: "/ajudar/turnos", label: "Turnos no gatil", description: "Escolher um turno livre" },
       ...(features.amigo ? [{ href: "/ajudar/amigo", label: "Ser Amigo", description: "Quota anual, com descontos nos parceiros" }] : []),
       ...(features.patinhas ? [{ href: "/patinhas", label: "Patinhas", description: "Cada ajuda dá Patinhas" }] : []),
-      { href: "/sos", label: "Encontrei um gato", description: "O que fazer, passo a passo" },
     ],
   },
   {

@@ -11,8 +11,6 @@ main { display: block; }
 .home-hero__text { display: grid; gap: 0.75rem; }
 .home-hero__text h1 { font-size: clamp(1.625rem, 4.4vw, 2.75rem); }
 .home-actions { display: grid; gap: 0.6rem; grid-template-columns: 1fr 1fr; padding-top: 0.25rem; }
-/* Phones keep the welcome inside the first screen, so "Encontrei um gato" waits in the footer there. */
-.home-actions .gn-btn--urgent { display: none; }
 @media (min-width: 60rem) {
   .home-top:not(.home-top--plain) .home-top__over {
     position: absolute; inset: 0; display: grid; align-items: end; padding-block: var(--gn-space-xl) 6.5rem; pointer-events: none;
@@ -23,8 +21,7 @@ main { display: block; }
   .home-top:not(.home-top--plain) .home-hero__text .gn-lead { color: rgb(255 255 255 / .92); }
   .home-top:not(.home-top--plain) .gn-btn { text-shadow: none; }
   .home-top--plain .home-top__over { padding-block: var(--gn-space-xl); }
-  .home-actions { grid-template-columns: repeat(3, auto); justify-content: start; padding-top: 0.75rem; }
-  .home-actions .gn-btn--urgent { display: inline-flex; }
+  .home-actions { grid-template-columns: repeat(2, auto); justify-content: start; padding-top: 0.75rem; }
   .home-actions .gn-btn { white-space: nowrap; }
 }
 .home-next { padding-block: var(--gn-space-m) var(--gn-space-l); }

@@ -61,9 +61,8 @@ test("main navigation: four sections at most, always visible (no hidden menu)", 
   }
   // "Sobre nós" is always in the footer too.
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "Sobre nós" })).toBeVisible();
-  // "Encontrei um gato" is not a button in the header, but stays one tap away in the footer.
-  await expect(page.getByRole("banner").getByRole("link", { name: "Encontrei um gato" })).toHaveCount(0);
-  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Encontrei um gato" })).toBeVisible();
+  // The site does not invite found-cat requests: no "Encontrei um gato" link anywhere on the page.
+  await expect(page.getByRole("link", { name: "Encontrei um gato" })).toHaveCount(0);
   // The association's own logo leads home.
   await expect(page.getByRole("link", { name: "Gatos de Ninguém, página inicial" })).toBeVisible();
 });
@@ -232,6 +231,9 @@ test("SOS guide: injured cat goes straight to urgent vet advice", async ({ page 
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page.getByRole("heading", { name: "Leve-o já ao veterinário mais próximo" })).toBeVisible();
   await expect(page.getByText("Urgente")).toBeVisible();
+  // General guidance only: no way to reach the association from here.
+  await expect(page.getByRole("main").getByText(/Contactar a associação/)).toHaveCount(0);
+  await expect(page.getByRole("main").locator('a[href*="facebook"], a[href*="instagram"], a[href^="mailto:"], a[href^="tel:"], a[href*="wa.me"]')).toHaveCount(0);
 });
 
 test("SEO: old Wix URLs redirect, sitemap and robots are served", async ({ page, request }) => {
