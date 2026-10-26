@@ -23,6 +23,8 @@ const ms = (a: Action) => sprites.actions[a].seconds * 1000;
 const LIE_MS = 40_000;
 /** Width of the cat on screen (matches .stroll in globals.css), so it starts and ends just off screen. */
 const OFF = 176;
+/** How long the runner takes to roll out (matches .stroll-rug in globals.css). */
+const RUG_MS = 650;
 /** `?gato=agora` sends a cat out at once, on any page: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("gato") === "agora";
 
@@ -63,6 +65,8 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
   const [phase, setPhase] = useState<Phase>("away");
   const [x, setX] = useState(-OFF);
   const [dur, setDur] = useState(0);
+  /** The white runner it walks in on: how wide (px) and whether it is rolled out. */
+  const [rug, setRug] = useState({ width: 0, open: false });
   const [card, setCard] = useState<"closed" | "hover" | "open">("closed");
   const box = useRef<HTMLDivElement>(null);
   const cardId = useId();
@@ -97,7 +101,11 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
     const out = () => {
       setPhase("out");
       const d = walkTo(window.innerWidth + 20, here, OUT_PACE);
-      later(() => { saveVisit({ lastWalk: Date.now() }); setPhase("away"); setCat(undefined); setDur(0); }, d + 100);
+      // once it is gone, the runner rolls back up
+      later(() => {
+        setRug((r) => ({ ...r, open: false }));
+        later(() => { saveVisit({ lastWalk: Date.now() }); setPhase("away"); setCat(undefined); setDur(0); }, RUG_MS);
+      }, d + 100);
     };
     const bonkThenOut = () => { setPhase("leaving"); later(out, ms("leave")); };
     if (lying) { setPhase("rise"); later(bonkThenOut, ms("lie")); } else bonkThenOut();
@@ -135,10 +143,13 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
         setDur(0);
         const enter = window.innerWidth + 20;
         setX(enter);
-        // Next frame: walk into the bottom right corner, rub its head on the screen, turn round, lie down and purr.
+        // Next frame: a white runner rolls out into the bottom right corner; then the cat walks in on it, rubs its
+        // head on the screen, turns round, lies down and purrs.
         later(() => {
           const width = box.current?.offsetWidth || OFF;
           const stop = Math.round(window.innerWidth - width - (window.innerWidth < 640 ? 4 : 24));
+          setRug({ width: window.innerWidth - stop, open: true });
+          later(() => {
           const d = walkTo(stop, enter);
           later(() => {
             setPhase("bonk");
@@ -150,6 +161,7 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
               }, ms("turn"));
             }, ms("bonk"));
           }, d);
+          }, RUG_MS);
         }, 50);
       });
     };
@@ -169,6 +181,7 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
   }, [card, phase]);
 
   if (!cat || phase === "away") return null;
+  const runner = <div className={`stroll-rug${rug.open ? " stroll-rug--open" : ""}`} style={{ width: rug.width }} aria-hidden="true" />;
   const female = cat.sex === "femea";
   const name = cat.name;
   const action = ({ in: "walk", out: "walk", turn: "turn", bonk: "bonk", leaving: "leave", lie: "lie", purr: "purr", stand: "stand", rise: "lie" } as const)[phase];
@@ -193,6 +206,8 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
   };
 
   return (
+    <>
+    {runner}
     <div
       ref={box}
       className={`stroll stroll--${phase}`}
@@ -227,5 +242,6 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
         <span key={phase} className="stroll__sprite" style={sprite} />
       </button>
     </div>
+    </>
   );
 }
