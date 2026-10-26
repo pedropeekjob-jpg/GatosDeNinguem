@@ -27,7 +27,7 @@ const OFF = 160;
 /** `?gato=agora` sends a cat out at once, on any page: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("gato") === "agora";
 
-/** in: walking in; bonk: head-butts; turn: turns round on the spot; lie: lies down; purr: lies purring; stand: stays up while its card is open; rise: gets up; leaving: last head-butts, turning to go; out: walking away. */
+/** in: walking in; bonk: rubs its head on the glass; turn: turns round on the spot; lie: lies down; purr: lies purring; stand: stays up while its card is open; rise: gets up; leaving: one more rub, turning to go; out: walking away. */
 type Phase = "away" | "in" | "bonk" | "turn" | "lie" | "purr" | "stand" | "rise" | "leaving" | "out";
 
 function readState(): StrollState & { lastSlug?: string } {
@@ -52,9 +52,9 @@ function saveVisit(s: Pick<StrollState, "visitStart" | "walks" | "lastWalk">) {
 
 /**
  * Now and then (see lib/passeio.ts) the logo's cat walks in from the right into the bottom right corner of the
- * screen, head-butts the glass to get our attention, turns round on the spot, lies down and purrs, with the name of
+ * screen, rubs its head against the glass as against our legs, turns round on the spot, lies down and purrs, with the name of
  * a real cat waiting for a family. Tapping it, or pointing at it with a mouse, opens that cat's card; when the card
- * goes, the cat gets up, gives a last couple of head-butts and leaves the way it came. If nobody comes, it does the
+ * goes, the cat gets up, rubs its head on the glass once more and leaves the way it came. If nobody comes, it does the
  * same after a while. It stays under every window, never shows while someone types or on pages where people need
  * to concentrate, and never for people who asked their device for less motion.
  */
@@ -89,7 +89,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
     return here;
   };
 
-  /** Gets up if lying, gives a last couple of head-butts and goes back out to the right. */
+  /** Gets up if lying, rubs its head on the glass once more and goes back out to the right. */
   const leave = (lying: boolean) => {
     clear();
     setCard("closed");
@@ -132,7 +132,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
         setDur(0);
         const enter = window.innerWidth + 20;
         setX(enter);
-        // Next frame: walk into the bottom right corner, head-butt the screen, turn round, lie down and purr.
+        // Next frame: walk into the bottom right corner, rub its head on the screen, turn round, lie down and purr.
         later(() => {
           const width = box.current?.offsetWidth || OFF;
           const stop = Math.round(window.innerWidth - width - (window.innerWidth < 640 ? 4 : 24));
