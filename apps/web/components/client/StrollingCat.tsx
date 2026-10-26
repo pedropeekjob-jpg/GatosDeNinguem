@@ -2,23 +2,33 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ageLabel } from "@gn/domain";
-import { Button, walkingCatSvg } from "@gn/ui";
+import { Button } from "@gn/ui";
 import { nextWalkIn, pickCat, STROLL, STROLL_QUIET, type StrollState } from "@/lib/passeio";
 import { NEW_CAT_SESSION_KEY, QUIET_PAGES, type NewCat } from "./CatAlerts";
+import sprites from "../../public/gato/acoes.json";
 
 const VISIT_KEY = "gn-passeio";
 const PAUSE_KEY = "gn-passeio-pausa";
 const LAST_KEY = "gn-passeio-ultimo";
-/** Walking speeds in pixels per second, each with the stride that keeps its paws from sliding on the ground. */
-const IN = { speed: 37, step: 0.8 };
-const OUT = { speed: 49, step: 0.6 };
-const SIT_MS = 8_000;
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+type Action = keyof typeof sprites.actions;
+/**
+ * The cat is the logo's cat in 3D, drawn beforehand into one strip of frames per action (public/gato, made by
+ * scripts/gato-3d). Walking, its paws move one stride (STRIDE of the frame's width) per loop of the walk strip, so
+ * the walk across the screen keeps that pace and the paws do not slide; it leaves a little faster than it came.
+ */
+const STRIDE = 0.124;
+const OUT_PACE = 1.3;
+const ms = (a: Action) => sprites.actions[a].seconds * 1000;
+/** How long it lies purring if nobody comes. */
+const LIE_MS = 40_000;
 /** Width of the cat on screen (matches .stroll in globals.css), so it starts and ends just off screen. */
-const OFF = 130;
+const OFF = 160;
 /** `?gato=agora` sends a cat out at once, on any page: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("gato") === "agora";
 
-type Phase = "away" | "in" | "sit" | "out";
+/** in: walking in; bonk: head-butts; turn: turns round on the spot; lie: lies down; purr: lies purring; stand: stays up while its card is open; rise: gets up; leaving: last head-butts, turning to go; out: walking away. */
+type Phase = "away" | "in" | "bonk" | "turn" | "lie" | "purr" | "stand" | "rise" | "leaving" | "out";
 
 function readState(): StrollState & { lastSlug?: string } {
   let visit: Partial<StrollState> = {};
@@ -42,17 +52,18 @@ function saveVisit(s: Pick<StrollState, "visitStart" | "walks" | "lastWalk">) {
 
 /**
  * Now and then (see lib/passeio.ts) the logo's cat walks in from the right into the bottom right corner of the
- * screen, head-butts the glass to get our attention, rubs itself as against your legs and says hello with the name
- * of a real cat waiting for a family, then turns round and goes. Tapping it, or pointing at it with a mouse, opens
- * that cat's card. It walks under every window, never while someone types or on pages
- * where people need to concentrate, and never for people who asked their device for less motion.
+ * screen, head-butts the glass to get our attention, turns round on the spot, lies down and purrs, with the name of
+ * a real cat waiting for a family. Tapping it, or pointing at it with a mouse, opens that cat's card; when the card
+ * goes, the cat gets up, gives a last couple of head-butts and leaves the way it came. If nobody comes, it does the
+ * same after a while. It stays under every window, never shows while someone types or on pages where people need
+ * to concentrate, and never for people who asked their device for less motion.
  */
 export function StrollingCat({ cats }: { cats: NewCat[] }) {
   const pathname = usePathname();
   const [cat, setCat] = useState<NewCat>();
   const [phase, setPhase] = useState<Phase>("away");
   const [x, setX] = useState(-OFF);
-  const [ms, setMs] = useState(0);
+  const [dur, setDur] = useState(0);
   const [card, setCard] = useState<"closed" | "hover" | "open">("closed");
   const box = useRef<HTMLDivElement>(null);
   const cardId = useId();
@@ -60,25 +71,39 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   const later = (fn: () => void, wait: number) => { timers.current.push(setTimeout(fn, wait)); };
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = []; };
 
-  const walkTo = (to: number, speed: number, from: number) => {
-    // Speeds are for a cat 120px wide; a smaller cat takes smaller steps.
+  const walkTo = (to: number, from: number, pace = 1) => {
     const width = box.current?.offsetWidth || OFF;
-    const duration = Math.round((Math.abs(to - from) / (speed * (width / 120))) * 1000);
-    setMs(duration);
+    const speed = (STRIDE * width * pace) / sprites.actions.walk.seconds;
+    const duration = Math.round((Math.abs(to - from) / speed) * 1000);
+    setDur(duration);
     setX(to);
     return duration;
   };
 
-  const walkOut = (from: number) => {
-    clear();
-    setCard("closed");
-    setPhase("out");
-    // It turns round and goes back the way it came, so it never crosses the page.
-    const d = walkTo(window.innerWidth + 20, OUT.speed, from);
-    later(() => { setPhase("away"); setCat(undefined); setMs(0); }, d + 100);
+  /** Where it is right now (it may be halfway through a walk), and stop it there. */
+  const halt = () => {
+    const el = box.current;
+    const here = Math.round(el ? new DOMMatrixReadOnly(getComputedStyle(el).transform).m41 : x);
+    setDur(0);
+    setX(here);
+    return here;
   };
 
-  // Schedules the next walk; checked again on every page change.
+  /** Gets up if lying, gives a last couple of head-butts and goes back out to the right. */
+  const leave = (lying: boolean) => {
+    clear();
+    setCard("closed");
+    const here = halt();
+    const out = () => {
+      setPhase("out");
+      const d = walkTo(window.innerWidth + 20, here, OUT_PACE);
+      later(() => { setPhase("away"); setCat(undefined); setDur(0); }, d + 100);
+    };
+    const bonkThenOut = () => { setPhase("leaving"); later(out, ms("leave")); };
+    if (lying) { setPhase("rise"); later(bonkThenOut, ms("lie")); } else bonkThenOut();
+  };
+
+  // Schedules the next visit; checked again on every page change.
   useEffect(() => {
     if (phase !== "away" || !cats.length) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -93,65 +118,83 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
       if (!preview && (quiet() || busy())) { timer = setTimeout(start, 10_000); return; }
       const next = pickCat(cats, state.lastSlug);
       if (!next) return;
-      const now = Date.now();
-      saveVisit({ visitStart: state.visitStart, walks: state.walks + 1, lastWalk: now });
+      saveVisit({ visitStart: state.visitStart, walks: state.walks + 1, lastWalk: Date.now() });
       try { localStorage.setItem(LAST_KEY, next.slug); } catch { /* private mode */ }
-      setCat(next);
-      setPhase("in");
-      setMs(0);
-      const enter = window.innerWidth + 20;
-      setX(enter);
-      // Next frame: walk in from the right into the bottom right corner and stop there for a while.
-      later(() => {
-        const width = box.current?.offsetWidth || OFF;
-        const stop = Math.round(window.innerWidth - width - (window.innerWidth < 640 ? 12 : 32));
-        const d = walkTo(stop, IN.speed, enter);
-        later(() => { setPhase("sit"); later(() => walkOut(stop), SIT_MS); }, d);
-      }, 50);
+      // Its pictures first (fetched only now), so it never walks in half drawn; standing is rare, so it comes later.
+      Promise.all(Object.keys(sprites.actions).filter((a) => a !== "stand").map((a) => {
+        const img = new Image();
+        img.src = `${BASE}/gato/${a}.webp`;
+        return img.decode().catch(() => undefined);
+      })).then(() => {
+        if (gone) return;
+        setCat(next);
+        setPhase("in");
+        setDur(0);
+        const enter = window.innerWidth + 20;
+        setX(enter);
+        // Next frame: walk into the bottom right corner, head-butt the screen, turn round, lie down and purr.
+        later(() => {
+          const width = box.current?.offsetWidth || OFF;
+          const stop = Math.round(window.innerWidth - width - (window.innerWidth < 640 ? 4 : 24));
+          const d = walkTo(stop, enter);
+          later(() => {
+            setPhase("bonk");
+            later(() => {
+              setPhase("turn");
+              later(() => {
+                setPhase("lie");
+                later(() => { setPhase("purr"); later(() => leave(true), LIE_MS); }, ms("lie"));
+              }, ms("turn"));
+            }, ms("bonk"));
+          }, d);
+        }, 50);
+      });
     };
+    let gone = false;
     timer = setTimeout(start, wait);
-    return () => clearTimeout(timer);
+    return () => { gone = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, phase, cats]);
 
-  // While its card is open the cat stays sitting; Escape closes the card.
+  // While its card is open the cat stays where it is (lying, or standing); Escape closes the card.
   useEffect(() => {
     if (card === "closed") return;
-    clear();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") walkOut(x); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") leave(phase === "lie" || phase === "purr"); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card]);
+  }, [card, phase]);
 
   if (!cat || phase === "away") return null;
-  const walking = !(phase === "sit" || card !== "closed");
-  const art = walkingCatSvg({ walking, step: phase === "out" ? OUT.step : IN.step });
   const female = cat.sex === "femea";
   const name = cat.name;
-  const sitting = phase === "sit" || card !== "closed";
-  // Stops it where it is right now (it may be halfway through a walk).
-  const hold = () => {
-    if (phase === "sit") return;
-    const el = box.current;
-    const here = el ? new DOMMatrixReadOnly(getComputedStyle(el).transform).m41 : x;
-    clear();
-    setPhase("sit");
-    setMs(0);
-    setX(Math.round(here));
+  const action = ({ in: "walk", out: "walk", turn: "turn", bonk: "bonk", leaving: "leave", lie: "lie", purr: "purr", stand: "stand", rise: "lie" } as const)[phase];
+  const { frames, seconds, loop } = sprites.actions[action];
+  const lying = phase === "lie" || phase === "purr";
+  const sprite = {
+    backgroundImage: `url(${BASE}/gato/${action}.webp)`,
+    backgroundSize: `${frames * 100}% 100%`,
+    animation: `stroll-frames ${phase === "out" ? seconds / OUT_PACE : seconds}s steps(${frames}, jump-none) ${loop ? "infinite" : "1 both"}${phase === "rise" ? " reverse" : ""}`,
   };
-  const open = (how: "hover" | "open") => { hold(); setCard((c) => (c === "open" ? c : how)); };
+  const settled = phase === "bonk" || phase === "turn" || lying || phase === "stand";
+  const open = (how: "hover" | "open") => {
+    if (phase === "out" || phase === "leaving" || phase === "rise") return;
+    clear();
+    if (!lying && phase !== "stand") { halt(); setPhase("stand"); }
+    setCard((c) => (c === "open" ? c : how));
+  };
+  const close = () => leave(lying);
   const notNow = () => {
     try { localStorage.setItem(PAUSE_KEY, String(Date.now() + STROLL.pauseMs)); } catch { /* private mode */ }
-    walkOut(x);
+    close();
   };
 
   return (
     <div
       ref={box}
-      className={`stroll${sitting ? " stroll--sit" : ""}${phase === "out" ? " stroll--back" : ""}`}
-      style={{ transform: `translateX(${x}px)`, transitionDuration: `${ms}ms` }}
-      onPointerLeave={(e) => { if (e.pointerType === "mouse" && card === "hover") later(() => walkOut(x), 600); }}
+      className={`stroll stroll--${phase}`}
+      style={{ transform: `translateX(${x}px)`, transitionDuration: `${dur}ms` }}
+      onPointerLeave={(e) => { if (e.pointerType === "mouse" && card === "hover") later(close, 600); }}
       onPointerEnter={(e) => { if (e.pointerType === "mouse" && card === "hover") clear(); }}
     >
       {card !== "closed" ? (
@@ -161,24 +204,25 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
             <p className="stroll__name">{name}</p>
             <p className="stroll__meta">{ageLabel(cat.ageYears)} · {female ? "Fêmea" : "Macho"}</p>
             <p className="stroll__summary">{cat.summary}</p>
-            <Button href={`/adotar/${cat.slug}`} block onClick={() => walkOut(x)}>Conhecer {female ? "a" : "o"} {name}</Button>
+            <Button href={`/adotar/${cat.slug}`} block onClick={close}>Conhecer {female ? "a" : "o"} {name}</Button>
             <button type="button" className="stroll__later" onClick={notNow}>Agora não</button>
           </div>
-          <button type="button" className="stroll__close" aria-label="Fechar" onClick={() => walkOut(x)}>×</button>
+          <button type="button" className="stroll__close" aria-label="Fechar" onClick={close}>×</button>
         </div>
-      ) : sitting ? (
+      ) : settled ? (
         <p className="stroll__bubble" aria-hidden="true">Olá, sou {female ? "a" : "o"} {name}</p>
       ) : null}
       <button
         type="button"
         className="stroll__cat"
-        dangerouslySetInnerHTML={{ __html: art }}
         aria-label={`Olá, sou ${female ? "a" : "o"} ${name} e procuro família. Ver ${female ? "a" : "o"} ${name}`}
         aria-expanded={card !== "closed"}
         aria-controls={card !== "closed" ? cardId : undefined}
         onPointerEnter={(e) => { if (e.pointerType === "mouse") open("hover"); }}
-        onClick={() => (card === "open" ? walkOut(x) : open("open"))}
-      />
+        onClick={() => (card === "open" ? close() : open("open"))}
+      >
+        <span key={phase} className="stroll__sprite" style={sprite} />
+      </button>
     </div>
   );
 }

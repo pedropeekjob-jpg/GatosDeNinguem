@@ -12,4 +12,3 @@ export { StepWizard } from "./components/StepWizard";
 export { SearchPreview } from "./components/SearchPreview";
 export { NextStep, ShareBar, ToggleButton } from "./components/Engagement";
 export { Modal, useModalHistory } from "./components/Modal";
-export { walkingCatSvg, WALKING_CAT_VIEWBOX } from "./components/walkingCat";

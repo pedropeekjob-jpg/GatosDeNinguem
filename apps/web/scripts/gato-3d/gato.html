@@ -1,0 +1,441 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Gato do logo em 3D</title>
+<!--
+  The logo's cat as a 3D cartoon, drawn by ray marching soft shapes (spheres, ellipsoids and round cones melted into
+  one another, so the head flows into the body as in the logo) with cel shading: black ink lit in three flat tones,
+  a glossy highlight, and the logo's white lines where a paw passes in front of the body. The face is the logo's:
+  one eye open in a white circle, the other winking, the little nose and the smile.
+  render-gato-3d.mjs opens this page in Chromium and calls window.frame(action, t) for every frame of every action.
+  Open it in a browser with ?a=walk (or bonk, turn, lie, purr, stand, leave) to watch an action loop.
+-->
+<style>html,body{margin:0;background:#fff}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script>
+"use strict";
+/** Final frame size is W x H; it is drawn at SS times that and scaled down, for smooth edges. */
+const W = 300, H = 212, SS = 2;
+const canvas = document.getElementById("c");
+canvas.width = W * SS; canvas.height = H * SS;
+canvas.style.width = W + "px"; canvas.style.height = H + "px";
+const gl = canvas.getContext("webgl2", { premultipliedAlpha: false, preserveDrawingBuffer: true, antialias: false, alpha: true });
+
+const MAX_CONES = 40, MAX_ELLS = 6;
+const vs = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }`;
+const fs = `#version 300 es
+precision highp float;
+out vec4 outColor;
+uniform vec2 uRes;
+uniform int uPass;            // 0: depth only; 1: colour
+uniform sampler2D uDepth;
+uniform vec3 uCam, uTarget;
+uniform float uFov;
+uniform int uNC, uNE;
+uniform vec4 uCa[${MAX_CONES}], uCb[${MAX_CONES}];
+uniform float uCk[${MAX_CONES}];
+uniform mat3 uEr[${MAX_ELLS}];
+uniform vec3 uEc[${MAX_ELLS}], uEs[${MAX_ELLS}];
+uniform float uEk[${MAX_ELLS}];
+uniform int uHead;            // which ellipsoid carries the face
+uniform ivec2 uEars;          // which cones are the ears
+uniform float uBlink;         // 0: the logo's open eye; 1: both eyes closed and smiling
+uniform float uMouth;         // 1: smile; more: open a little (a miaow)
+
+float smin(float a, float b, float k){ if (k <= 0.) return min(a, b); float h = max(k - abs(a - b), 0.) / k; return min(a, b) - h * h * k * .25; }
+float sdRoundCone(vec3 p, vec3 a, vec3 b, float r1, float r2){
+  vec3 ba = b - a; float l2 = dot(ba, ba); float rr = r1 - r2; float a2 = l2 - rr * rr; float il2 = 1. / l2;
+  vec3 pa = p - a; float y = dot(pa, ba); float z = y - l2;
+  vec3 xv = pa * l2 - ba * y; float x2 = dot(xv, xv); float y2 = y * y * l2; float z2 = z * z * l2;
+  float k = sign(rr) * rr * rr * x2;
+  if (sign(z) * a2 * z2 > k) return sqrt(x2 + z2) * il2 - r2;
+  if (sign(y) * a2 * y2 < k) return sqrt(x2 + y2) * il2 - r1;
+  return (sqrt(x2 * a2 * il2) + y * rr) * il2 - r1;
+}
+float sdEll(vec3 p, vec3 r){ float k0 = length(p / r); float k1 = length(p / (r * r)); return k0 * (k0 - 1.) / k1; }
+
+float map(vec3 p){
+  float d = 1e9;
+  for (int i = 0; i < ${MAX_ELLS}; i++){ if (i >= uNE) break; d = smin(d, sdEll(uEr[i] * (p - uEc[i]), uEs[i]), uEk[i]); }
+  for (int i = 0; i < ${MAX_CONES}; i++){ if (i >= uNC) break; d = smin(d, sdRoundCone(p, uCa[i].xyz, uCb[i].xyz, uCa[i].w, uCb[i].w), uCk[i]); }
+  return d;
+}
+vec3 normal(vec3 p){
+  const vec2 k = vec2(1, -1); const float h = .0015;
+  return normalize(k.xyy * map(p + k.xyy * h) + k.yyx * map(p + k.yyx * h) + k.yxy * map(p + k.yxy * h) + k.xxx * map(p + k.xxx * h));
+}
+vec3 rayDir(vec2 frag){
+  vec2 uv = (frag - .5 * uRes) / uRes.y;
+  vec3 f = normalize(uTarget - uCam), r = normalize(cross(f, vec3(0, 1, 0))), u = cross(r, f);
+  return normalize(f + (uv.x * r + uv.y * u) * 2. * tan(uFov * .5));
+}
+float march(vec3 ro, vec3 rd){
+  float t = 2.;
+  for (int i = 0; i < 140; i++){ float d = map(ro + rd * t); if (d < .0008 * t) return t; t += d; if (t > 9.) break; }
+  return -1.;
+}
+
+// The logo's face, in the head's own units: x to the viewer's right, y up, 1 = the head's half width.
+float sdCircle(vec2 p, float r){ return length(p) - r; }
+float sdArc(vec2 p, vec2 c, float r, float from, float to){
+  // distance to the part of a circle between two angles (radians)
+  vec2 q = p - c; float a = atan(q.y, q.x);
+  if (a >= from && a <= to) return abs(length(q) - r);
+  vec2 e1 = c + r * vec2(cos(from), sin(from)), e2 = c + r * vec2(cos(to), sin(to));
+  return min(length(p - e1), length(p - e2));
+}
+/** 1 where the face is white (the eye's disc, the wink, the nose and the smile), 0 where it is ink. */
+float face(vec2 u, float px){
+  float line = .05;
+  float w = 0.;
+  // open eye: a white disc with a closed, smiling lid line in ink; closing, the disc shrinks into a line
+  vec2 eye = vec2(-.45, .1);
+  float disc = sdCircle(u - eye, .21 * (1. - uBlink));
+  float lid = sdArc(u, eye + vec2(0, -.07), .1, .35, 2.8) - line * .5;
+  float inDisc = 1. - smoothstep(-px, px, disc);
+  float inLid = 1. - smoothstep(-px, px, lid);
+  w = max(w, inDisc * (1. - inLid));
+  float closed = sdArc(u, eye + vec2(0, -.07), .13, .35, 2.8) - line * .5;
+  w = max(w, uBlink * (1. - smoothstep(-px, px, closed)));
+  // wink
+  float wink = sdArc(u, vec2(.48, -.2), .13, .35, 2.8) - line * .5;
+  w = max(w, 1. - smoothstep(-px, px, wink));
+  // nose: a small rounded heart, point down
+  vec2 n = u - vec2(.04, -.31);
+  float nose = max(n.y - .045, abs(n.x) - (n.y + .07) * .8) - .016;
+  w = max(w, 1. - smoothstep(-px, px, nose));
+  // smile: two little arcs under the nose (opening into a small "o" for a miaow)
+  float m1 = sdArc(u, vec2(-.2, -.36), .24, -2.75, -.35) - line * .5;
+  float m2 = sdArc(u, vec2(.25, -.38), .2, -2.75, -.35) - line * .5;
+  w = max(w, 1. - smoothstep(-px, px, min(m1, m2)));
+  return w;
+}
+
+void main(){
+  vec2 frag = gl_FragCoord.xy;
+  vec3 rd = rayDir(frag);
+  float t = march(uCam, rd);
+  if (uPass == 0){
+    // depth packed as t in [2, 9): coarse part in r, fine in g
+    float s = (t - 2.) / 7.; outColor = t < 0. ? vec4(0) : vec4(floor(s * 255.) / 255., fract(s * 255.), 0, 1); return; }
+  vec3 bg = vec3(1);
+  if (t < 0.){
+    // soft shadow on the ground, under the cat
+    float tg = -uCam.y / rd.y;
+    if (rd.y < 0.){
+      vec3 g = uCam + rd * tg;
+      float d = map(g);
+      float s = 1. - smoothstep(0., .45, d);
+      outColor = vec4(0, 0, 0, .16 * s * s); return;
+    }
+    outColor = vec4(0); return;
+  }
+  vec3 p = uCam + rd * t;
+  vec3 n = normal(p);
+  vec3 v = -rd;
+  vec3 L = normalize(vec3(-.55, .85, .7));
+  float ndl = dot(n, L);
+  // three flat tones of ink, a rim of light all round the outline, and a small glossy highlight
+  vec3 ink = ndl > .45 ? vec3(.235, .21, .22) : ndl > -.05 ? vec3(.16, .14, .148) : vec3(.095, .083, .088);
+  float rim = pow(1. - max(dot(n, v), 0.), 3.);
+  if (rim > .42 && ndl > -.35) ink = mix(ink, vec3(.36, .33, .34), .8);
+  float spec = pow(max(dot(n, normalize(L + v)), 0.), 140.);
+  if (spec > .6) ink = vec3(.62, .6, .6);
+  vec3 col = ink;
+
+  // the face, painted on the front of the head
+  mat3 R = uEr[uHead];
+  vec3 q = R * (p - uEc[uHead]);
+  float hx = uEs[uHead].x;
+  float px = 1.6 / (uRes.y * .5) * t * tan(uFov * .5) / hx;   // about one pixel, in face units
+  if (q.z > 0. && length(q / uEs[uHead]) < 1.12){
+    vec2 u = q.xy / hx;
+    float white = face(u, px);
+    vec3 paper = ndl > -.1 ? vec3(1) : vec3(.86, .85, .85);
+    col = mix(col, paper, white);
+  }
+  // the light inside the ears, facing forward as the face does
+  for (int e = 0; e < 2; e++){
+    int i = e == 0 ? uEars.x : uEars.y;
+    vec3 a = uCa[i].xyz, b = uCb[i].xyz;
+    vec3 ba = b - a; float h = clamp(dot(p - a, ba) / dot(ba, ba), 0., 1.);
+    vec3 w = p - (a + ba * h);
+    float r = mix(uCa[i].w, uCb[i].w, h);
+    vec3 fwd = transpose(R) * vec3(0, 0, 1);
+    vec3 side = transpose(R) * vec3(1, 0, 0);
+    if (h > .22 && h < .8 && length(w) < r * 1.25 && dot(normalize(w), fwd) > .45 && abs(dot(w, side)) < r * (.5 - .45 * h))
+      col = mix(col, vec3(1), .95);
+  }
+  // the logo's white lines: where this point lies just behind a nearer part (a paw in front of the body)
+  float lw = 1.6 * float(${SS});
+  float here = (texelFetch(uDepth, ivec2(frag), 0).r * 255. + texelFetch(uDepth, ivec2(frag), 0).g) / 255. * 7. + 2.;
+  float edge = 0.;
+  for (int k = 0; k < 8; k++){
+    float a = float(k) * .7854;
+    vec4 s = texelFetch(uDepth, ivec2(frag + lw * vec2(cos(a), sin(a))), 0);
+    if (s.a > .5){ float d = (s.r * 255. + s.g) / 255. * 7. + 2.; if (here - d > .14) edge = 1.; }
+  }
+  col = mix(col, vec3(1), edge);
+  outColor = vec4(col, 1);
+}`;
+function sh(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = (n) => gl.getUniformLocation(prog, n);
+const depthTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, depthTex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, W * SS, H * SS, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, depthTex, 0);
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+// ---------- a little vector maths ----------
+const v3 = (x, y, z) => [x, y, z];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const len = (a) => Math.hypot(a[0], a[1], a[2]);
+const norm = (a) => mul(a, 1 / (len(a) || 1));
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const lerp = (a, b, t) => a + (b - a) * t;
+const lerp3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const smooth = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
+const ease = (x) => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const rad = (d) => d * Math.PI / 180;
+/** Rotation about y (yaw), x (pitch) and z (roll), as a function on points. */
+const rotY = (a) => (p) => [p[0] * Math.cos(a) + p[2] * Math.sin(a), p[1], -p[0] * Math.sin(a) + p[2] * Math.cos(a)];
+const rotZ = (a) => (p) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a), p[2]];
+/** Rotates p about the axis through o along k (unit) by angle a (Rodrigues). */
+function rotAxis(p, o, k, a){
+  const v = sub(p, o), c = Math.cos(a), s = Math.sin(a);
+  return add(o, add(add(mul(v, c), mul(cross(k, v), s)), mul(k, dot(k, v) * (1 - c))));
+}
+/** Two bones from root to target, the joint bending towards hint. */
+function ik(root, target, a, b, hint){
+  let d = sub(target, root); let dl = len(d); const maxL = a + b - 1e-3;
+  if (dl > maxL){ d = mul(d, maxL / dl); dl = maxL; target = add(root, d); }
+  const dir = mul(d, 1 / dl);
+  const x = (a * a - b * b + dl * dl) / (2 * dl);
+  const h = Math.sqrt(Math.max(a * a - x * x, 0));
+  let perp = sub(hint, mul(dir, dot(hint, dir))); perp = norm(perp);
+  return [add(add(root, mul(dir, x)), mul(perp, h)), target];
+}
+
+// ---------- the cat ----------
+/*
+ * Cat space: the cat faces -x, y is up, the ground is y = 0 and +z is its near side (towards us).
+ * A pose is a handful of numbers; build() turns it into shapes for the shader.
+ * - yaw: which way the whole cat faces (0: left, 90: towards us, 180: right)
+ * - walk: stride phase (0..1) and how much it walks (0 stands)
+ * - lie: 0 standing, 1 lying like a loaf
+ * - look: how far the head turns towards us; nod: head pitch; tilt: head roll; push: head pushed towards us (head-butt)
+ * - squash: the head flattening on the glass; blink: eyes closed; tail: { up, sway, t }
+ */
+const STRIDE = 0.5;
+function build(P){
+  const cones = [], ells = [];
+  const lie = smooth(P.lie || 0);
+  const crouch = P.crouch || 0;
+  const phase = P.phase || 0, walk = P.walk || 0;
+  const bob = walk * -0.022 * Math.cos(4 * Math.PI * phase) + (P.breathe || 0) * 0.012;
+  const sway = walk * 0.03 * Math.sin(2 * Math.PI * phase);
+  const yaw = rad(P.yaw || 0);
+  const lean = P.lean || 0;                  // chest forward/down, during a head-butt
+  const toWorld = (p) => add(rotY(yaw)(sub(p, [0.05, 0, 0])), [P.x || 0, 0, 0]);
+  const world3x3 = (m) => m; // ellipsoid axes are built in world space below
+  const lowered = (p, how) => add(p, [0, -how * lie - crouch * 0.12, 0]);
+
+  // the body: chest and hips, melted together, and the head melted onto the chest
+  const chest = add(lowered([-0.36 - lean * 0.1, 0.76 + bob, 0], 0.36), [0, -lean * 0.05, sway]);
+  const hips = add(lowered([0.42, 0.7 + bob * .6, 0], 0.36), [0, 0, sway * .5]);
+  const R0 = rotY(yaw);
+  const axes = (ry = 0, rz = 0) => { // local-to-world rotation of an ellipsoid in cat space
+    const f = (v) => R0(rotY(rad(ry))(rotZ(rad(rz))(v)));
+    return [f([1, 0, 0]), f([0, 1, 0]), f([0, 0, 1])];
+  };
+  const ell = (c, r, ax, k) => ells.push({ c: toWorld(c), r, ax, k });
+  const breath = 1 + (P.breathe || 0) * 0.025;
+  ell(hips, [0.55, 0.49 * breath, 0.42 * breath], axes(0, lerp(4, -4, lie)), 0);
+  ell(chest, [0.46, 0.44 * breath, 0.38 * breath], axes(0, lerp(-12, 0, lie) - lean * 10), 0.32);
+  // haunches, rounder when lying
+  for (const s of [1, -1]) ell(add(hips, [0.08, -0.05 - lie * 0.05, s * 0.2]), [0.3 + 0.06 * lie, 0.3, 0.2], axes(0, 20), 0.12);
+
+  // the head
+  const look = rad(P.look ?? 45);
+  const headYaw = yaw + look;                // world facing angle of the face, from facing left
+  const fwd = [-Math.cos(headYaw), 0, Math.sin(headYaw)];
+  const nod = rad(P.nod || 0), tilt = rad(P.tilt || 0);
+  // forward / up / right of the face in world space
+  let up = [0, 1, 0];
+  let f = fwd;
+  const right0 = norm(cross(up, f));
+  f = rotAxis(f, [0, 0, 0], right0, nod); up = rotAxis(up, [0, 0, 0], right0, nod);
+  up = rotAxis(up, [0, 0, 0], f, tilt);
+  const right = norm(cross(up, f));
+  const neck = toWorld(lowered([-0.7 - lean * 0.12, 1.26 + bob * 1.3, sway * 1.2], lerp(0.4, 0.46, lie)));
+  const push = P.push || 0;
+  const headC = add(add(neck, mul(f, 0.06 + push)), [0, -lean * 0.06, 0]);
+  const sq = P.squash || 0;
+  const hr = [0.45 * (1 + sq * 0.12), 0.39 * (1 + sq * 0.1), 0.4 * (1 - sq * 0.22)];
+  ells.push({ c: headC, r: hr, ax: [right, up, f], k: 0.3, head: true });
+  // a muzzle, so the face is round at the front
+  // ears: round cones from inside the head to a sharp tip, leaning out
+  const ear = (s) => {
+    const base = add(headC, add(add(mul(right, s * 0.23), mul(up, 0.22)), mul(f, -0.04)));
+    const tip = add(headC, add(add(mul(right, s * 0.33), mul(up, 0.6)), mul(f, -0.02)));
+    return { a: base, b: tip, ra: 0.15, rb: 0.014, k: 0.05 };
+  };
+  const earL = cones.length; cones.push(ear(-1));
+  const earR = cones.length; cones.push(ear(1));
+
+  // legs
+  const legs = [
+    { hip: [-0.42, 0.56, 0.16], foot: [-0.45, 0, 0.16], off: 0.25, a: 0.28, b: 0.27, bend: [-1, 0, 0], r: [0.12, 0.1], front: true },
+    { hip: [-0.42, 0.56, -0.16], foot: [-0.45, 0, -0.16], off: 0.75, a: 0.28, b: 0.27, bend: [-1, 0, 0], r: [0.12, 0.1], front: true },
+    { hip: [0.52, 0.52, 0.22], foot: [0.57, 0, 0.22], off: 0.0, a: 0.28, b: 0.28, bend: [1, 0, 0], r: [0.14, 0.1] },
+    { hip: [0.52, 0.52, -0.22], foot: [0.57, 0, -0.22], off: 0.5, a: 0.28, b: 0.28, bend: [1, 0, 0], r: [0.14, 0.1] },
+  ];
+  const paw = 0.095;
+  for (const L of legs){
+    const ps = (phase + L.off) % 1;
+    let fx = L.foot[0], fy = paw;
+    if (walk){
+      if (ps < 0.6) fx += walk * (-STRIDE / 2 + STRIDE * (ps / 0.6));
+      else { const s = (ps - 0.6) / 0.4; fx += walk * (STRIDE / 2 - STRIDE * ease(s)); fy += walk * 0.12 * Math.sin(Math.PI * s); }
+    }
+    if (P.paws){ const k = P.paws(L); fx += k[0]; fy += k[1]; }
+    const hipS = lowered(add(L.hip, [L.front ? -lean * .08 : 0, (L.front ? bob : bob * .6), 0]), L.front ? 0.4 : 0.38);
+    let footS = [fx, fy, L.foot[2]];
+    // lying: front paws tucked forward under the chest, hind legs folded against the haunches
+    const lieFoot = L.front ? [-0.72, paw * 0.9, L.foot[2] * 1.05] : [0.12, paw * 0.9, L.foot[2] * 1.55];
+    footS = lerp3(footS, lieFoot, lie);
+    const hint = L.front ? lerp3(L.bend, [1, 0.2, 0], lie) : lerp3(L.bend, [-0.2, 1, 0], lie);
+    const [knee, foot] = ik(hipS, footS, L.a, L.b, hint);
+    const H = toWorld(hipS), K = toWorld(knee), F = toWorld(foot);
+    cones.push({ a: H, b: K, ra: L.r[0], rb: L.r[1] * 0.95, k: 0.06, front: L.front });
+    cones.push({ a: K, b: F, ra: L.r[1], rb: paw * 0.8, k: 0.03 });
+    // the paw, a little longer forwards
+    const toe = toWorld(add(foot, [-0.07, -0.01, 0]));
+    cones.push({ a: F, b: toe, ra: paw, rb: paw * 0.92, k: 0.04 });
+  }
+
+  // the tail: a chain of round cones; up and hooked when happy, wrapped round the body when lying
+  const tail = P.tail || {};
+  const N = 9, seg = 0.12;
+  let pts = [];
+  {
+    let pos = lowered([0.9, 0.82 + bob * .5, 0], 0.36);
+    pts.push(pos);
+    const base = rad(tail.base ?? 70), curl = rad(tail.curl ?? 12);
+    for (let i = 1; i <= N; i++){
+      const a = base + curl * i;
+      const w = (tail.sway || 0) * Math.sin((tail.t || 0) * 2 * Math.PI - i * 0.45) * (i / N);
+      pos = add(pos, [Math.cos(a) * seg, Math.sin(a) * seg, w * seg]);
+      pts.push(pos);
+    }
+  }
+  if (lie > 0){
+    // lying: along the ground, round the near side of the body to the front paws
+    const wrap = [];
+    for (let i = 0; i <= N; i++){
+      const u = i / N;
+      const ang = lerp(-0.2, Math.PI * 0.95, u);
+      wrap.push([0.25 + Math.cos(ang) * 0.72 * (1 - u * 0.25), 0.08 + (1 - u) * 0.25 * (1 - u), 0.1 + Math.sin(ang) * 0.42]);
+    }
+    if ((tail.sway || 0) && lie > 0.9) { const i = N; wrap[i] = add(wrap[i], [0, 0.04 * Math.max(0, Math.sin((tail.t || 0) * 2 * Math.PI)), 0]); }
+    pts = pts.map((p, i) => lerp3(p, wrap[i], lie));
+  }
+  for (let i = 0; i < N; i++){
+    const r0 = lerp(0.095, 0.07, i / N), r1 = lerp(0.095, 0.07, (i + 1) / N);
+    cones.push({ a: toWorld(pts[i]), b: toWorld(pts[i + 1]), ra: i === N - 1 ? r0 : r0, rb: i === N - 1 ? 0.078 : r1, k: i === 0 ? 0.1 : 0.02 });
+  }
+  return { cones, ells, earL, earR, blink: P.blink || 0 };
+}
+
+// ---------- the camera and drawing ----------
+const CAM = { pos: [0.08, 1.8, 4.9], target: [0.08, 0.95, 0], fov: rad(32) };
+function draw(scene){
+  gl.viewport(0, 0, W * SS, H * SS);
+  gl.uniform2f(U("uRes"), W * SS, H * SS);
+  gl.uniform3fv(U("uCam"), CAM.pos); gl.uniform3fv(U("uTarget"), CAM.target); gl.uniform1f(U("uFov"), CAM.fov);
+  const { cones, ells } = scene;
+  gl.uniform1i(U("uNC"), cones.length); gl.uniform1i(U("uNE"), ells.length);
+  const ca = new Float32Array(MAX_CONES * 4), cb = new Float32Array(MAX_CONES * 4), ck = new Float32Array(MAX_CONES);
+  cones.forEach((c, i) => {
+    let b = c.b; if (len(sub(c.a, b)) < 1e-4) b = add(b, [1e-4, 0, 0]);
+    ca.set([...c.a, c.ra], i * 4); cb.set([...b, c.rb], i * 4); ck[i] = c.k;
+  });
+  gl.uniform4fv(U("uCa"), ca); gl.uniform4fv(U("uCb"), cb); gl.uniform1fv(U("uCk"), ck);
+  const er = new Float32Array(MAX_ELLS * 9), ec = new Float32Array(MAX_ELLS * 3), es = new Float32Array(MAX_ELLS * 3), ek = new Float32Array(MAX_ELLS);
+  let head = 0;
+  ells.forEach((e, i) => {
+    // world-to-local: rows are the local axes; GLSL mat3 is column-major, so write the transpose
+    const [x, y, z] = e.ax;
+    er.set([x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2]], i * 9);
+    ec.set(e.c, i * 3); es.set(e.r, i * 3); ek[i] = e.k;
+    if (e.head) head = i;
+  });
+  gl.uniformMatrix3fv(U("uEr"), false, er); gl.uniform3fv(U("uEc"), ec); gl.uniform3fv(U("uEs"), es); gl.uniform1fv(U("uEk"), ek);
+  gl.uniform1i(U("uHead"), head);
+  gl.uniform2i(U("uEars"), scene.earL, scene.earR);
+  gl.uniform1f(U("uBlink"), scene.blink);
+  // pass 0: depth into the texture; pass 1: colour, reading the depth for the white lines
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.uniform1i(U("uPass"), 0);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.uniform1i(U("uPass"), 1);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, depthTex); gl.uniform1i(U("uDepth"), 0);
+  gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// ---------- the actions ----------
+/*
+ * Each action is a function of t in [0, 1) giving a pose, and a length in seconds. Every action starts where the
+ * one before it ends, so they play as one movement:
+ *   walk (loops, facing left) → bonk (turns towards us, two head-butts at the screen) → turn (a circle on the spot)
+ *   → lie (lies down) → purr (loops) … rise (lie backwards) → leave (two head-butts, then turns to face right)
+ *   → walk mirrored, out to the right. stand (loops) is for when its card opens while it is up.
+ */
+const FACE_US = 62;                        // standing at ease, three quarters towards us
+const tailHappy = (t, n = 1) => ({ base: 70, curl: 12, sway: 0.5, t: t * n });
+const ACTIONS = {
+  walk: { s: 0.8, loop: true, pose: (t) => ({ yaw: 0, walk: 1, phase: t, look: 62, nod: -4 + 3 * Math.sin(4 * Math.PI * t), tail: tailHappy(t) }) },
+  bonk: { s: 2.4, pose: (t) => {
+    // 0–.25: turns to face us; then two head-butts; ends standing three quarters to us
+    const turn = ease(t / 0.25);
+    const b = (c) => { const x = (t - c) / 0.2; return x < 0 || x > 1 ? 0 : Math.sin(Math.PI * Math.min(1, x * 1.6)) ** 2 * (x < .62 ? 1 : 1 - (x - .62) / .38); };
+    const hit = Math.max(b(0.3), b(0.62));
+    const contact = Math.max(0, hit - 0.75) / 0.25;
+    return { yaw: lerp(0, FACE_US, turn), walk: t < 0.25 ? 0.6 * (1 - turn) : 0, phase: t * 3, look: lerp(62, 28, turn),
+      push: 0.42 * hit, lean: hit, squash: contact, nod: lerp(-4, 0, turn) + 16 * hit, tilt: 10 * hit, blink: smooth((hit - .3) / .3), tail: tailHappy(t, 2) };
+  } },
+  turn: { s: 2.0, pose: (t) => ({ yaw: FACE_US + 360 * ease(t), walk: 1, phase: t * 3, look: lerp(28, 28, t), tail: tailHappy(t, 2) }) },
+  lie: { s: 1.0, pose: (t) => ({ yaw: FACE_US, lie: ease(t), look: 28, nod: 6 * ease(t), blink: smooth((t - .5) / .5), tail: tailHappy(t * .5) }) },
+  purr: { s: 1.8, loop: true, pose: (t) => ({ yaw: FACE_US, lie: 1, look: 28, nod: 6 + 1.5 * Math.sin(2 * Math.PI * t), tilt: 4 * Math.sin(2 * Math.PI * t), blink: 1, breathe: Math.sin(2 * Math.PI * t), tail: { sway: 1, t } }) },
+  stand: { s: 2.4, loop: true, pose: (t) => ({ yaw: FACE_US + 8 * Math.sin(2 * Math.PI * t), look: 28, tilt: 9 * Math.sin(2 * Math.PI * t), nod: 3 * Math.sin(4 * Math.PI * t), lean: 0.15 * (1 - Math.cos(2 * Math.PI * t)), blink: Math.sin(2 * Math.PI * t) > .4 ? 1 : 0, tail: tailHappy(t, 2) }) },
+  leave: { s: 2.4, pose: (t) => {
+    const b = (c) => { const x = (t - c) / 0.2; return x < 0 || x > 1 ? 0 : Math.sin(Math.PI * Math.min(1, x * 1.6)) ** 2 * (x < .62 ? 1 : 1 - (x - .62) / .38); };
+    const hit = Math.max(b(0.02), b(0.32));
+    const contact = Math.max(0, hit - 0.75) / 0.25;
+    const turn = ease((t - 0.62) / 0.38);
+    return { yaw: lerp(FACE_US, 180, turn), walk: turn > 0 ? Math.min(1, turn * 1.5) : 0, phase: t * 3, look: lerp(28, 62, turn),
+      push: 0.42 * hit, lean: hit, squash: contact, nod: 16 * hit, tilt: 10 * hit, blink: smooth((hit - .3) / .3), tail: tailHappy(t, 2) };
+  } },
+};
+window.ACTIONS = Object.fromEntries(Object.entries(ACTIONS).map(([k, a]) => [k, { s: a.s, loop: !!a.loop }]));
+window.frame = (name, t) => { draw(build(ACTIONS[name].pose(t))); return canvas.toDataURL("image/png"); };
+
+const want = new URLSearchParams(location.search).get("a");
+if (want && ACTIONS[want]){
+  const a = ACTIONS[want]; const t0 = performance.now();
+  const tick = () => { const t = ((performance.now() - t0) / 1000 / a.s) % 1; draw(build(a.pose(t))); requestAnimationFrame(tick); };
+  tick();
+}
+</script>
