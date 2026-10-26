@@ -2,17 +2,19 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ageLabel } from "@gn/domain";
-import { Button } from "@gn/ui";
+import { Button, walkingCatSvg } from "@gn/ui";
 import { nextWalkIn, pickCat, STROLL, STROLL_QUIET, type StrollState } from "@/lib/passeio";
 import { NEW_CAT_SESSION_KEY, QUIET_PAGES, type NewCat } from "./CatAlerts";
 
 const VISIT_KEY = "gn-passeio";
 const PAUSE_KEY = "gn-passeio-pausa";
 const LAST_KEY = "gn-passeio-ultimo";
-/** Walking speeds in pixels per second, and how long it sits saying hello. */
-const IN_SPEED = 70;
-const OUT_SPEED = 95;
+/** Walking speeds in pixels per second, each with the stride that keeps its paws from sliding on the ground. */
+const IN = { speed: 37, step: 0.8 };
+const OUT = { speed: 49, step: 0.6 };
 const SIT_MS = 6_000;
+/** Width of the cat on screen (matches .stroll in globals.css), so it starts and ends just off screen. */
+const OFF = 130;
 /** `?gato=agora` sends a cat out at once, on any page: to try it on test sites and the demo. */
 const isPreview = () => new URLSearchParams(window.location.search).get("gato") === "agora";
 
@@ -39,8 +41,8 @@ function saveVisit(s: Pick<StrollState, "visitStart" | "walks" | "lastWalk">) {
 }
 
 /**
- * Now and then (see lib/passeio.ts) a cat drawn like the one in the logo walks in along the bottom of the screen,
- * sits down and says hello with the name of a real cat waiting for a family, then walks on. Tapping it, or pointing
+ * Now and then (see lib/passeio.ts) a cat drawn like the one in the logo walks in from the right along the bottom of the screen,
+ * stops and says hello with the name of a real cat waiting for a family, then walks on. Tapping it, or pointing
  * at it with a mouse, opens that cat's card. It walks under every window, never while someone types or on pages
  * where people need to concentrate, and never for people who asked their device for less motion.
  */
@@ -48,7 +50,7 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   const pathname = usePathname();
   const [cat, setCat] = useState<NewCat>();
   const [phase, setPhase] = useState<Phase>("away");
-  const [x, setX] = useState(-120);
+  const [x, setX] = useState(-OFF);
   const [ms, setMs] = useState(0);
   const [card, setCard] = useState<"closed" | "hover" | "open">("closed");
   const box = useRef<HTMLDivElement>(null);
@@ -58,7 +60,9 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   const clear = () => { timers.current.forEach(clearTimeout); timers.current = []; };
 
   const walkTo = (to: number, speed: number, from: number) => {
-    const duration = Math.round((Math.abs(to - from) / speed) * 1000);
+    // Speeds are for a cat 120px wide; a smaller cat takes smaller steps.
+    const width = box.current?.offsetWidth || OFF;
+    const duration = Math.round((Math.abs(to - from) / (speed * (width / 120))) * 1000);
     setMs(duration);
     setX(to);
     return duration;
@@ -68,8 +72,8 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
     clear();
     setCard("closed");
     setPhase("out");
-    const d = walkTo(window.innerWidth + 40, OUT_SPEED, from);
-    later(() => { setPhase("away"); setCat(undefined); setMs(0); setX(-120); }, d + 100);
+    const d = walkTo(-OFF, OUT.speed, from);
+    later(() => { setPhase("away"); setCat(undefined); setMs(0); }, d + 100);
   };
 
   // Schedules the next walk; checked again on every page change.
@@ -93,11 +97,12 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
       setCat(next);
       setPhase("in");
       setMs(0);
-      setX(-120);
-      // Next frame: walk in to a spot near the left edge and sit there for a while.
+      const enter = window.innerWidth + 20;
+      setX(enter);
+      // Next frame: walk in from the right to a spot near the right edge and stop there for a while.
       later(() => {
-        const stop = Math.round(Math.max(16, Math.min(window.innerWidth * 0.12, 200)));
-        const d = walkTo(stop, IN_SPEED, -120);
+        const stop = Math.round(window.innerWidth - OFF - Math.max(16, Math.min(window.innerWidth * 0.1, 180)));
+        const d = walkTo(stop, IN.speed, enter);
         later(() => { setPhase("sit"); later(() => walkOut(stop), SIT_MS); }, d);
       }, 50);
     };
@@ -117,6 +122,8 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
   }, [card]);
 
   if (!cat || phase === "away") return null;
+  const walking = !(phase === "sit" || card !== "closed");
+  const art = walkingCatSvg({ walking, step: phase === "out" ? OUT.step : IN.step });
   const female = cat.sex === "femea";
   const name = cat.name;
   const sitting = phase === "sit" || card !== "closed";
@@ -162,38 +169,13 @@ export function StrollingCat({ cats }: { cats: NewCat[] }) {
       <button
         type="button"
         className="stroll__cat"
+        dangerouslySetInnerHTML={{ __html: art }}
         aria-label={`Olá, sou ${female ? "a" : "o"} ${name} e procuro família. Ver ${female ? "a" : "o"} ${name}`}
         aria-expanded={card !== "closed"}
         aria-controls={card !== "closed" ? cardId : undefined}
         onPointerEnter={(e) => { if (e.pointerType === "mouse") open("hover"); }}
         onClick={() => (card === "open" ? walkOut(x) : open("open"))}
-      >
-        <WalkingCat />
-      </button>
+      />
     </div>
-  );
-}
-
-/** A side view of the logo's cat: black, with the logo's closed happy eye and little smile, tail up. */
-function WalkingCat() {
-  return (
-    <svg viewBox="0 0 120 92" width="88" height="68" aria-hidden="true" focusable="false">
-      <g className="stroll__tail"><path d="M30 52C14 50 6 36 10 22C12 14 20 10 25 14" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" /></g>
-      <g className="stroll__legs stroll__legs--a">
-        <path d="M38 58V84M74 58V84" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-      </g>
-      <g className="stroll__legs stroll__legs--b">
-        <path d="M48 58V84M84 58V84" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
-      </g>
-      <g className="stroll__body">
-        <ellipse cx="60" cy="52" rx="32" ry="16" fill="currentColor" />
-        <g className="stroll__head">
-          <path d="M80 30L82 10L92 21Q97 19 102 21L111 10L112 31Q114 46 97 49Q82 50 80 38Z" fill="currentColor" />
-          <path d="M85 16L86 22L90 21Z" fill="var(--gn-bg, #fff)" />
-          <path d="M91 31Q94 28 97 31M102 31Q105 28 108 31" fill="none" stroke="var(--gn-bg, #fff)" strokeWidth="2" strokeLinecap="round" />
-          <path d="M97 38Q100 41 103 38Q106 41 109 38" fill="none" stroke="var(--gn-bg, #fff)" strokeWidth="1.8" strokeLinecap="round" />
-        </g>
-      </g>
-    </svg>
   );
 }

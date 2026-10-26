@@ -29,7 +29,7 @@ A gestão pergunta à API o que está ligado (`GET /features`) e mostra só isso
 
 ## Gato que passeia
 
-De vez em quando, um gato desenhado como o do logótipo atravessa o fundo do ecrã, para e diz o nome de um gato real para adoção (primeiro os que esperam há mais tempo). Ao tocar nele, ou ao passar o rato por cima, abre o cartão desse gato com o botão "Conhecer". As regras estão em `apps/web/lib/passeio.ts`:
+De vez em quando, um gato com a cara do logótipo atravessa o fundo do ecrã da direita para a esquerda, para e diz o nome de um gato real para adoção (primeiro os que esperam há mais tempo). Ao tocar nele, ou ao passar o rato por cima, abre o cartão desse gato com o botão "Conhecer". As regras estão em `apps/web/lib/passeio.ts`:
 
 - nunca nos primeiros 20 segundos de uma visita, no máximo uma vez a cada 2 minutos e meio e 3 vezes por visita;
 - nunca com uma janela aberta, enquanto se escreve, nas páginas de formulários, conta, loja, doar e apadrinhar, nem na visita em que já apareceu o aviso de gato novo;
