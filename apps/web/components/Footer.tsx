@@ -23,7 +23,6 @@ export function Footer() {
               <li><a href="/finais-felizes">Finais felizes</a></li>
               <li><a href="/loja">Loja solidária</a></li>
               <li><a href="/parceiros">Parceiros</a></li>
-              <li><a href="/sos">Encontrei um gato</a></li>
               <li><a href="/doar">Fazer um donativo</a></li>
               <li><a href="/sobre">Sobre nós</a></li>
             </ul>

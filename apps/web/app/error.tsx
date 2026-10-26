@@ -14,7 +14,6 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         <div className="action-row">
           <Button onClick={reset}>Tentar outra vez</Button>
           <Button href="/" variant="secondary">Ir para o início</Button>
-          <Button href="/sos" variant="urgent">Encontrei um gato</Button>
         </div>
       </div>
     </Container>

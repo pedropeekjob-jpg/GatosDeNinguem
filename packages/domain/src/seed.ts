@@ -348,7 +348,7 @@ const seedPageInputs: z.input<typeof pageSchema>[] = [
     id: "page-sos",
     path: "/sos",
     heading: "Encontrei um gato. O que faço?",
-    intro: "Responda a uma pergunta de cada vez. Dizemos-lhe o que fazer.",
+    intro: "Kit de emergência: responda a uma pergunta de cada vez e veja o que fazer, passo a passo.",
     seo: { title: "Encontrei um gato na rua: o que fazer" },
     updatedAt: now,
   },

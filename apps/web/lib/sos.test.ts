@@ -18,6 +18,14 @@ describe("SOS decision tree", () => {
     expect(node && node.kind === "answer" && node.urgent).toBe(true);
   });
 
+  it("sends people to vets and public services, never to the association", () => {
+    for (const node of Object.values(sosTree)) {
+      if (node.kind !== "answer") continue;
+      const text = [node.title, ...node.steps].join(" ");
+      expect(text, node.id).not.toMatch(/associa|contacte-nos|indique-nos|ajudamos|podemos/i);
+    }
+  });
+
   it("never asks more than three questions", () => {
     const depth = (id: string): number => {
       const n = sosTree[id]!;

@@ -10,7 +10,7 @@ export default function NotFound() {
         <div className="action-row">
           <Button href="/">Ir para o início</Button>
           <Button href="/adotar" variant="secondary">Ver gatos para adoção</Button>
-          <Button href="/sos" variant="urgent">Encontrei um gato</Button>
+          <Button href="/doar" variant="secondary">Fazer um donativo</Button>
         </div>
       </div>
     </Container>

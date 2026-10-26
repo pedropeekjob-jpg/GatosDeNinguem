@@ -23,8 +23,7 @@ export function SosGuide() {
           <h2 ref={headingRef} tabIndex={-1} className="gn-plain-heading">{node.title}</h2>
         </Notice>
         <ol className="gn-stack gn-stack--s">{node.steps.map((s) => <li key={s}>{s}</li>)}</ol>
-        <p><strong>Contactar a associação:</strong> mensagem no <a href="https://www.facebook.com/GatosdeNinguemViana/">Facebook</a> ou no <a href="https://www.instagram.com/gatosdeninguem/">Instagram</a>.</p>
-        <p className="small muted">Maus tratos ou abandono: PSP ou GNR. Animal atropelado na estrada: Bombeiros. Colónias de rua: Junta de Freguesia ou Câmara Municipal.</p>
+        <p className="small muted">Maus tratos ou abandono: PSP ou GNR. Animal atropelado na estrada: Bombeiros. Colónias de rua e recolha de animais: Junta de Freguesia ou Câmara Municipal.</p>
         <div className="action-row">
           <Button variant="secondary" onClick={() => go(path.slice(0, -1))}>Voltar</Button>
           <Button variant="quiet" onClick={() => go(["inicio"])}>Começar de novo</Button>

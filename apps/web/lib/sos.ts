@@ -1,4 +1,8 @@
-/** Emergency guide as a decision tree, from the association's "Manual de Emergência". */
+/**
+ * Emergency guide as a decision tree, from the association's "Manual de Emergência".
+ * The answers point to vets and public services, never to the association, which wants as few
+ * found-cat requests as possible (Pedro, 2026-10-26): the site's focus is adopting and donating.
+ */
 export type SosNode =
   | { kind: "question"; id: string; question: string; options: { label: string; next: string }[] }
   | { kind: "answer"; id: string; title: string; urgent?: boolean; steps: string[] };
@@ -21,7 +25,7 @@ export const sosTree: Record<string, SosNode> = {
     id: "ferido",
     urgent: true,
     title: "Leve-o já ao veterinário mais próximo",
-    steps: ["Cada minuto conta.", "Pegue no gato com cuidado, de preferência com uma toalha ou manta.", "Leve-o à clínica veterinária mais próxima.", "Depois, contacte a associação para combinarmos os próximos passos."],
+    steps: ["Cada minuto conta.", "Pegue no gato com cuidado, de preferência com uma toalha ou manta.", "Leve-o à clínica veterinária mais próxima.", "Um veterinário consegue ler o chip e encontrar a família, se o gato tiver dono."],
   },
   bebes: {
     kind: "question",
@@ -37,7 +41,7 @@ export const sosTree: Record<string, SosNode> = {
     kind: "answer",
     id: "bebes-mae-meiga",
     title: "Deixe os bebés com a mãe",
-    steps: ["Se conseguir pegar na mãe, leve a família para um sítio seguro e tranquilo.", "Dê-lhes água, comida, uma manta e uma caixa de areia.", "Contacte a associação."],
+    steps: ["Se conseguir pegar na mãe, leve a família para um sítio seguro e tranquilo.", "Dê-lhes água, comida, uma manta e uma caixa de areia.", "Quando os bebés tiverem 2 meses, leve a mãe a esterilizar: a Câmara Municipal e muitos veterinários têm campanhas a preço reduzido."],
   },
   "bebes-sozinhos": {
     kind: "question",
@@ -52,14 +56,14 @@ export const sosTree: Record<string, SosNode> = {
     kind: "answer",
     id: "recem-nascidos",
     urgent: true,
-    title: "Mantenha-os quentes e contacte-nos já",
-    steps: ["Embrulhe-os numa manta para não arrefecerem.", "Não lhes dê leite de vaca.", "Contacte a associação imediatamente: os recém-nascidos correm grande risco."],
+    title: "Mantenha-os quentes e leve-os já ao veterinário",
+    steps: ["Embrulhe-os numa manta para não arrefecerem.", "Não lhes dê leite de vaca.", "Leve-os ao veterinário mais próximo hoje: os recém-nascidos correm grande risco e precisam de leite próprio para gatinhos."],
   },
   "bebes-independentes": {
     kind: "answer",
     id: "bebes-independentes",
     title: "Leve-os para um sítio seguro",
-    steps: ["Coloque-os num espaço seguro e confortável.", "Dê-lhes água, comida e uma caixa de areia.", "Contacte a associação para tratarmos da adoção."],
+    steps: ["Coloque-os num espaço seguro e confortável.", "Dê-lhes água, comida e uma caixa de areia.", "Partilhe fotografias nos grupos de animais da sua zona para lhes encontrar família."],
   },
   adulto: {
     kind: "question",
@@ -75,19 +79,19 @@ export const sosTree: Record<string, SosNode> = {
     kind: "answer",
     id: "adulto-meigo",
     title: "Pode ter dono: leve-o para um sítio seguro",
-    steps: ["Leve-o para um espaço seguro com água, comida, uma manta e areia.", "Contacte a associação. Podemos verificar se tem chip.", "Partilhe uma fotografia no Facebook da sua zona: pode ser um gato perdido."],
+    steps: ["Leve-o para um espaço seguro com água, comida, uma manta e areia.", "Peça a um veterinário que leia o chip: é rápido e pode devolvê-lo à família.", "Partilhe uma fotografia no Facebook da sua zona: pode ser um gato perdido."],
   },
   colonia: {
     kind: "answer",
     id: "colonia",
-    title: "Indique-nos o local exato",
-    steps: ["Não tente apanhar gatos assustados: podem fugir ou magoar-se.", "Anote a morada exata ou um ponto de referência.", "Contacte a associação. Podemos incluí-los no programa de esterilização (CED)."],
+    title: "Deixe-os onde estão e avise a Junta",
+    steps: ["Não tente apanhar gatos assustados: podem fugir ou magoar-se.", "Anote a morada exata ou um ponto de referência.", "Avise a Junta de Freguesia ou a Câmara Municipal: tratam da esterilização das colónias de rua (programa CED)."],
   },
   doente: {
     kind: "answer",
     id: "doente",
-    title: "Contacte-nos com a localização",
-    steps: ["Se o gato se deixar pegar, leve-o para um sítio seguro e contacte a associação.", "Se for assustado, indique-nos o local exato e uma fotografia, se possível."],
+    title: "Leve-o ao veterinário, se possível",
+    steps: ["Se o gato se deixar pegar, leve-o a um veterinário.", "Se for assustado, avise a Junta de Freguesia ou a Câmara Municipal com o local exato e uma fotografia, se possível."],
   },
   motor: {
     kind: "question",
@@ -102,13 +106,13 @@ export const sosTree: Record<string, SosNode> = {
     kind: "answer",
     id: "motor-ok",
     title: "Retire-o com cuidado",
-    steps: ["Se for meigo, retire-o com cuidado e contacte a associação.", "Se for assustado, abra o capô, afaste-se e dê-lhe tempo para sair.", "Dica para o inverno: bata no capô antes de ligar o carro."],
+    steps: ["Se for meigo, retire-o com cuidado e leve-o para um sítio seguro.", "Se for assustado, abra o capô, afaste-se e dê-lhe tempo para sair.", "Dica para o inverno: bata no capô antes de ligar o carro."],
   },
   morto: {
     kind: "answer",
     id: "morto",
-    title: "Indique-nos o local",
-    steps: ["Indique à associação o local exato.", "Se tiver coleira, ajudamos a avisar a família."],
+    title: "Avise a Câmara Municipal",
+    steps: ["A Câmara Municipal ou a Junta de Freguesia tratam da recolha: indique o local exato.", "Se tiver coleira, um veterinário pode ler o chip para avisar a família."],
   },
 };
 

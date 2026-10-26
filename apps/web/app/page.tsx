@@ -40,7 +40,6 @@ export default async function HomePage() {
               <div className="home-actions">
                 <Button href="/adotar">Quero adotar</Button>
                 <Button href="/doar" variant="secondary">Quero doar</Button>
-                <Button href="/sos" variant="urgent">Encontrei um gato</Button>
               </div>
               <p className="home-more"><a href="/ajudar">Outras formas de ajudar</a></p>
             </div>
