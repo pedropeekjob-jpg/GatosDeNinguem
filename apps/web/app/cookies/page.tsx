@@ -1,7 +1,7 @@
 import { Container } from "@gn/ui";
 import { LegalDraftNotice } from "@/components/LegalDraftNotice";
 import { PageHero } from "@/components/PageHero";
-import { association } from "@/lib/association";
+import { contactHref } from "@/lib/association";
 import { getPage } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
@@ -57,7 +57,7 @@ export default async function CookiesPage() {
           <p>Pode apagar estes dados a qualquer momento nas definições do seu navegador. Se o fizer, sai da sua conta e perde o cesto e os favoritos.</p>
 
           <h2>Dúvidas</h2>
-          <p>Escreva para <a href={`mailto:${association.email}`}>{association.email}</a>. Veja também a <a href="/privacidade">política de privacidade</a>.</p>
+          <p>Escreva-nos pelo <a href={contactHref("dados")}>formulário de contacto</a>. Veja também a <a href="/privacidade">política de privacidade</a>.</p>
         </div>
       </Container>
     </>

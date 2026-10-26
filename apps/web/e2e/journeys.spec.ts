@@ -5,7 +5,7 @@ import { parseFeatures } from "@gn/domain";
 // The same FEATURES setting the site was built with. CI runs the journeys twice: all off, and all on.
 const features = parseFeatures(process.env.FEATURES);
 
-const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/doar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/voluntariado", ...(features.amigo ? ["/ajudar/amigo"] : []), "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies"];
+const pages = ["/", "/adotar", "/adotar/tobias", "/adotar/perguntas", "/adotar/descobrir", "/ajudar", "/doar", "/sos", "/noticias", "/finais-felizes", "/parceiros", "/sobre", "/ajudar/turnos", "/apadrinhar", "/apadrinhar/tobias", "/ajudar/familia-temporaria", "/ajudar/voluntariado", ...(features.amigo ? ["/ajudar/amigo"] : []), "/loja", "/loja/t-shirt-gatos-de-ninguem", "/loja/cesto", "/loja/condicoes", "/privacidade", "/cookies", "/contactos"];
 
 test.describe("every page", () => {
   for (const path of pages) {
@@ -635,6 +635,34 @@ test("footer: shows where the gatil is and links to the privacy and cookie polic
   await page.getByRole("contentinfo").getByRole("link", { name: "Política de cookies" }).click();
   await expect(page).toHaveURL(/\/cookies\/?$/);
   await expect(page.getByRole("cell", { name: "gn-sessao" })).toBeVisible();
+});
+
+test("contact: no email address anywhere, the footer leads to a form that sends the message", async ({ page }) => {
+  // Pedro (2026-10-26): every contact goes through the form; only the shop conditions show an email, as the law asks.
+  for (const path of ["/", "/sobre", "/privacidade", "/cookies", "/contactos"]) {
+    await page.goto(path);
+    await expect(page.locator('a[href^="mailto:"]:not([href^="mailto:?"])'), path).toHaveCount(0);
+    expect(await page.locator("body").innerText(), path).not.toMatch(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
+  }
+  await page.goto("/");
+  await page.getByRole("contentinfo").getByRole("link", { name: "Fale connosco" }).click();
+  await expect(page).toHaveURL(/\/contactos\/?$/);
+  await page.getByRole("button", { name: "Enviar mensagem" }).click();
+  await expect(page.getByText("Falta corrigir alguns campos")).toBeVisible();
+  await page.getByLabel("Assunto").selectOption("adocao");
+  await page.getByLabel("O seu nome").fill("Ana Costa");
+  await page.getByLabel("Email", { exact: true }).fill("ana@example.pt");
+  await page.getByLabel("Mensagem").fill("Olá! Posso visitar o gatil no sábado?");
+  await page.getByText("Aceito que a associação use estes dados para me responder").click();
+  await page.getByRole("button", { name: "Enviar mensagem" }).click();
+  await expect(page.getByText("Mensagem enviada. Obrigado!")).toBeVisible();
+});
+
+test("contact: the privacy page opens the form with the data topic chosen", async ({ page }) => {
+  await page.goto("/privacidade");
+  await page.getByRole("main").getByRole("link", { name: "formulário de contacto" }).first().click();
+  await expect(page).toHaveURL(/\/contactos\/?\?assunto=dados$/);
+  await expect(page.getByLabel("Assunto")).toHaveValue("dados");
 });
 
 test("shop: choose a size, put it in the basket, order and see how to pay", async ({ page }) => {

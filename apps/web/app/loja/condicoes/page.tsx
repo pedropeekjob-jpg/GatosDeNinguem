@@ -2,7 +2,7 @@ import { COMPLAINTS_BOOK_URL, disputeBodies, REFUND_DAYS, WITHDRAWAL_DAYS } from
 import { Container, Notice } from "@gn/ui";
 import { LegalDraftNotice } from "@/components/LegalDraftNotice";
 import { PageHero } from "@/components/PageHero";
-import { association } from "@/lib/association";
+import { association, contactHref } from "@/lib/association";
 import { getShopSummary } from "@/lib/content";
 import { buildMetadata } from "@/lib/seo";
 
@@ -33,7 +33,8 @@ export default async function ShopConditionsPage() {
           <h2 id="quem-vende">Quem vende</h2>
           <p>
             {association.name}, NIF {association.nif}, associação sem fins lucrativos de Viana do Castelo.
-            Contacto: <a href={`mailto:${association.email}`}>{association.email}</a>.
+            Morada: {association.gatil.lines.join(", ")}.
+            Contacto: <a href={contactHref("loja")}>formulário de contacto</a> (assunto «Loja solidária») ou {association.shopLegalEmail}.
           </p>
 
           <h2 id="precos">Preços</h2>
@@ -55,7 +56,7 @@ export default async function ShopConditionsPage() {
           <h2 id="desistir">Pode desistir em {WITHDRAWAL_DAYS} dias</h2>
           <p>
             Tem {WITHDRAWAL_DAYS} dias para desistir da compra, sem dar razões, contados a partir do dia em que recebe ou levanta os artigos.
-            Basta dizer-nos, por email ou telefone, ou enviar-nos a declaração abaixo.
+            Basta dizer-nos pelo <a href={contactHref("loja")}>formulário de contacto</a> ou por email, ou enviar-nos a declaração abaixo.
             Devolvemos o dinheiro que pagou, incluindo os portes de envio normais, no prazo de {REFUND_DAYS} dias depois de nos avisar,
             pelo mesmo meio que usou para pagar. Podemos esperar até recebermos os artigos de volta.
             Tem de devolver os artigos em {WITHDRAWAL_DAYS} dias, no gatil, numa banca ou pelo correio; neste caso os portes da devolução são por sua conta.
@@ -64,7 +65,7 @@ export default async function ShopConditionsPage() {
           <Notice tone="info" title="Declaração de desistência">
             <p className="small">Copie, preencha e envie-nos, se quiser usar este modelo:</p>
             <p className="small">
-              Para {association.name}, {association.email}:<br />
+              Para {association.name}, {association.gatil.lines.join(", ")}, {association.shopLegalEmail}:<br />
               Comunico que desisto do contrato de compra dos seguintes bens: …<br />
               Pedido n.º … , recebido em … .<br />
               Nome: … · Morada: … · Data: … · Assinatura (só se for em papel): …
@@ -79,7 +80,7 @@ export default async function ShopConditionsPage() {
 
           <h2 id="reclamacoes">Reclamações</h2>
           <p>
-            Fale primeiro connosco: <a href={`mailto:${association.email}`}>{association.email}</a>.
+            Fale primeiro connosco pelo <a href={contactHref("reclamacao")}>formulário de contacto</a>, com o assunto «Reclamação».
             Também pode usar o <a href={COMPLAINTS_BOOK_URL} rel="noopener">Livro de Reclamações Eletrónico</a>.
           </p>
           <p>Se não chegarmos a acordo, pode recorrer a uma entidade de resolução alternativa de litígios de consumo:</p>
