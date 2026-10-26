@@ -23,32 +23,38 @@ const req = (method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE", url: string, p
 const buyer = { name: "Helena Castro", phone: "912 000 011", delivery: "levantar", payment: "mbway", consent: true };
 
 describe("public shop", () => {
-  it("lists articles on sale with price, cost and stock, so everyone sees where the money goes", async () => {
+  it("lists the gifts with their minimum donation, cost and stock, so everyone sees where the money goes", async () => {
     const res = await req("GET", "/loja/artigos");
     const caneca = res.json().find((p: { slug: string }) => p.slug === "caneca-gato-a-piscar-o-olho");
-    expect(caneca).toMatchObject({ priceCents: 900, costCents: 350, stock: 12 });
+    expect(caneca).toMatchObject({ minDonationCents: 900, costCents: 350, stock: 12 });
   });
 
   it("shows how much the shop raised this year and what it paid for", async () => {
     const res = await req("GET", "/loja/resumo");
-    expect(res.json().transparency).toMatchObject({ year: 2026, salesCents: 11100, spentCents: 6800 });
+    expect(res.json().transparency).toMatchObject({ year: 2026, donationsCents: 11600, spentCents: 6800 });
     expect(res.json().settings.iban).toMatch(/^PT50/);
   });
 
-  it("reserves articles, answers with a code and how to pay, and takes them out of stock", async () => {
-    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-tshirt", variant: "L", quantity: 2 }, { productId: "art-caneca", quantity: 1 }] });
+  it("reserves the gifts for a donation, answers with a code and how to pay, and takes them out of stock", async () => {
+    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-tshirt", variant: "L", quantity: 2 }, { productId: "art-caneca", quantity: 1 }], amountCents: 4500 });
     expect(res.statusCode).toBe(201);
-    expect(res.json()).toMatchObject({ totalCents: 3900, payment: "mbway", code: expect.stringMatching(/^L-/) });
+    expect(res.json()).toMatchObject({ totalCents: 4500, payment: "mbway", code: expect.stringMatching(/^L-/) });
     expect(res.json().settings.pickup).toBeTruthy();
     const tshirt = (await req("GET", "/loja/artigos/t-shirt-gatos-de-ninguem")).json();
     expect(tshirt.variants.find((v: { label: string }) => v.label === "L").stock).toBe(2);
     expect(refreshed).toContain("loja");
     const orders = (await req("GET", "/loja/gestao/pedidos", undefined, true)).json();
-    expect(orders[0]).toMatchObject({ name: "Helena Castro", status: "novo", totalCents: 3900 });
+    expect(orders[0]).toMatchObject({ name: "Helena Castro", status: "novo", totalCents: 4500 });
   });
 
-  it("explains when an article ran out", async () => {
-    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-saco", quantity: 5 }] });
+  it("refuses a donation below the minimum of the chosen gifts", async () => {
+    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-caneca", quantity: 2 }], amountCents: 1000 });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().message).toMatch(/donativo mínimo é 18\s€/);
+  });
+
+  it("explains when a gift ran out", async () => {
+    const res = await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-saco", quantity: 5 }], amountCents: 4000 });
     expect(res.statusCode).toBe(409);
     expect(res.json().message).toBe("Só há 2 de Saco de pano «Adote, não compre». Diminua a quantidade, por favor.");
   });
@@ -84,7 +90,7 @@ describe("back office", () => {
   });
 
   it("adds an article and refuses a cost above the price", async () => {
-    const article = { slug: "iman-gato", name: "Íman de frigorífico", category: "casa", priceCents: 300, costCents: 50, photos: [{ url: "/loja/caneca.svg", alt: "Íman com um gato" }], stock: 20 };
+    const article = { slug: "iman-gato", name: "Íman de frigorífico", category: "casa", minDonationCents: 300, costCents: 50, photos: [{ url: "/loja/caneca.svg", alt: "Íman com um gato" }], stock: 20 };
     const res = await req("POST", "/loja/gestao/artigos", article, true);
     expect(res.statusCode).toBe(201);
     expect(res.json()).toMatchObject({ active: true, donated: false, variants: [] });
@@ -98,7 +104,7 @@ describe("back office", () => {
     expect(paid.json()).toMatchObject({ status: "pago", paidAt: "2026-11-01T09:00:00.000Z", teamNote: "MB WAY recebido" });
 
     const before = (await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock;
-    const placed = (await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-caneca", quantity: 3 }] })).json();
+    const placed = (await req("POST", "/loja/pedidos", { ...buyer, items: [{ productId: "art-caneca", quantity: 3 }], amountCents: 2700 })).json();
     const order = (await req("GET", "/loja/gestao/pedidos", undefined, true)).json().find((o: { code: string }) => o.code === placed.code);
     await req("PATCH", `/loja/gestao/pedidos/${order.id}`, { status: "cancelado" }, true);
     expect((await req("GET", "/loja/artigos/caneca-gato-a-piscar-o-olho")).json().stock).toBe(before);
@@ -106,11 +112,13 @@ describe("back office", () => {
     expect(revive.statusCode).toBe(409);
   });
 
-  it("records a sale at a stand, which counts in the year's total", async () => {
-    const before = (await req("GET", "/loja/resumo")).json().transparency.salesCents;
+  it("records a donation at a stand, which counts in the year's total", async () => {
+    const before = (await req("GET", "/loja/resumo")).json().transparency.donationsCents;
     const res = await req("POST", "/loja/gestao/pedidos", { items: [{ productId: "art-calendario", quantity: 2 }] }, true);
     expect(res.json()).toMatchObject({ status: "entregue", inPerson: true, totalCents: 2000 });
-    expect((await req("GET", "/loja/resumo")).json().transparency.salesCents).toBe(before + 2000);
+    expect((await req("GET", "/loja/resumo")).json().transparency.donationsCents).toBe(before + 2000);
+    const more = await req("POST", "/loja/gestao/pedidos", { items: [{ productId: "art-calendario", quantity: 1 }], amountCents: 2500 }, true);
+    expect(more.json()).toMatchObject({ totalCents: 2500 });
   });
 
   it("adds and removes what the money paid for", async () => {
