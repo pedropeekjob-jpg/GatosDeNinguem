@@ -450,9 +450,9 @@ function Accounts({ today }: { today: Date }) {
 function Settings({ initial }: { initial: ShopSettings }) {
   const api = useApi();
   const qc = useQueryClient();
-  const [s, setS] = useState({ address: initial.address ?? "", hours: initial.hours ?? "" });
+  const [s, setS] = useState({ address: initial.address ?? "", landmark: initial.landmark ?? "", hours: initial.hours ?? "" });
   const save = useMutation({
-    mutationFn: () => api.saveShopSettings({ address: s.address.trim() || undefined, hours: s.hours.trim() || undefined }),
+    mutationFn: () => api.saveShopSettings({ address: s.address.trim() || undefined, landmark: s.landmark.trim() || undefined, hours: s.hours.trim() || undefined }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["shop-summary"] }),
   });
   return (
@@ -460,6 +460,7 @@ function Settings({ initial }: { initial: ShopSettings }) {
       <h2>A loja física</h2>
       <p className="muted">Aparece no site, na página da loja e em cada artigo. Enquanto estiver em branco, o site diz que a morada e o horário vêm em breve.</p>
       <TextField id="d-morada" label="Morada da loja" hint="Rua, número, código postal e localidade. O site mostra um botão «Como chegar» que abre o Google Maps." value={s.address} onChange={(e) => setS({ ...s, address: e.target.value })} />
+      <TextField id="d-referencia" label="Como encontrar (opcional)" hint="Um ponto de referência que aparece debaixo da morada, por exemplo: Em frente à Prio." value={s.landmark} onChange={(e) => setS({ ...s, landmark: e.target.value })} />
       <TextArea id="d-horario" label="Horário" hint="Uma linha por dia ou grupo de dias, por exemplo: Sábados, 10h às 13h." rows={3} value={s.hours} onChange={(e) => setS({ ...s, hours: e.target.value })} />
       {save.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(save.error)}</Notice> : null}
       {save.isSuccess ? <p role="status">Guardado</p> : null}

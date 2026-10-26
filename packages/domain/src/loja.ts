@@ -322,6 +322,8 @@ export function shopTransparency(orders: ShopOrder[], spending: ShopSpending[], 
 /** Where the shop is and when it opens, edited in the back office. Until they are set, the site says they are coming soon. */
 export const shopSettingsSchema = z.object({
   address: z.string().trim().max(200).optional(),
+  /** A landmark that helps people find the door, e.g. "Em frente à Prio". Shown under the address, not sent to the map. */
+  landmark: z.string().trim().max(120).optional(),
   /** One line per day or group of days, e.g. "Sábados, 10h às 13h". */
   hours: z.string().trim().max(500).optional(),
 });

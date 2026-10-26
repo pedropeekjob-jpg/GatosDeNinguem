@@ -19,6 +19,15 @@ describe("ShopVisit", () => {
     expect(screen.getByText(/Domingos, fechado/)).toBeInTheDocument();
   });
 
+  it("shows the landmark under the address but leaves it out of the map search", () => {
+    render(<ShopVisit settings={{ address: "Rua da Estação 134, Barroselas, Viana do Castelo", landmark: "Em frente à Prio" }} />);
+    expect(screen.getByText("Em frente à Prio")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Como chegar (Google Maps)" })).toHaveAttribute(
+      "href",
+      "https://www.google.com/maps/dir/?api=1&destination=Rua%20da%20Esta%C3%A7%C3%A3o%20134%2C%20Barroselas%2C%20Viana%20do%20Castelo",
+    );
+  });
+
   it("still says the hours are coming when only the address is known", () => {
     render(<ShopVisit settings={{ address: "Rua da Bandeira 10" }} />);
     expect(screen.getByText("Em breve dizemos aqui o horário.")).toBeInTheDocument();

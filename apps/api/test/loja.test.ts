@@ -29,10 +29,10 @@ describe("public shop", () => {
     expect(caneca).toMatchObject({ minDonationCents: 900, costCents: 350, stock: 12 });
   });
 
-  it("shows how much the shop raised this year, what it paid for, and nothing about where it is until the team says", async () => {
+  it("shows how much the shop raised this year, what it paid for, and where the shop is", async () => {
     const res = await req("GET", "/loja/resumo");
     expect(res.json().transparency).toMatchObject({ year: 2026, donationsCents: 11600, spentCents: 6800 });
-    expect(res.json().settings).toEqual({});
+    expect(res.json().settings).toEqual({ address: "Rua da Estação 134, Barroselas, Viana do Castelo", landmark: "Em frente à Prio" });
   });
 
   it("takes no orders online: the site only shows the articles", async () => {

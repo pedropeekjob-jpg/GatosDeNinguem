@@ -93,7 +93,7 @@ describe.runIf(Boolean(url))("PrismaContentRepository", () => {
     expect((await repo.listShopOrders())[0]?.code).toBe("L-7K3Q");
     expect((await repo.listShopSpending()).map((s) => s.id)).toEqual(["gasto-2", "gasto-1"]);
     expect((await repo.listItemDonations())[0]?.status).toBe("nova");
-    expect(await repo.getShopSettings()).toEqual({});
+    expect((await repo.getShopSettings()).landmark).toBe("Em frente à Prio");
   });
 
   it("stores cat alert sign-ups by email or device, and one alert per cat", async () => {

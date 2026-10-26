@@ -9,7 +9,7 @@ export const directionsUrl = (address: string) => `https://www.google.com/maps/d
  * Until they are known, it says so instead of showing empty lines.
  */
 export function ShopVisit({ settings }: { settings: ShopSettings }) {
-  const { address, hours } = settings;
+  const { address, landmark, hours } = settings;
   if (!address && !hours) {
     return <p className="shop-visit">Estamos a preparar a loja. Em breve dizemos aqui a morada e o horário.</p>;
   }
@@ -19,7 +19,7 @@ export function ShopVisit({ settings }: { settings: ShopSettings }) {
         <div>
           <dt>Morada</dt>
           <dd className="gn-stack gn-stack--s">
-            <span>{address}</span>
+            <span>{address}{landmark ? <><br /><span className="muted">{landmark}</span></> : null}</span>
             <span className="action-row"><Button href={directionsUrl(address)} target="_blank" rel="noopener" icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>}>Como chegar (Google Maps)</Button></span>
           </dd>
         </div>

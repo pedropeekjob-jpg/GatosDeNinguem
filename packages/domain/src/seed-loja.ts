@@ -82,8 +82,8 @@ export const seedShopSpending: ShopSpending[] = [
   { id: "gasto-2", date: "2026-10-15", description: "Vacinas da Estrela e do Tobias", amountCents: 3000 },
 ];
 
-// The shop's address and opening hours are not known yet: the team adds them in the back office.
-export const seedShopSettings: ShopSettings = {};
+// Address given by Pedro on 2026-10-26. Opening hours are not known yet: the team adds them in the back office.
+export const seedShopSettings: ShopSettings = { address: "Rua da Estação 134, Barroselas, Viana do Castelo", landmark: "Em frente à Prio" };
 
 export const seedItemDonations: StoredItemDonation[] = [
   { id: "doa-1", what: "Caixa com 10 livros infantis e 2 puzzles completos", category: "livros", condition: "como-novo", handover: "entrego", name: "Inês Faria", phone: "914000013", town: "Darque", consent: true, receivedAt: "2026-10-21T11:00:00.000Z", status: "nova" },
