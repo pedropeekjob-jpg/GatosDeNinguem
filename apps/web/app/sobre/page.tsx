@@ -15,13 +15,14 @@ export async function generateMetadata() {
 export default async function AboutPage() {
   const [page, impact] = await Promise.all([getPage("/sobre"), getImpact()]);
   return (
-    <div className="about-page">
-      <ParallaxLogo />
+    <>
       <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Sobre nós" }]} />
       <Container>
         <TeamBanner photo={teamPhoto} />
       </Container>
-      <Container narrow>
+      <div className="story">
+        <ParallaxLogo />
+        <Container narrow>
         <div className="gn-stack gn-stack--m">
           <h2>A nossa missão</h2>
           <ul className="gn-stack gn-stack--s">
@@ -42,7 +43,8 @@ export default async function AboutPage() {
             <Button href="/finais-felizes" variant="secondary">Ver finais felizes</Button>
           </div>
         </div>
-      </Container>
+        </Container>
+      </div>
       <Section tone="ink" heading="O nosso trabalho em números" intro={<>Atualizado a <When iso={impact.updatedAt} />.</>}>
         <div className="stats">
           <StatTile value={impact.catsInShelter} label="gatos no gatil hoje" />
@@ -57,6 +59,6 @@ export default async function AboutPage() {
           </div>
         ) : null}
       </Section>
-    </div>
+    </>
   );
 }
