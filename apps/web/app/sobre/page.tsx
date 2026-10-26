@@ -1,4 +1,4 @@
-import { Button, Container, ProgressMeter, Section, StatTile } from "@gn/ui";
+import { AnimatedLogo, Button, Container, ProgressMeter, Section, StatTile } from "@gn/ui";
 import { PageHero } from "@/components/PageHero";
 import { getImpact, getPage } from "@/lib/content";
 import { When } from "@/components/When";
@@ -15,7 +15,11 @@ export default async function AboutPage() {
   const [page, impact] = await Promise.all([getPage("/sobre"), getImpact()]);
   return (
     <>
-      <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Sobre nós" }]} />
+      <div className="about-top">
+        {/* The logo's cat plays once behind the title, faint, as a backdrop. Purely decorative; still for people who ask for less motion. */}
+        <div className="about-top__logo" aria-hidden="true"><AnimatedLogo size={520} /></div>
+        <PageHero heading={page.heading} intro={page.intro} crumbs={[{ href: "/", label: "Início" }, { label: "Sobre nós" }]} />
+      </div>
       <Container>
         <TeamBanner photo={teamPhoto} />
       </Container>

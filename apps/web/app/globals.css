@@ -570,3 +570,9 @@ main:has(> .gn-section--soft:last-child) + .site-footer { margin-top: 0; }
     box-shadow: 0 1px 2px rgb(28 26 27 / .06), 0 10px 30px rgb(28 26 27 / .12);
   }
 }
+
+/* Sobre nós: the animated logo as a faint backdrop behind the page title (right side; behind the text on phones). */
+.about-top { position: relative; overflow: hidden; isolation: isolate; }
+.about-top__logo { position: absolute; z-index: -1; pointer-events: none; opacity: 0.09; top: 0.5rem; right: -3rem; width: min(17rem, 70vw); }
+.about-top__logo svg { display: block; width: 100%; height: auto; }
+@media (min-width: 60rem) { .about-top__logo { right: max(1rem, calc((100vw - 72rem) / 2 + 1.25rem)); top: 0.75rem; width: 12.5rem; opacity: 0.08; } }
