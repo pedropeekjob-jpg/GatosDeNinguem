@@ -1,4 +1,5 @@
 import type { Product, ShopOrder, ShopSettings, ShopSpending, StoredItemDonation } from "./loja";
+import { seedProductTranslations } from "./seed-traducoes";
 
 const now = "2026-10-20T10:00:00.000Z";
 
@@ -54,6 +55,7 @@ export const seedProducts: Product[] = [
     variants: [], stock: 0, active: true, updatedAt: now,
   },
 ];
+for (const p of seedProducts) p.translations = (seedProductTranslations as Record<string, Product["translations"]>)[p.id];
 
 export const seedShopOrders: ShopOrder[] = [
   {

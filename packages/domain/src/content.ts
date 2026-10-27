@@ -1,6 +1,19 @@
 import { z } from "zod";
 import { seoFieldsSchema, slugSchema } from "./seo-fields";
 
+/** The languages the public site is shown in besides Portuguese (the original of every text). */
+export const translationLangSchema = z.enum(["en", "es", "fr"]);
+export type TranslationLang = z.infer<typeof translationLangSchema>;
+
+/**
+ * A record's texts in the other languages. Every language and every field is optional: whatever has no
+ * translation is shown in Portuguese. `auto`: translated by a machine and not yet checked by the team.
+ */
+export function translationsSchema<T extends z.ZodRawShape>(fields: T) {
+  const one = z.object(fields).partial().extend({ auto: z.boolean().optional() });
+  return z.object({ en: one.optional(), es: one.optional(), fr: one.optional() }).optional();
+}
+
 export const catStatusSchema = z.enum(["a-recuperar", "para-adocao", "reservado", "adotado"]);
 export type CatStatus = z.infer<typeof catStatusSchema>;
 
@@ -48,6 +61,7 @@ export const catSchema = z.object({
     })
     .optional(),
   seo: seoFieldsSchema.default({}),
+  translations: translationsSchema({ summary: z.string().max(200), story: z.string(), traits: z.array(z.string()), specialNeeds: z.string(), happyEndingText: z.string() }),
   updatedAt: z.string().datetime(),
 });
 export type Cat = z.infer<typeof catSchema>;
@@ -91,6 +105,7 @@ export const pageSchema = z.object({
   /** Only on the home page: the strolling cat's settings, for the whole site. */
   strollingCat: strollingCatSettingsSchema.default(defaultStrollingCatSettings),
   seo: seoFieldsSchema.default({}),
+  translations: translationsSchema({ heading: z.string(), intro: z.string() }),
   updatedAt: z.string().datetime(),
 });
 export type Page = z.infer<typeof pageSchema>;
@@ -129,6 +144,7 @@ export const postSchema = z.object({
   /** Only for category "evento". */
   event: postEventSchema.optional(),
   seo: seoFieldsSchema.default({}),
+  translations: translationsSchema({ title: z.string().max(120), summary: z.string().max(240), body: z.string(), ctaLabel: z.string() }),
   updatedAt: z.string().datetime(),
 });
 export type Post = z.infer<typeof postSchema>;
@@ -172,6 +188,7 @@ export const perkSchema = z.object({
   patinhasCost: z.number().int().positive().optional(),
   minLevel: z.number().int().min(1).max(5).optional(),
   monthlyLimitPerPerson: z.number().int().positive().optional(),
+  translations: translationsSchema({ description: z.string() }),
 });
 export type Perk = z.infer<typeof perkSchema>;
 
@@ -186,6 +203,7 @@ export const partnerSchema = z.object({
   logo: photoSchema.optional(),
   why: z.string().max(280).optional(),
   perks: z.array(perkSchema).default([]),
+  translations: translationsSchema({ why: z.string().max(280) }),
   active: z.boolean().default(true),
   since: z.string().datetime(),
 });
@@ -228,6 +246,7 @@ export const impactSchema = z.object({
       goal: z.number().positive(),
       unit: z.string(),
       href: z.string(),
+      translations: translationsSchema({ title: z.string(), unit: z.string() }),
     })
     .optional(),
   /** Shown under the numbers so visitors know how fresh they are. */

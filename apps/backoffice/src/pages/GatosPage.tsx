@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ageLabel, formatDate, formatMonthYear, statusLabel, type CatStatus } from "@gn/domain";
 import { Badge, Button, Checkbox, ChoiceList, Notice, TextArea, TextField } from "@gn/ui";
 import { PhotoManager } from "../components/PhotoManager";
+import { TranslationsPanel, type Translations } from "../components/TranslationsPanel";
 import { errorMessage, useApi } from "../lib/api";
 import { photoSrc } from "../lib/photos";
 import { slugify } from "../lib/slug";
@@ -64,6 +65,7 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
     photos: cat?.photos ?? [],
     // A new cat has usually just arrived.
     arrivedAt: cat ? cat.arrivedAt ?? "" : new Date().toISOString().slice(0, 10),
+    translations: cat?.translations as Translations | undefined,
   });
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
 
@@ -94,6 +96,7 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
         listedAt: cat?.listedAt,
         adoptedAt: cat?.adoptedAt,
         happyEnding: cat?.happyEnding,
+        translations: f.translations as CatInput["translations"],
       };
       return cat ? api.updateCat(cat.id, input) : api.createCat(input);
     },
@@ -131,6 +134,18 @@ function CatForm({ cat, onClose }: { cat?: Cat; onClose: () => void }) {
       <Checkbox id="c-ster" label="Esterilizado" checked={f.sterilized} onChange={(v) => set("sterilized", v)} />
       <Checkbox id="c-vac" label="Vacinado" checked={f.vaccinated} onChange={(v) => set("vaccinated", v)} />
       <Checkbox id="c-chip" label="Com chip" checked={f.microchipped} onChange={(v) => set("microchipped", v)} />
+      <TranslationsPanel
+        id="c-tr"
+        fields={[
+          { key: "summary", label: "Resumo" },
+          { key: "story", label: "História", long: true },
+          { key: "traits", label: "Características", list: true },
+          ...(f.specialNeeds ? [{ key: "specialNeeds", label: "Cuidados especiais" }] : []),
+          ...(cat?.happyEnding?.text ? [{ key: "happyEndingText", label: "Final feliz", long: true }] : []),
+        ]}
+        value={f.translations}
+        onChange={(t) => set("translations", t)}
+      />
       {save.isError ? <Notice tone="error" title="Não foi guardado">{errorMessage(save.error)}</Notice> : null}
       <div><Button type="submit" disabled={save.isPending}>{save.isPending ? "A guardar…" : "Guardar gato"}</Button></div>
     </form>

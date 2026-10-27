@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { photoSchema } from "./content";
+import { photoSchema, translationsSchema } from "./content";
 import { slugSchema } from "./seo-fields";
 
 /**
@@ -45,6 +45,7 @@ const productFields = {
   stock: z.number().int().min(0).default(0),
   /** Hidden from the site when false (kept for the order history). */
   active: z.boolean().default(true),
+  translations: translationsSchema({ name: z.string().max(80), description: z.string().max(1000) }),
 };
 
 /** Articles saved before the shop became donations-with-a-gift had a `priceCents`: it becomes the minimum donation. */

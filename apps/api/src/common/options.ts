@@ -3,6 +3,7 @@ import type { ContentRepository } from "../content/repository";
 import type { PhotoStore } from "../media/photo-store";
 import type { SponsorDebitProvider } from "../padrinhos/debit";
 import type { PatinhasRepository } from "../patinhas/repository";
+import type { Translator } from "../traducao/translator";
 
 export type ApiOptions = {
   repository: ContentRepository;
@@ -28,6 +29,8 @@ export type ApiOptions = {
   sponsorDebit?: SponsorDebitProvider;
   /** Emails a godparent news about their cat (Resend). Without it, the news is only in their area on the site. */
   sendSponsorEmail?: (to: { email: string; name: string }, message: { subject: string; text: string }) => Promise<void>;
+  /** Translates what the team writes into English, Spanish and French when it is saved (DeepL). Without it, texts stay in Portuguese. */
+  translator?: Translator;
   /** Public address of the site, used in links in promotions and emails (default: https://gatosdeninguem.pt). */
   siteUrl?: string;
   /** Signs newsletter unsubscribe links (default: the admin token). */

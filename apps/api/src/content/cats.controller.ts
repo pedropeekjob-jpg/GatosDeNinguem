@@ -1,10 +1,11 @@
 import { Body, Controller, Get, HttpCode, Inject, NotFoundException, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
-import { catInputSchema, catStatusSchema, publicHappyEnding, seoFieldsSchema, type Cat } from "@gn/domain";
+import { catInputSchema, catStatusSchema, catTranslationSpec, publicHappyEnding, seoFieldsSchema, type Cat } from "@gn/domain";
 import { randomUUID } from "node:crypto";
 import { CatAlertService } from "../alertas/cat-alert.service";
 import { AdminGuard } from "../common/admin.guard";
 import { API_OPTIONS, type ApiOptions } from "../common/options";
 import { parseBody } from "../common/validation";
+import { TranslationService } from "../traducao/translation.service";
 
 /** Public view of a cat: private adopter data is never sent. */
 function toPublic(cat: Cat) {
@@ -22,6 +23,7 @@ function stampDates(cat: Cat, now: string) {
 export class CatsController {
   constructor(@Inject(API_OPTIONS) private readonly options: ApiOptions, @Inject(CatAlertService) private readonly alerts: CatAlertService) {}
   private get repo() { return this.options.repository; }
+  private get translations() { return new TranslationService(this.options); }
 
   /** A cat put up for adoption for the first time: tell the people who asked. Saving never fails because of it. */
   private async announce(cat: Cat) {
@@ -58,7 +60,7 @@ export class CatsController {
   @UseGuards(AdminGuard)
   async create(@Body() body: unknown) {
     const input = parseBody(catInputSchema, body);
-    const cat: Cat = { ...input, id: randomUUID(), updatedAt: new Date().toISOString() };
+    const cat: Cat = await this.translations.fill(catTranslationSpec, { ...input, id: randomUUID(), updatedAt: new Date().toISOString() }, undefined, [input.name]);
     stampDates(cat, cat.updatedAt);
     await this.repo.saveCat(cat);
     await this.options.onContentChanged({ type: "cat", path: `/adotar/${cat.slug}` });
@@ -73,7 +75,7 @@ export class CatsController {
     if (!current) throw new NotFoundException("Gato não encontrado.");
     const changes = parseBody(catInputSchema.partial(), body);
     const now = new Date().toISOString();
-    const next: Cat = { ...current, ...changes, updatedAt: now };
+    const next: Cat = await this.translations.fill(catTranslationSpec, { ...current, ...changes, updatedAt: now }, current, [changes.name ?? current.name]);
     stampDates(next, now);
     await this.repo.saveCat(next);
     await this.options.onContentChanged({ type: "cat", path: `/adotar/${next.slug}` });

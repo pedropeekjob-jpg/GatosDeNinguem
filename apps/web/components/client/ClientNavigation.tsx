@@ -8,6 +8,8 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 function internalPath(a: HTMLAnchorElement): string | null {
   if (a.target && a.target !== "_self") return null;
   if (a.hasAttribute("download") || a.getAttribute("rel")?.includes("external")) return null;
+  // A link to another language (the language menu, the footer) loads the whole page in that language.
+  if (a.hasAttribute("hreflang")) return null;
   const url = new URL(a.href, location.href);
   if (url.origin !== location.origin) return null;
   let path = url.pathname;

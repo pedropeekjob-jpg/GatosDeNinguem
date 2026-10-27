@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useUiText } from "./UiText";
 
 export interface CarouselSlide { src: string; alt: string; caption?: string }
 
@@ -25,6 +26,7 @@ const wideScreen = () => typeof window !== "undefined" && !!window.matchMedia?.(
 export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6, hero = false }: CarouselProps) {
   const track = useRef<HTMLUListElement>(null);
   const [index, setIndex] = useState(0);
+  const text = useUiText();
   const [playing, setPlaying] = useState(false);
   const [held, setHeld] = useState(false); // pointer over it or keyboard focus inside: never move under someone's hand
   const count = slides.length;
@@ -54,7 +56,7 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6,
   return (
     <section
       className={hero ? "gn-carousel gn-carousel--hero" : "gn-carousel"}
-      aria-roledescription="carrossel"
+      aria-roledescription={text.carousel}
       aria-label={label}
       onPointerEnter={() => setHeld(true)}
       onPointerLeave={() => setHeld(false)}
@@ -62,9 +64,9 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6,
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setHeld(false); }}
     >
       {/* Focusable so the photos can be scrolled with the arrow keys. */}
-      <ul ref={track} className="gn-carousel__track" onScroll={onScroll} tabIndex={0} aria-label="Fotografias">
+      <ul ref={track} className="gn-carousel__track" onScroll={onScroll} tabIndex={0} aria-label={text.photos}>
         {slides.map((s, i) => (
-          <li key={`${s.src}-${i}`} className={i === index ? "gn-carousel__slide is-active" : "gn-carousel__slide"} aria-roledescription="diapositivo" aria-label={`${i + 1} de ${count}`} aria-hidden={i !== index ? true : undefined}>
+          <li key={`${s.src}-${i}`} className={i === index ? "gn-carousel__slide is-active" : "gn-carousel__slide"} aria-roledescription={text.slide} aria-label={text.slideOf(i + 1, count)} aria-hidden={i !== index ? true : undefined}>
             <img src={s.src} alt={s.alt} loading={i === 0 ? "eager" : "lazy"} fetchPriority={hero && i === 0 ? "high" : undefined} />
             {s.caption ? <p className="gn-carousel__caption">{s.caption}</p> : null}
           </li>
@@ -72,15 +74,15 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6,
       </ul>
       {count > 1 ? (
         <div className="gn-carousel__controls">
-          <button type="button" className="gn-carousel__btn" onClick={() => go(index - 1)} aria-label="Fotografia anterior">
+          <button type="button" className="gn-carousel__btn" onClick={() => go(index - 1)} aria-label={text.previousPhoto}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
           </button>
           <span className="gn-carousel__count" aria-live={playing ? "off" : "polite"}>{index + 1} / {count}</span>
-          <button type="button" className="gn-carousel__btn" onClick={() => go(index + 1)} aria-label="Fotografia seguinte">
+          <button type="button" className="gn-carousel__btn" onClick={() => go(index + 1)} aria-label={text.nextPhoto}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
           </button>
           {autoplay ? (
-            <button type="button" className="gn-carousel__btn gn-carousel__btn--play" onClick={() => setPlaying(!playing)} aria-label={playing ? "Parar a passagem automática" : "Passar automaticamente"}>
+            <button type="button" className="gn-carousel__btn gn-carousel__btn--play" onClick={() => setPlaying(!playing)} aria-label={playing ? text.stopAutoplay : text.startAutoplay}>
               {playing
                 ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12" /></svg>
                 : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor" /></svg>}
@@ -93,7 +95,7 @@ export function Carousel({ slides, label, autoplay = false, intervalSeconds = 6,
       {count > 1 ? (
         <div className="gn-carousel__dots">
           {slides.map((s, i) => (
-            <button key={`${s.src}-${i}`} type="button" className="gn-carousel__dot" onClick={() => go(i)} aria-label={`Fotografia ${i + 1} de ${count}`} aria-current={i === index ? true : undefined}>
+            <button key={`${s.src}-${i}`} type="button" className="gn-carousel__dot" onClick={() => go(i)} aria-label={text.photoOf(i + 1, count)} aria-current={i === index ? true : undefined}>
               <span aria-hidden="true" />
             </button>
           ))}

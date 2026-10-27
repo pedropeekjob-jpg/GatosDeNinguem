@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ageLabel } from "@gn/domain";
 import { Button } from "@gn/ui";
 import { nextWalkIn, pickCat, STROLL_QUIET, type StrollState } from "@/lib/passeio";
-import { QUIET_PAGES, type NewCat } from "./CatAlerts";
+import { splitLang } from "@/lib/i18n/config";
+import { useI18n } from "@/lib/i18n/client";
+import { ageLabel, sexLabel } from "@/lib/i18n/labels";
+import { isQuietPage, type NewCat } from "./CatAlerts";
 import sprites from "../../public/gato/acoes.json";
 
 const VISIT_KEY = "gn-passeio";
@@ -60,6 +62,7 @@ function saveVisit(changes: Partial<StrollState>) {
  * to concentrate, and never for people who asked their device for less motion.
  */
 export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeconds?: number }) {
+  const { lang, t, l } = useI18n();
   const pathname = usePathname();
   const [cat, setCat] = useState<NewCat>();
   const [phase, setPhase] = useState<Phase>("away");
@@ -120,7 +123,7 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
     const state = readState();
     const wait = preview ? 500 : nextWalkIn(state, Date.now(), everySeconds ? everySeconds * 1000 : undefined);
     if (wait === null) return;
-    const quiet = () => QUIET_PAGES.some((r) => r.test(window.location.pathname)) || STROLL_QUIET.some((r) => r.test(window.location.pathname));
+    const quiet = () => isQuietPage(pathname) || STROLL_QUIET.some((r) => r.test(splitLang(pathname)[1]));
     const busy = () => !!document.querySelector("dialog[open]") || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "") || document.visibilityState !== "visible";
     let timer: ReturnType<typeof setTimeout>;
     const start = () => {
@@ -184,6 +187,8 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
   const runner = <div className={`stroll-rug${rug.open ? " stroll-rug--open" : ""}`} style={{ width: rug.width }} aria-hidden="true" />;
   const female = cat.sex === "femea";
   const name = cat.name;
+  const hello = t({ pt: `Olá, sou ${female ? "a" : "o"} ${name}`, en: `Hi, I’m ${name}`, es: `Hola, soy ${name}`, fr: `Bonjour, je suis ${name}` });
+  const meet = t({ pt: `Conhecer ${female ? "a" : "o"} ${name}`, en: `Meet ${name}`, es: `Conocer a ${name}`, fr: `Découvrir ${name}` });
   const action = ({ in: "walk", out: "walk", turn: "turn", bonk: "bonk", leaving: "leave", lie: "lie", purr: "purr", stand: "stand", rise: "lie" } as const)[phase];
   const { frames, seconds, loop } = sprites.actions[action];
   const lying = phase === "lie" || phase === "purr";
@@ -216,24 +221,24 @@ export function StrollingCat({ cats, everySeconds }: { cats: NewCat[]; everySeco
       onPointerEnter={(e) => { if (e.pointerType === "mouse" && card === "hover") clear(); }}
     >
       {card !== "closed" ? (
-        <div className="stroll__card" id={cardId} role="dialog" aria-label={`${name}, para adoção`}>
+        <div className="stroll__card" id={cardId} role="dialog" aria-label={t({ pt: `${name}, para adoção`, en: `${name}, for adoption`, es: `${name}, en adopción`, fr: `${name}, à l’adoption` })}>
           <img className="stroll__photo" src={cat.photo.url} alt={cat.photo.alt} />
           <div className="stroll__info">
             <p className="stroll__name">{name}</p>
-            <p className="stroll__meta">{ageLabel(cat.ageYears)} · {female ? "Fêmea" : "Macho"}</p>
+            <p className="stroll__meta">{ageLabel(lang, cat.ageYears)} · {sexLabel[lang][cat.sex]}</p>
             <p className="stroll__summary">{cat.summary}</p>
-            <Button href={`/adotar/${cat.slug}`} block onClick={close}>Conhecer {female ? "a" : "o"} {name}</Button>
-            <button type="button" className="stroll__later" onClick={notNow}>Agora não</button>
+            <Button href={l(`/adotar/${cat.slug}`)} block onClick={close}>{meet}</Button>
+            <button type="button" className="stroll__later" onClick={notNow}>{t({ pt: "Agora não", en: "Not now", es: "Ahora no", fr: "Pas maintenant" })}</button>
           </div>
-          <button type="button" className="stroll__close" aria-label="Fechar" onClick={close}>×</button>
+          <button type="button" className="stroll__close" aria-label={t({ pt: "Fechar", en: "Close", es: "Cerrar", fr: "Fermer" })} onClick={close}>×</button>
         </div>
       ) : settled ? (
-        <p className="stroll__bubble" aria-hidden="true">Olá, sou {female ? "a" : "o"} {name}</p>
+        <p className="stroll__bubble" aria-hidden="true">{hello}</p>
       ) : null}
       <button
         type="button"
         className="stroll__cat"
-        aria-label={`Olá, sou ${female ? "a" : "o"} ${name} e procuro família. Ver ${female ? "a" : "o"} ${name}`}
+        aria-label={t({ pt: `${hello} e procuro família. Ver ${female ? "a" : "o"} ${name}`, en: `${hello} and I’m looking for a home. See ${name}`, es: `${hello} y busco familia. Ver a ${name}`, fr: `${hello} et je cherche une famille. Voir ${name}` })}
         aria-expanded={card !== "closed"}
         aria-controls={card !== "closed" ? cardId : undefined}
         onPointerEnter={(e) => { if (e.pointerType === "mouse") open("hover"); }}

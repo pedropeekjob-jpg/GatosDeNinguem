@@ -62,6 +62,10 @@ export interface Api extends PatinhasApi, CuidadosApi, LojaApi, AlertasApi {
   redirects(): Promise<Redirect[]>;
   addRedirect(r: Omit<Redirect, "id">): Promise<Redirect>;
   deleteRedirect(id: string): Promise<void>;
+  /** Whether the API translates texts automatically when they are saved. */
+  translationStatus(): Promise<{ on: boolean; provider: string | null }>;
+  /** Translates every text that has no translation yet. */
+  fillTranslations(): Promise<{ on: boolean; updated: number }>;
 }
 
 export class ApiError extends Error {
@@ -125,6 +129,8 @@ export function httpApi(baseUrl: string, token: string): Api {
     addRedirect: (r) => call("POST", "/seo/redirects", r),
     deleteRedirect: (id) => call("DELETE", `/seo/redirects/${id}`),
     features: () => call("GET", "/features"),
+    translationStatus: () => call("GET", "/traducoes"),
+    fillTranslations: () => call("POST", "/traducoes/preencher"),
     ...patinhasHttp(call),
     ...cuidadosHttp(call),
     ...lojaHttp(call),

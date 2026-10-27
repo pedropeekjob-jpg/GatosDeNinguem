@@ -1,12 +1,15 @@
 "use client";
 import { useState, type ReactNode } from "react";
+import { useUiText } from "./UiText";
 
 /**
  * Share links that work without any third-party script: WhatsApp, Facebook,
  * email and copy-to-clipboard. Content-agnostic: pass any url and text.
  */
-export function ShareBar({ url, text, label = "Partilhar" }: { url: string; text: string; label?: string }) {
+export function ShareBar({ url, text, label: given }: { url: string; text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
+  const words = useUiText();
+  const label = given ?? words.share;
   const u = encodeURIComponent(url);
   const t = encodeURIComponent(text);
   async function copy() {
@@ -14,7 +17,7 @@ export function ShareBar({ url, text, label = "Partilhar" }: { url: string; text
       await navigator.clipboard.writeText(url);
       setCopied(true);
     } catch {
-      window.prompt?.("Copie este endereço:", url);
+      window.prompt?.(words.copyPrompt, url);
     }
   }
   return (
@@ -30,7 +33,7 @@ export function ShareBar({ url, text, label = "Partilhar" }: { url: string; text
         <a className="gn-share__icon" href={`mailto:?subject=${t}&body=${u}`} aria-label="Email" title="Email">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2" /><path d="m4 7 8 6 8-6" /></svg>
         </a>
-        <button type="button" className="gn-share__icon" onClick={copy} aria-label={copied ? "Copiado" : "Copiar endereço"} title={copied ? "Copiado" : "Copiar endereço"}>
+        <button type="button" className="gn-share__icon" onClick={copy} aria-label={copied ? words.copied : words.copyLink} title={copied ? words.copied : words.copyLink}>
           {copied ? (
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
           ) : (
@@ -38,7 +41,7 @@ export function ShareBar({ url, text, label = "Partilhar" }: { url: string; text
           )}
         </button>
       </div>
-      <p className="gn-sr-only" aria-live="polite">{copied ? "Endereço copiado" : ""}</p>
+      <p className="gn-sr-only" aria-live="polite">{copied ? words.linkCopied : ""}</p>
     </div>
   );
 }

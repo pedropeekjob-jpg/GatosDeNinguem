@@ -1,5 +1,7 @@
 "use client";
 import { catAlertSignupSchema, type CatAlertFilters } from "@gn/domain";
+import { documentLang } from "@/lib/i18n/client";
+import { translateError } from "@/lib/i18n/labels";
 
 /** "Avisem-me quando chegarem gatos": sign-up by email or by notifications on this device. */
 
@@ -12,8 +14,9 @@ export type AlertResult = { ok: true; demoConfirmUrl?: string } | { ok: false; m
 
 const fail = (message: string, issues: Issue[] = []): AlertResult => {
   const fieldErrors: Record<string, string> = {};
-  for (const i of issues) fieldErrors[String(i.path[0])] ??= i.message;
-  return { ok: false, message, fieldErrors };
+  const lang = documentLang();
+  for (const i of issues) fieldErrors[String(i.path[0])] ??= translateError(lang, i.message);
+  return { ok: false, message: translateError(lang, message), fieldErrors };
 };
 
 async function post(path: string, data: unknown): Promise<AlertResult> {

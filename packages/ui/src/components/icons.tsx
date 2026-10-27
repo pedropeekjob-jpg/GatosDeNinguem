@@ -24,6 +24,7 @@ export const IconPaw = () => (
   <Icon><ellipse cx="12" cy="16" rx="4.2" ry="3.5" /><circle cx="6" cy="11" r="1.7" /><circle cx="9.3" cy="6.8" r="1.7" /><circle cx="14.7" cy="6.8" r="1.7" /><circle cx="18" cy="11" r="1.7" /></Icon>
 );
 /** Three lines: the menu with every page. */
+export const IconGlobe = () => <Icon><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.2-3.6-8.5S9.6 5.9 12 3.5Z" /></Icon>;
 export const IconMenu = () => <Icon><path d="M4 7h16M4 12h16M4 17h16" /></Icon>;
 /** A small arrow: down for a menu that opens, right for a link to another page. */
 export const IconChevronDown = () => <Icon><path d="m6.5 9.5 5.5 5.5 5.5-5.5" /></Icon>;

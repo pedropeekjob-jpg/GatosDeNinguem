@@ -1,5 +1,7 @@
 "use client";
 import { adoptionInterestSchema, contactMessageSchema, fosterApplicationSchema, itemDonationSchema, newsletterSignupSchema, partnerApplicationSchema, sponsorshipRequestSchema, volunteerSignupInputSchema } from "@gn/domain";
+import { documentLang } from "@/lib/i18n/client";
+import { translateError } from "@/lib/i18n/labels";
 
 export type SubmitResult = { ok: true } | { ok: false; message: string; fieldErrors: Record<string, string> };
 
@@ -36,10 +38,12 @@ export async function requestSponsorship(data: unknown): Promise<SubmitResult & 
 type Issue = { path: (string | number)[]; message: string };
 type Schema = { safeParse(data: unknown): { success: true } | { success: false; error: { issues: Issue[] } } };
 
+/** The messages come from the shared rules in Portuguese; on the other languages' pages they are shown in that language. */
 const toResult = (message: string, issues: Issue[] = []): SubmitResult => {
+  const lang = documentLang();
   const fieldErrors: Record<string, string> = {};
-  for (const issue of issues) fieldErrors[String(issue.path[0])] ??= issue.message;
-  return { ok: false, message, fieldErrors };
+  for (const issue of issues) fieldErrors[String(issue.path[0])] ??= translateError(lang, issue.message);
+  return { ok: false, message: translateError(lang, message), fieldErrors };
 };
 
 async function postJson(url: string, data: unknown, schema: Schema): Promise<SubmitResult> {

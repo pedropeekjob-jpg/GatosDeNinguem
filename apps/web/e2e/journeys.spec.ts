@@ -873,3 +873,67 @@ test.describe("strolling cat", () => {
     await context.close();
   });
 });
+
+test.describe("other languages", () => {
+  const translated = ["/en", "/en/adotar", "/en/adotar/tobias", "/fr", "/fr/ajudar", "/fr/doar", "/es", "/es/adotar/descobrir", "/es/sobre", "/es/sos", "/en/loja", "/fr/noticias", "/en/contactos"];
+  for (const path of translated) {
+    test(`${path} is in its language, accessible and points search engines to the other languages`, async ({ page }) => {
+      await page.goto(path);
+      const lang = path.slice(1, 3);
+      await expect(page.locator("html")).toHaveAttribute("lang", new RegExp(`^${lang}-`));
+      await expect(page.locator("h1")).toHaveCount(1);
+      for (const hreflang of ["pt-PT", "en-GB", "es-ES", "fr-FR", "x-default"]) await expect(page.locator(`link[rel="alternate"][hreflang="${hreflang}"]`)).toHaveCount(1);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`/${lang}(/|$)`));
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow).toBeLessThanOrEqual(1);
+      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+    });
+  }
+
+  test("the globe in the header opens the same page in another language, and links stay in that language", async ({ page }) => {
+    await page.goto("/adotar");
+    const menu = page.locator(".lang-switch");
+    await expect(menu.locator("summary")).toHaveAccessibleName("Idioma: Português");
+    await menu.locator("summary").click();
+    await menu.getByRole("link", { name: "English" }).click();
+    await expect(page).toHaveURL(/\/en\/adotar$/);
+    await expect(page.locator("html")).toHaveAttribute("lang", "en-GB");
+    await expect(page.locator("h1")).not.toHaveText(/Adotar/);
+    // Every cat card leads to the cat's page in English.
+    const first = page.locator('main a[href^="/en/adotar/"]:visible').first();
+    await expect(first).toBeVisible();
+    // Back to Portuguese, at the plain address.
+    await menu.locator("summary").click();
+    await menu.getByRole("link", { name: "Português" }).click();
+    await expect(page).toHaveURL(/\/adotar$/);
+    await expect(page.locator("html")).toHaveAttribute("lang", "pt-PT");
+  });
+
+  test("pages only in Portuguese (account, privacy) keep their address and say so", async ({ page }) => {
+    const res = await page.goto("/en/conta");
+    expect(res?.status()).toBeLessThan(400);
+    await expect(page).toHaveURL(/\/conta$/);
+    await page.goto("/en");
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Privacy policy (in Portuguese)" })).toHaveAttribute("href", "/privacidade");
+  });
+
+  test("visitors whose browser is in French are offered the French page, once", async ({ browser }) => {
+    const context = await browser.newContext({ locale: "fr-FR" });
+    const page = await context.newPage();
+    await page.goto("http://localhost:3000/doar");
+    const bar = page.getByRole("region", { name: "Ce site existe aussi en français." });
+    await expect(bar).toBeVisible();
+    await bar.getByRole("button", { name: "Non, merci" }).click();
+    await expect(bar).toBeHidden();
+    await page.reload();
+    await expect(page.locator(".lang-suggest")).toHaveCount(0);
+    await context.close();
+  });
+
+  test("form messages come in the visitor's language", async ({ page }) => {
+    await page.goto("/en/contactos");
+    await page.getByRole("button", { name: "Send message" }).click();
+    await expect(page.getByText("Please enter your name")).toBeVisible();
+  });
+});
